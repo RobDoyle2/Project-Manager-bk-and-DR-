@@ -63,6 +63,10 @@ function problemList(items, cls) { return `<ul class="issues ${cls}">${items.sli
 async function handleImportFile(file) {
   let text;
   try { text = await readFileText(file); } catch (e) { toast('Could not read that file.', 'error'); return; }
+  return handleImportText(text, file.name);
+}
+async function handleImportText(text, fileName) {
+  const file = { name: fileName };
   let raw;
   try { raw = JSON.parse(text.replace(/^﻿/, '')); }
   catch (e) { await infoDialog({ title: 'Import failed', html: `<p><b>${esc(file.name)}</b> is not valid JSON.</p>${problemList([String(e.message)], 'err')}<p class="muted">Your current project data has not been changed.</p>` }); return; }
@@ -154,6 +158,31 @@ const ACTIONS = {
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
+  'show-json': () => {
+    computedFields();
+    const json = JSON.stringify(data, null, 2);
+    openModal({ title: 'Project JSON', wide: true, hideSave: true, cancelLabel: 'Close',
+      html: `<p class="muted small">Use this when downloads are blocked (for example in an embedded viewer): copy the text, then paste it into a text file saved as <b>.json</b>, or into “Paste JSON…” on another copy of the app.</p>
+        <textarea id="jsonOut" class="json-box" readonly rows="14">${esc(json)}</textarea>
+        <div class="btn-row mt">${btn('Copy to clipboard', 'copy-json', '', 'primary')}<span class="muted small">${json.length.toLocaleString()} characters</span></div>` });
+    setTimeout(() => { const t = $('#jsonOut'); if (t) t.select(); }, 50);
+  },
+  'copy-json': () => {
+    const t = $('#jsonOut'); if (!t) return; t.select();
+    const done = () => toast('JSON copied to the clipboard.');
+    const fallback = () => { try { document.execCommand('copy') ? done() : toast('Press Ctrl+C to copy the selected text.', 'warn'); } catch (e) { toast('Press Ctrl+C to copy the selected text.', 'warn'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, fallback); else fallback();
+  },
+  'paste-json': () => {
+    openModal({ title: 'Paste JSON to import', wide: true, saveLabel: 'Check & import',
+      html: `<p class="muted small">Paste the full text of a project JSON file here. It is validated first, and you will be asked to confirm before your current data is replaced.</p>
+        <textarea name="jsonIn" class="json-box" rows="14" placeholder='{ "schemaVersion": 1, ... }'></textarea>`,
+      onSave: f => {
+        const text = f.elements.jsonIn.value.trim();
+        if (!text) return { error: 'Paste the JSON text first.', field: 'jsonIn' };
+        setTimeout(() => handleImportText(text, 'pasted JSON'), 0);
+      } });
+  },
   'restore-backup': ds => restoreBackup(+ds.i),
   'delete-backup': ds => { const l = readBackups(); l.splice(+ds.i, 1); try { localStorage.setItem(LS_BACKUPS, JSON.stringify(l)); } catch (e) { /* ignore */ } render(); },
   'reset-project': () => resetProject(),

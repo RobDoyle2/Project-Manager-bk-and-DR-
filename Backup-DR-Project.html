@@ -452,6 +452,9 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .tb-btn svg{margin-right:5px}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
+.json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbff;resize:vertical}
+.mt{margin-top:12px}
+
 </style>
 <style id="reportCss">
 /* Status report styles — also embedded in the downloadable HTML report */
@@ -2080,7 +2083,7 @@ function viewReports() {
     <div class="card span2"><h3>${icon('save', 18)} Project data (JSON)</h3>
       <div class="data-stat"><span><b>${c.objectives}</b> objectives</span><span><b>${c.tasks}</b> tasks</span><span><b>${c.subtasks}</b> subtasks</span><span><b>${c.milestones}</b> milestones</span><span><b>${c.risks}</b> risks</span><span><b>${c.dependencies}</b> dependencies</span><span>Schema v${SCHEMA_VERSION}</span></div>
       <p class="${unexported && (c.objectives || c.risks || c.milestones) ? 'callout amber' : 'muted'}">${unexported && (c.objectives || c.risks || c.milestones) ? icon('risk', 15) : ''}<span>${unexported && (c.objectives || c.risks || c.milestones) ? 'You have changes that have not been exported. ' : ''}Last JSON export: <b>${esc(fmtDateTime(data.meta.lastExportedAt))}</b>. Browser autosave is a convenience — <b>export regularly</b> and keep the JSON file safe; it is your master copy.</span></p>
-      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
+      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Paste JSON…', 'paste-json', '', 'ghost', 'upload')}${btn('Show / copy JSON', 'show-json', '', 'ghost', 'report')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
       <h4 class="sec-t mt">Browser backups <small class="muted">(stored in this browser only — last ${8})</small></h4>
       ${backups.length ? `<div class="bk-list">${backups.map((b, i) => `<div class="bk"><div><b>${esc(fmtDateTime(b.at))}</b><small>${esc(b.reason)} · ${b.counts.objectives} obj, ${b.counts.tasks} tasks, ${b.counts.subtasks} subtasks</small></div><div class="btn-row">${btn('Restore', 'restore-backup', `data-i="${i}"`, 'small')}${btn('Download', 'download-backup', `data-i="${i}"`, 'small ghost')}<button class="icon-btn danger" data-action="delete-backup" data-i="${i}" aria-label="Delete backup">${icon('trash', 15)}</button></div></div>`).join('')}</div>` : '<p class="muted small">No backups yet. One is created automatically before any import, reset or restore, and when you press “Save &amp; back up now”.</p>'}
     </div>
@@ -2412,6 +2415,10 @@ function problemList(items, cls) { return `<ul class="issues ${cls}">${items.sli
 async function handleImportFile(file) {
   let text;
   try { text = await readFileText(file); } catch (e) { toast('Could not read that file.', 'error'); return; }
+  return handleImportText(text, file.name);
+}
+async function handleImportText(text, fileName) {
+  const file = { name: fileName };
   let raw;
   try { raw = JSON.parse(text.replace(/^﻿/, '')); }
   catch (e) { await infoDialog({ title: 'Import failed', html: `<p><b>${esc(file.name)}</b> is not valid JSON.</p>${problemList([String(e.message)], 'err')}<p class="muted">Your current project data has not been changed.</p>` }); return; }
@@ -2503,6 +2510,31 @@ const ACTIONS = {
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
+  'show-json': () => {
+    computedFields();
+    const json = JSON.stringify(data, null, 2);
+    openModal({ title: 'Project JSON', wide: true, hideSave: true, cancelLabel: 'Close',
+      html: `<p class="muted small">Use this when downloads are blocked (for example in an embedded viewer): copy the text, then paste it into a text file saved as <b>.json</b>, or into “Paste JSON…” on another copy of the app.</p>
+        <textarea id="jsonOut" class="json-box" readonly rows="14">${esc(json)}</textarea>
+        <div class="btn-row mt">${btn('Copy to clipboard', 'copy-json', '', 'primary')}<span class="muted small">${json.length.toLocaleString()} characters</span></div>` });
+    setTimeout(() => { const t = $('#jsonOut'); if (t) t.select(); }, 50);
+  },
+  'copy-json': () => {
+    const t = $('#jsonOut'); if (!t) return; t.select();
+    const done = () => toast('JSON copied to the clipboard.');
+    const fallback = () => { try { document.execCommand('copy') ? done() : toast('Press Ctrl+C to copy the selected text.', 'warn'); } catch (e) { toast('Press Ctrl+C to copy the selected text.', 'warn'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, fallback); else fallback();
+  },
+  'paste-json': () => {
+    openModal({ title: 'Paste JSON to import', wide: true, saveLabel: 'Check & import',
+      html: `<p class="muted small">Paste the full text of a project JSON file here. It is validated first, and you will be asked to confirm before your current data is replaced.</p>
+        <textarea name="jsonIn" class="json-box" rows="14" placeholder='{ "schemaVersion": 1, ... }'></textarea>`,
+      onSave: f => {
+        const text = f.elements.jsonIn.value.trim();
+        if (!text) return { error: 'Paste the JSON text first.', field: 'jsonIn' };
+        setTimeout(() => handleImportText(text, 'pasted JSON'), 0);
+      } });
+  },
   'restore-backup': ds => restoreBackup(+ds.i),
   'delete-backup': ds => { const l = readBackups(); l.splice(+ds.i, 1); try { localStorage.setItem(LS_BACKUPS, JSON.stringify(l)); } catch (e) { /* ignore */ } render(); },
   'reset-project': () => resetProject(),

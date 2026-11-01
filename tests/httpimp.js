@@ -1,0 +1,10 @@
+const { chromium } = require('playwright'); const http=require('http'), fs=require('fs');
+const root='/home/claude/project-manager-bk-and-dr-';
+const srv=http.createServer((q,r)=>{const f=root+(q.url==='/'?'/index.html':q.url.split('?')[0]);fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/json'});r.end(d)})}).listen(8765);
+(async()=>{const b=await chromium.launch();const p=await b.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://localhost:8765/Backup-DR-Project.html');await p.waitForSelector('#view .page-head');
+await p.setInputFiles('#fileInput',root+'/Backup-DR-Data_2026-11-01_0726.json');await p.waitForSelector('#confirm[open]');
+console.log('confirm text:',(await p.innerText('#confirm')).replace(/\s+/g,' ').slice(0,260));
+await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
+console.log('objectives after import:',await p.evaluate(()=>window.BackupDR.getData().objectives.length),'errors',errs);
+await b.close();srv.close();})();

@@ -442,3 +442,6 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 
 .tb-btn svg{margin-right:5px}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
+
+.json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbff;resize:vertical}
+.mt{margin-top:12px}
