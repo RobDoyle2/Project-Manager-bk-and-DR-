@@ -558,9 +558,17 @@ function download(name, text, mime) {
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 800);
 }
 function stampName(prefix, ext) { const t = todayISO(); const n = new Date(); return `${prefix}_${t}_${pad2(n.getHours())}${pad2(n.getMinutes())}.${ext}`; }
+function exportText() { computedFields(); data.meta.lastExportedAt = new Date().toISOString(); saveLocal(); return JSON.stringify(data, null, 2); }
 function exportJSON(kind) {
-  computedFields();
-  data.meta.lastExportedAt = new Date().toISOString();
-  saveLocal();
-  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), JSON.stringify(data, null, 2));
+  const text = exportText();
+  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), text);
+  return text;
+}
+const canShareFiles = () => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] })); } catch (e) { return false; } };
+/* Mobile-friendly export: opens the phone's share sheet so the file can be saved to Files / Drive / Downloads / email. */
+async function shareJSON() {
+  const text = exportText();
+  const file = new File([text], stampName('Backup-DR-Data', 'json'), { type: 'application/json' });
+  try { await navigator.share({ files: [file], title: 'Backup & DR project data' }); return 'shared'; }
+  catch (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; }
 }

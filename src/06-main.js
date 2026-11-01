@@ -154,7 +154,16 @@ const ACTIONS = {
     list.insertAdjacentHTML('beforeend', depRowHtml({ type: 'task' }, ed.dataset.self));
   },
   'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
-  'export-json': () => { exportJSON(); toast('Project exported as JSON.'); render(); },
+  'export-json': () => {
+    exportJSON(); render();
+    const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
+  },
+  'share-json': async () => {
+    const r = await shareJSON(); render();
+    if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
+    else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
+  },
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },

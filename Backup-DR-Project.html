@@ -1078,11 +1078,19 @@ function download(name, text, mime) {
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 800);
 }
 function stampName(prefix, ext) { const t = todayISO(); const n = new Date(); return `${prefix}_${t}_${pad2(n.getHours())}${pad2(n.getMinutes())}.${ext}`; }
+function exportText() { computedFields(); data.meta.lastExportedAt = new Date().toISOString(); saveLocal(); return JSON.stringify(data, null, 2); }
 function exportJSON(kind) {
-  computedFields();
-  data.meta.lastExportedAt = new Date().toISOString();
-  saveLocal();
-  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), JSON.stringify(data, null, 2));
+  const text = exportText();
+  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), text);
+  return text;
+}
+const canShareFiles = () => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] })); } catch (e) { return false; } };
+/* Mobile-friendly export: opens the phone's share sheet so the file can be saved to Files / Drive / Downloads / email. */
+async function shareJSON() {
+  const text = exportText();
+  const file = new File([text], stampName('Backup-DR-Data', 'json'), { type: 'application/json' });
+  try { await navigator.share({ files: [file], title: 'Backup & DR project data' }); return 'shared'; }
+  catch (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; }
 }
 
 /* =====================================================================
@@ -2083,7 +2091,7 @@ function viewReports() {
     <div class="card span2"><h3>${icon('save', 18)} Project data (JSON)</h3>
       <div class="data-stat"><span><b>${c.objectives}</b> objectives</span><span><b>${c.tasks}</b> tasks</span><span><b>${c.subtasks}</b> subtasks</span><span><b>${c.milestones}</b> milestones</span><span><b>${c.risks}</b> risks</span><span><b>${c.dependencies}</b> dependencies</span><span>Schema v${SCHEMA_VERSION}</span></div>
       <p class="${unexported && (c.objectives || c.risks || c.milestones) ? 'callout amber' : 'muted'}">${unexported && (c.objectives || c.risks || c.milestones) ? icon('risk', 15) : ''}<span>${unexported && (c.objectives || c.risks || c.milestones) ? 'You have changes that have not been exported. ' : ''}Last JSON export: <b>${esc(fmtDateTime(data.meta.lastExportedAt))}</b>. Browser autosave is a convenience — <b>export regularly</b> and keep the JSON file safe; it is your master copy.</span></p>
-      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Paste JSON…', 'paste-json', '', 'ghost', 'upload')}${btn('Show / copy JSON', 'show-json', '', 'ghost', 'report')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
+      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${canShareFiles() ? btn('Share / save to…', 'share-json', '', '', 'upload') : ''}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Paste JSON…', 'paste-json', '', 'ghost', 'upload')}${btn('Show / copy JSON', 'show-json', '', 'ghost', 'report')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
       <h4 class="sec-t mt">Browser backups <small class="muted">(stored in this browser only — last ${8})</small></h4>
       ${backups.length ? `<div class="bk-list">${backups.map((b, i) => `<div class="bk"><div><b>${esc(fmtDateTime(b.at))}</b><small>${esc(b.reason)} · ${b.counts.objectives} obj, ${b.counts.tasks} tasks, ${b.counts.subtasks} subtasks</small></div><div class="btn-row">${btn('Restore', 'restore-backup', `data-i="${i}"`, 'small')}${btn('Download', 'download-backup', `data-i="${i}"`, 'small ghost')}<button class="icon-btn danger" data-action="delete-backup" data-i="${i}" aria-label="Delete backup">${icon('trash', 15)}</button></div></div>`).join('')}</div>` : '<p class="muted small">No backups yet. One is created automatically before any import, reset or restore, and when you press “Save &amp; back up now”.</p>'}
     </div>
@@ -2506,7 +2514,16 @@ const ACTIONS = {
     list.insertAdjacentHTML('beforeend', depRowHtml({ type: 'task' }, ed.dataset.self));
   },
   'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
-  'export-json': () => { exportJSON(); toast('Project exported as JSON.'); render(); },
+  'export-json': () => {
+    exportJSON(); render();
+    const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
+  },
+  'share-json': async () => {
+    const r = await shareJSON(); render();
+    if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
+    else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
+  },
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
