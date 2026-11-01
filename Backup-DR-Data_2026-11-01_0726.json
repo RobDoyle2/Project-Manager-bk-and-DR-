@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "app": "backup-dr-project",
+  "project": {
+    "id": "PRJ-001",
+    "name": "Backup & Disaster Recovery Programme",
+    "description": "",
+    "manager": "",
+    "startDate": "2026-10-01",
+    "endDate": "2027-06-30"
+  },
+  "counters": {
+    "objective": 0,
+    "task": 0,
+    "subtask": 0,
+    "risk": 0,
+    "dependency": 0,
+    "milestone": 0
+  },
+  "objectives": [],
+  "risks": [],
+  "dependencies": [],
+  "milestones": [],
+  "meta": {
+    "createdAt": "2026-11-01T07:25:52.829Z",
+    "modifiedAt": "2026-11-01T07:25:52.829Z",
+    "lastExportedAt": "2026-11-01T07:26:00.699Z"
+  }
+}
