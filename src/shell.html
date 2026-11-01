@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backup &amp; DR Programme Manager</title>
+<meta name="description" content="Standalone project management application for a Backup &amp; Disaster Recovery programme.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235b5bd6'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.5-8 10-4.6-1.500-8-5-8-10V9z' fill='none' stroke='white' stroke-width='2.200' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+/*__CSS__*/
+</style>
+<style id="reportCss">
+/*__REPORT_CSS__*/
+</style>
+</head>
+<body>
+<noscript><p style="padding:2rem;font-family:sans-serif">This application needs JavaScript enabled in your browser.</p></noscript>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></svg></div><div><b>Backup &amp; DR</b><small>Programme Manager</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn hamb" data-action="nav-toggle" aria-label="Open menu"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h2 id="pageTitle">Dashboard</h2>
+      <span class="sp"></span>
+      <span id="saveChip" class="save-chip" role="status" aria-live="polite">Ready</span>
+      <button class="btn small tb-btn" data-action="import-json" title="Load a project from a JSON file (replaces current data after confirmation)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg><span>Import JSON</span></button>
+      <button class="btn small tb-btn" data-action="export-json" title="Download the full project as a JSON file"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+</div>
+<dialog id="modal" aria-modal="true"></dialog>
+<dialog id="confirm" aria-modal="true"></dialog>
+<div id="toasts" aria-live="polite"></div>
+<div id="tip" hidden></div>
+<div id="printArea" aria-hidden="true"></div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<script>
+(function () {
+'use strict';
+/*__JS__*/
+})();
+</script>
+</body>
+</html>

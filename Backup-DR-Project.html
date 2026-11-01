@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backup &amp; DR Programme Manager</title>
+<meta name="description" content="Standalone project management application for a Backup &amp; Disaster Recovery programme.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235b5bd6'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.5-8 10-4.6-1.500-8-5-8-10V9z' fill='none' stroke='white' stroke-width='2.200' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f4f5fb;--card:#fff;--ink:#22243a;--ink2:#575c78;--ink3:#8a8fa8;--line:#e5e7f2;--line2:#eff0f8;
+  --brand:#5b5bd6;--brand-d:#4343b8;--brand-soft:#ececfd;--accent:#0d9488;
+  --radius:16px;--shadow:0 1px 2px rgba(34,36,58,.05),0 8px 24px rgba(34,36,58,.06);
+  --red:#e5484d;--amber:#f5a524;--green:#22b573;--blue:#3b82f6;
+}
+*{box-sizing:border-box}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,"Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1{font-size:1.7rem;letter-spacing:-.02em;line-height:1.15}
+h3{font-size:1.02rem}
+.muted{color:var(--ink3)}.small{font-size:.82rem}.center{text-align:center}
+.ic{flex:none;vertical-align:middle}
+[hidden]{display:none!important}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:256px minmax(0,1fr);min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow:auto;z-index:60}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 10px 18px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6a6af2,#a35cf0 60%,#ff6ba8);display:grid;place-items:center;color:#fff;box-shadow:0 6px 14px rgba(110,90,240,.35)}
+.brand b{display:block;font-size:1.05rem;letter-spacing:-.01em}.brand small{color:var(--ink3);font-size:.76rem}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:.95rem;transition:background .15s,color .15s}
+.nav a:hover{background:#f2f3fb;color:var(--ink)}
+.nav a.active{background:var(--brand-soft);color:var(--brand-d)}
+.nav-badge{margin-left:auto;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:99px;display:grid;place-items:center;padding:0 6px}
+.nav-badge.red{background:var(--red);color:#fff}
+.side-foot{margin-top:auto;padding-top:14px}
+.export-nudge{width:100%;display:flex;gap:10px;align-items:center;text-align:left;background:#fff6e0;border:1px solid #f6d995;color:#7a5200;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:600;font-size:.85rem}
+.export-nudge small{font-weight:500;opacity:.85}
+.export-nudge:hover{background:#ffefc4}
+.side-ok{display:flex;gap:8px;align-items:flex-start;color:var(--ink3);font-size:.78rem;padding:6px 10px}
+.scrim{display:none}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(244,245,251,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;gap:12px;padding:12px 28px;border-bottom:1px solid var(--line)}
+.topbar .hamb{display:none}
+.topbar h2{font-size:1rem;font-weight:700;color:var(--ink2)}
+.topbar .sp{flex:1}
+.save-chip{display:inline-flex;gap:6px;align-items:center;font-size:.8rem;padding:5px 11px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);font-weight:600}
+.save-chip.saved{color:#13734a;background:#e6f8ef;border-color:#c7ecd9}
+.save-chip.error{color:#a3191e;background:#fdeaea;border-color:#f6c4c6}
+.save-chip.pending{color:#7a5200;background:#fff6e0;border-color:#f6d995}
+#view{padding:24px 28px 70px;width:100%;max-width:1560px;margin:0 auto}
+#view:focus{outline:none}
+
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.page-head p{margin-top:5px;max-width:70ch}
+.head-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- buttons ---------- */
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 14px;cursor:pointer;font-weight:650;font-size:.9rem;display:inline-flex;gap:7px;align-items:center;justify-content:center;transition:transform .08s,box-shadow .15s,background .15s;white-space:nowrap}
+.btn:hover{background:#f7f8fd;box-shadow:0 2px 8px rgba(34,36,58,.08)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(91,91,214,.3)}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.ghost{background:transparent}
+.btn.small{padding:5px 10px;font-size:.8rem;border-radius:9px}
+.btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn.danger:hover{background:#c93338}
+.btn.danger-t{color:#b3262b}
+.btn:focus-visible,.icon-btn:focus-visible,.nav a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.bar:focus-visible{outline:3px solid rgba(91,91,214,.35);outline-offset:1px}
+.icon-btn{border:0;background:transparent;border-radius:9px;width:32px;height:32px;display:inline-grid;place-items:center;cursor:pointer;color:var(--ink2)}
+.icon-btn:hover{background:#eef0fa;color:var(--ink)}
+.icon-btn.danger:hover{background:#fdeaea;color:var(--red)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn-col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.chip-btn{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:.78rem;cursor:pointer;font-weight:600}
+.chip-btn:hover{background:var(--brand-soft)}
+.link-btn{background:none;border:0;padding:0;text-align:left;font-weight:650;color:var(--ink);cursor:pointer}
+.link-btn:hover{color:var(--brand-d);text-decoration:underline}
+
+/* ---------- cards / dashboard ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.span2{grid-column:1/-1}
+.cols-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.dash-top{display:grid;grid-template-columns:minmax(230px,300px) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.overall{display:flex;flex-direction:column;align-items:center;gap:8px}
+.overall h3{align-self:flex-start}
+.ring{width:170px;height:170px}
+.ring-bg{fill:none;stroke:#e9ebf6;stroke-width:13}
+.ring-fg{fill:none;stroke:var(--brand);stroke-width:13;stroke-linecap:round;transition:stroke-dashoffset .6s}
+.ring-t{font-size:30px;font-weight:800;fill:var(--ink)}.ring-s{font-size:12px;fill:var(--ink3);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.kpi{position:relative;text-align:left;border:1px solid var(--line);background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;gap:2px;overflow:hidden;transition:transform .12s}
+.kpi:hover{transform:translateY(-2px)}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--kc,var(--brand))}
+.kpi-n{font-size:2.1rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi-l{font-weight:700;font-size:.95rem}.kpi-s{color:var(--ink3);font-size:.78rem}
+.k-brand{--kc:var(--brand)}.k-done{--kc:var(--green)}.k-prog{--kc:var(--blue)}.k-block{--kc:var(--red)}.k-late{--kc:var(--amber)}
+.stack{display:flex;height:18px;border-radius:99px;overflow:hidden;background:#eceef6;gap:2px}
+.sg{background:var(--c)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:.82rem;color:var(--ink2)}
+.legend.mt{margin-top:16px}
+.lg{display:inline-flex;align-items:center;gap:6px}.lg.dim{opacity:.45}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--c);display:inline-block}
+.obj-mini{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.om{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) 42px;gap:12px;align-items:center;font-size:.86rem}
+.om-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.om b{text-align:right}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px}
+.list li{display:flex;gap:11px;align-items:flex-start}
+.li-main{flex:1;min-width:0;display:flex;flex-direction:column}.li-main b{font-size:.9rem;font-weight:650}.li-main small{color:var(--ink3);font-size:.78rem}
+.rel{font-size:.78rem;color:var(--ink3);white-space:nowrap}.rel.bad{color:var(--red);font-weight:700}
+.ms-dot{width:12px;height:12px;border-radius:3px;transform:rotate(45deg);background:var(--mc,var(--blue));margin-top:5px;flex:none}
+.ms-planned{--mc:#3b82f6}.ms-at-risk{--mc:#f5a524}.ms-achieved{--mc:#22b573}.ms-missed{--mc:#e5484d}
+.sec-t{display:flex;align-items:center;gap:7px;font-size:.88rem;margin-bottom:12px}.sec-t.mt{margin-top:20px}
+.t-red{color:#c0282d}.t-amber{color:#a76a00}.t-brand{color:var(--brand-d)}
+.onboard{display:flex;gap:20px;align-items:flex-start;margin-bottom:18px;background:linear-gradient(135deg,#f3f1ff,#fff 55%);border-color:#dcd8fb}
+.onb-ic{width:58px;height:58px;border-radius:18px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.onboard h2{font-size:1.25rem;margin-bottom:6px}.onboard p{color:var(--ink2);max-width:75ch}
+.onb-steps{margin:12px 0 16px;padding-left:20px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+.onb-actions{display:flex;gap:10px;flex-wrap:wrap}
+.empty{text-align:center;padding:60px 20px;background:#fff;border:2px dashed var(--line);border-radius:var(--radius);color:var(--ink2)}
+.empty-ic{width:62px;height:62px;border-radius:20px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;margin:0 auto 14px}
+.empty h3{font-size:1.15rem;margin-bottom:6px;color:var(--ink)}.empty p{max-width:55ch;margin:0 auto 16px}
+
+/* ---------- status vocabulary ---------- */
+.st-not-started{--c:#a3a9c2;--cs:#eceef5;--cd:#555b75}
+.st-in-progress{--c:#3b82f6;--cs:#dbe9ff;--cd:#1d4ed8}
+.st-completed{--c:#22b573;--cs:#d6f5e6;--cd:#13734a}
+.st-at-risk{--c:#f5a524;--cs:#fdecc8;--cd:#8a5a00}
+.st-blocked,.st-delayed{--c:#e5484d;--cs:#fbdadb;--cd:#a3191e}
+.st-on-hold{--c:#9a8cc7;--cs:#ebe7f6;--cd:#5b4d94}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.74rem;font-weight:700;background:var(--cs);color:var(--cd);white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.prio{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:7px;background:#eef0f8;color:var(--ink2)}
+.prio-high{background:#ffe9d6;color:#9a4300}.prio-critical{background:#fde0e1;color:#a3191e}.prio-low{background:#e8f4ee;color:#25704c}
+.idchip{font-size:.7rem;font-weight:700;letter-spacing:.03em;color:var(--ink3);background:#f0f1f9;padding:2px 7px;border-radius:7px;white-space:nowrap}
+.avatar-wrap{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.avatar{width:26px;height:26px;border-radius:50%;color:#fff;font-size:.68rem;font-weight:700;display:inline-grid;place-items:center;flex:none}
+.av-name{font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar{height:9px;border-radius:99px;background:#e9ebf5;overflow:hidden;flex:1;min-width:40px}
+.pbar>i{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .35s}
+.slip{font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:6px}.slip.bad{background:#fde0e1;color:#a3191e}.slip.good{background:#d6f5e6;color:#13734a}
+.fc{font-size:.76rem;color:#8a5a00;background:#fff4d6;padding:2px 8px;border-radius:7px;display:inline-block}
+.callout{display:flex;gap:9px;align-items:flex-start;padding:10px 14px;border-radius:12px;font-size:.88rem;margin:10px 0}
+.callout.red{background:#fdeaea;color:#8f1d22;border:1px solid #f6c4c6}.callout.amber{background:#fff6e0;color:#7a5200;border:1px solid #f6d995}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:7px;background:#eef0f8;color:var(--ink2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.chip.red{background:#fde0e1;color:#a3191e}.chip.amber{background:#fff0cc;color:#8a5a00}
+
+/* ---------- toolbars ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.search,.toolbar select,.fld input,.fld select,.fld textarea,.dep-row input,.dep-row select{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;min-height:38px}
+.search{min-width:240px;flex:1;max-width:380px}
+.chk{display:inline-flex;gap:7px;align-items:center;font-size:.88rem;color:var(--ink2);cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--brand)}
+.toolbar .seg,.seg[role=tablist]{background:#e9ebf6;border-radius:12px;padding:4px;gap:2px;display:inline-flex}
+.seg[role=tablist] button{border:0;background:transparent;padding:7px 16px;border-radius:9px;font-weight:650;cursor:pointer;color:var(--ink2)}
+.seg[role=tablist] button.on{background:#fff;color:var(--brand-d);box-shadow:0 2px 6px rgba(34,36,58,.12)}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:650;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--brand-d);border-bottom-color:var(--brand)}
+.count{font-size:.72rem;background:#eceef7;border-radius:99px;padding:1px 8px;margin-left:4px}.count.red{background:var(--red);color:#fff}
+
+/* ---------- objectives ---------- */
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.obj-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;border-top:5px solid var(--c);display:flex;flex-direction:column;gap:10px}
+.obj-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.obj-ids{display:flex;gap:6px;align-items:center}
+.obj-title{font-size:1.12rem;letter-spacing:-.01em}
+.obj-desc{color:var(--ink2);font-size:.9rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.obj-meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--ink2)}
+.dates{display:inline-flex;gap:5px;align-items:center}
+.obj-prog{display:flex;align-items:center;gap:12px}.obj-prog b{min-width:42px;text-align:right}
+.obj-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--ink2)}
+.obj-actions{display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap}.sp{flex:1}
+.obj-tasks{border-top:1px solid var(--line2);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.mini-task{display:grid;grid-template-columns:minmax(0,1fr) auto 40px;gap:10px;align-items:center;border:0;background:#f7f8fd;border-radius:10px;padding:8px 12px;cursor:pointer;text-align:left}
+.mini-task:hover{background:var(--brand-soft)}.mt-n{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mt-p{text-align:right;font-weight:700;font-size:.82rem}
+
+/* ---------- tasks table ---------- */
+.t-group{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+.t-group-h{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 20px;background:linear-gradient(90deg,var(--cs),#fff 70%);flex-wrap:wrap}
+.tg-l{display:flex;gap:14px;align-items:center}.tg-bar{width:6px;height:38px;border-radius:6px;background:var(--c)}
+.t-group-h small{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.tg-r{display:flex;gap:14px;align-items:center}.tg-prog{display:flex;gap:10px;align-items:center;width:210px}.tg-prog b{min-width:40px;text-align:right}
+.t-head,.t-row{display:grid;grid-template-columns:minmax(250px,2.3fr) 150px 175px 84px 125px 175px 108px;gap:12px;align-items:center;padding:0 20px}
+.t-head{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;padding-top:10px;padding-bottom:8px;border-bottom:1px solid var(--line2);border-top:1px solid var(--line2)}
+.t-row{padding-top:10px;padding-bottom:10px;border-bottom:1px solid var(--line2);font-size:.88rem}
+.t-row:last-child{border-bottom:0}
+.t-row:hover{background:#fafaff}
+.t-row.lvl-2{background:#fbfbfe}
+.t-row.lvl-2 .t-name{padding-left:34px}
+.t-row.is-blocked{box-shadow:inset 4px 0 0 var(--red);background:#fff8f8}
+.t-name{display:flex;gap:8px;align-items:flex-start;min-width:0}
+.t-name-txt{min-width:0;display:flex;flex-direction:column;gap:3px}
+.sub{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.blocker-txt{font-size:.76rem;color:#a3191e}
+.chev{border:0;background:#eef0f8;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink2);transition:transform .15s}
+.chev.open{transform:rotate(90deg)}.chev-sp{width:24px;flex:none}
+.prog-ctl{display:flex;align-items:center;gap:8px}
+.prog-ctl input[type=range]{flex:1;accent-color:var(--c);min-width:70px}
+.ptxt{font-weight:700;min-width:38px;text-align:right}
+.prog-auto{display:flex;align-items:center;gap:8px}.auto{color:var(--ink3);font-size:.7rem;text-transform:uppercase;font-weight:700}
+.t-act{display:flex;gap:2px;justify-content:flex-end}
+.pad{padding:16px 20px}.foot{margin-top:6px}
+
+/* ---------- risks ---------- */
+.risk-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.heat-card{max-width:300px}
+.heat-card h4{margin-bottom:10px}
+.heat{border-collapse:separate;border-spacing:3px;width:100%}.heat caption{font-size:.7rem;color:var(--ink3);margin-bottom:6px;text-align:left}
+.heat th{font-size:.7rem;color:var(--ink3);font-weight:600;width:14%}
+.hm{height:34px;text-align:center;font-weight:800;border-radius:7px}
+.band{font-size:.74rem;font-weight:800;padding:2px 9px;border-radius:7px;display:inline-block;white-space:nowrap}
+.band-low{background:#d6f5e6;color:#13734a}.band-medium{background:#fdecc8;color:#8a5a00}.band-high{background:#ffd9c2;color:#9a4300}.band-critical{background:#fbc9cb;color:#8f1d22}
+.r-table,.d-table{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.r-head,.r-row{display:grid;grid-template-columns:minmax(220px,3fr) 120px 135px 120px 140px 105px 76px;gap:12px;align-items:center;padding:12px 18px}
+.b-table .r-head,.b-table .r-row{grid-template-columns:minmax(200px,2fr) minmax(200px,2.4fr) 150px 170px 140px}
+.r-head,.d-head{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;border-bottom:1px solid var(--line2);padding-top:10px;padding-bottom:8px}
+.r-row,.d-row{border-bottom:1px solid var(--line2);font-size:.88rem}.r-row:last-child,.d-row:last-child{border-bottom:0}
+.r-row.closed{opacity:.55}.r-row.blocked{box-shadow:inset 4px 0 0 var(--red)}
+.r-main{display:flex;flex-direction:column;gap:3px;min-width:0}.r-main small{color:var(--ink2)}
+.rs{font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;background:#eceef6}.rs-open{background:#fde0e1;color:#a3191e}.rs-mitigating{background:#fff0cc;color:#8a5a00}.rs-accepted{background:#e3e8fb;color:#2f3f9f}.rs-closed{background:#d6f5e6;color:#13734a}
+
+/* ---------- dependencies ---------- */
+.d-head,.d-row{display:grid;grid-template-columns:200px minmax(160px,1.5fr) 30px minmax(160px,1.5fr) 100px minmax(120px,1fr) 76px;gap:12px;align-items:center;padding:12px 18px}
+.d-main{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.arrow{color:var(--ink3);font-size:1.2rem;text-align:center}
+.ds{font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px}
+.ds-open{background:#dbe9ff;color:#1d4ed8}.ds-at-risk{background:#fdecc8;color:#8a5a00}.ds-satisfied{background:#d6f5e6;color:#13734a}
+.matrix-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;overflow:auto}
+.matrix{border-collapse:collapse;min-width:100%}
+.matrix th,.matrix td{border:1px solid var(--line2);padding:0}
+.matrix .corner{padding:10px;font-size:.78rem;text-align:left;vertical-align:bottom;background:#fafbff;min-width:200px}
+.matrix th.col{height:150px;width:46px;background:#fafbff;vertical-align:bottom}
+.matrix th.col span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;padding:8px 4px;font-size:.78rem;font-weight:600;max-height:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.matrix th.col small{color:var(--ink3);font-weight:500}
+.matrix th.row{text-align:left;font-size:.82rem;padding:8px 10px;font-weight:600;background:#fafbff}.matrix th.row small{display:block;color:var(--ink3);font-weight:500}
+.matrix td{height:40px;text-align:center}
+.mx-dot{width:20px;height:20px;border-radius:50%;border:0;cursor:pointer;background:var(--blue)}
+.mx-dot.ds-at-risk{background:var(--amber)}.mx-dot.ds-satisfied{background:var(--green)}.mx-dot.ds-open{background:var(--blue)}
+.mx-dot.conf{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--red)}
+.dot.ds-open{background:var(--blue)}.dot.ds-at-risk{background:var(--amber)}.dot.ds-satisfied{background:var(--green)}.conf-d{background:#fff;border:2px solid var(--red)}
+
+/* ---------- milestones ---------- */
+.ms-list{display:flex;flex-direction:column;gap:14px}
+.ms-card{display:flex;gap:18px;align-items:center}
+.ms-diamond{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;color:var(--mc);background:#f2f3fb;flex:none}
+.ms-diamond.ms-planned{background:#e4efff}.ms-diamond.ms-at-risk{background:#fff0cc}.ms-diamond.ms-achieved{background:#d6f5e6}.ms-diamond.ms-missed{background:#fde0e1}
+.ms-body{flex:1;min-width:0}.ms-top{display:flex;gap:8px;align-items:center;margin-bottom:4px}.ms-body h3{margin-bottom:2px}
+.ms-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:.86rem;color:var(--ink2);margin-top:6px}.ms-meta span{display:inline-flex;gap:6px;align-items:center}
+
+/* ---------- reports & data ---------- */
+.rep-grid h3{display:flex;gap:9px;align-items:center;margin-bottom:8px}
+.data-stat{display:flex;gap:10px 22px;flex-wrap:wrap;margin:10px 0 14px;font-size:.9rem;color:var(--ink2)}
+.bk-list{display:flex;flex-direction:column;gap:8px}
+.bk{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line2);border-radius:12px;padding:10px 14px;flex-wrap:wrap}.bk small{display:block;color:var(--ink3)}
+
+/* ---------- modal / forms ---------- */
+dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;color:var(--ink)}
+dialog::backdrop{background:rgba(25,27,50,.5);backdrop-filter:blur(3px)}
+dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
+@keyframes pop{from{transform:translateY(8px) scale(.985);opacity:0}to{transform:none;opacity:1}}
+.modal-card{background:#fff;border-radius:20px;width:min(640px,94vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(20,22,50,.4);overflow:hidden;margin:0}
+.modal-card.wide{width:min(840px,95vw)}.modal-card.small{width:min(520px,94vw)}
+.modal-card header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.modal-card header h3{font-size:1.15rem}
+.modal-body{padding:20px 22px;overflow:auto;flex:1}
+.modal-card footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fafbff}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}.fld.full,.full{grid-column:1/-1}
+.fl{font-size:.8rem;font-weight:700;color:var(--ink2)}
+.fld textarea{resize:vertical;min-height:60px}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.search:focus,.toolbar select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,91,214,.18)}
+.hint{color:var(--ink3);font-size:.76rem;font-weight:400}.hint.inline{font-weight:500}
+.form-error{background:#fdeaea;color:#8f1d22;border:1px solid #f6c4c6;border-radius:10px;padding:9px 12px;margin-top:14px;font-size:.88rem;font-weight:600}
+.form-error.inline{display:inline-block;margin:0 0 0 10px}
+.calc-box{background:#f5f6fd;border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem}
+.warn-note{background:#fff6e0;color:#7a5200;border-radius:10px;padding:8px 12px;font-size:.84rem}
+.notes{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:6px;max-height:140px;overflow:auto}
+.notes li{background:#f7f8fd;border-radius:9px;padding:6px 10px;font-size:.85rem}.nd{display:block;font-size:.7rem;font-weight:700;color:var(--ink3)}
+.fc-details{border:1px dashed var(--line);border-radius:12px;padding:10px 14px}.fc-details summary{cursor:pointer;font-weight:650;font-size:.88rem}.fc-details .fgrid{margin-top:12px}
+.blockbox{border:1px solid #f3d3d4;border-radius:12px;padding:12px;background:#fffafa}
+.auto-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px}
+.prog-ed{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.prog-ed input{width:90px}.quick{display:flex;gap:5px;flex-wrap:wrap}
+.dep-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.dep-row{display:grid;grid-template-columns:150px minmax(0,1.5fr) 100px minmax(0,1fr) 32px;gap:8px;align-items:center}
+.dep-row .dep-target select,.dep-row .dep-target input{width:100%}
+.cmp{display:flex;gap:14px;align-items:stretch;margin:14px 0;flex-wrap:wrap}
+.cmp>div:not(.cmp-arrow){flex:1;min-width:190px;background:#f5f6fd;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:.84rem}.cmp small{color:var(--ink3);text-transform:uppercase;font-weight:700;font-size:.68rem}
+.cmp-arrow{align-self:center;font-size:1.4rem;color:var(--ink3)}
+.issues{margin:8px 0;padding:10px 12px 10px 28px;border-radius:10px;font-size:.84rem;max-height:200px;overflow:auto}
+.issues.err{background:#fdeaea;color:#8f1d22}.issues.warn{background:#fff6e0;color:#7a5200}
+.confirm-msg{line-height:1.5}
+
+/* ---------- toast / tooltip ---------- */
+#toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#22243a;color:#fff;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:.9rem;font-weight:600;transform:translateY(12px);opacity:0;transition:all .25s;max-width:min(420px,90vw)}
+.toast.in{transform:none;opacity:1}.toast.warn{background:#8a5a00}.toast.error{background:#b3262b}
+#tip{position:fixed;z-index:300;pointer-events:none;background:#22243a;color:#fff;font-size:.78rem;line-height:1.4;padding:8px 11px;border-radius:9px;max-width:320px;white-space:pre-line;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+/* ---------- GANTT ---------- */
+.rm-card{padding:14px}
+.gantt{--labelw:330px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.gantt-scroll{overflow-x:auto}
+.gantt-inner{min-width:calc(var(--labelw) + 720px);position:relative}
+.g-head{display:flex;border-bottom:1px solid var(--line);background:#fafbff}
+.g-lab{flex:0 0 var(--labelw);width:var(--labelw);position:sticky;left:0;z-index:6;background:#fff;border-right:1px solid var(--line);min-width:0}
+.g-lab-head{background:#fafbff;display:flex;align-items:flex-end;padding:10px 16px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
+.g-lab-head .tl-h{width:100%}
+.g-months{flex:1;display:flex;min-width:0}
+.g-month{border-left:1px solid var(--line);padding:9px 4px 8px;text-align:center;display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.g-month b{font-size:.84rem;white-space:nowrap}.g-month small{color:var(--ink3);font-size:.7rem;font-weight:600}
+.g-body{position:relative}
+.g-grid{position:absolute;left:var(--labelw);right:0;top:0;bottom:0;display:flex;pointer-events:none;z-index:1}
+.g-gl{border-left:1px solid var(--line2)}.g-gl:first-child{border-left:0}
+.g-today-wrap{position:absolute;inset:0}
+.g-today{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);z-index:3}
+.g-today span{position:absolute;top:0;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:0 0 6px 6px}
+.g-row{display:flex;border-bottom:1px solid var(--line2);position:relative}
+.g-row:last-child{border-bottom:0}
+.g-track{flex:1;position:relative;z-index:2;min-width:0}
+.g-empty{padding:34px 24px;text-align:center;color:var(--ink3)}
+.g-ms-row{background:linear-gradient(#fcfcff,#fff)}
+.m-lab{padding:8px 16px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.ml-name{display:flex;gap:7px;align-items:center;min-width:0}.ml-name b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+.ml-sub{font-size:.76rem;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ml-pill{display:flex;gap:8px;align-items:center}.ml-pct{font-weight:800;font-size:.88rem}
+.ms-ico{color:var(--brand)}
+.bar{position:absolute;border-radius:9px;background:var(--cs);overflow:visible;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);transition:filter .15s,transform .12s}
+.bar:hover{filter:brightness(.96);transform:translateY(-1px)}
+.bar-in{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--c)}
+.bar.narrow .chip-p{left:calc(100% + 5px)}
+.bar-note{position:absolute;z-index:3;font-size:.68rem;font-weight:700;color:#a3191e;white-space:nowrap;line-height:20px;margin:0 6px}
+.bar-note.nn{margin-left:58px}
+.bar .chip-p{position:absolute;left:6px;top:50%;transform:translateY(-50%);background:#fff;color:var(--cd);font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:99px;box-shadow:0 1px 3px rgba(0,0,0,.18);white-space:nowrap}
+/* work-level colours: objective = deep pink, tasks and subtasks = one lighter pink */
+.bar.bl0{--c:#be185d;--cs:#f6c1da;--cd:#9d174d}.bar.bl1,.bar.bl2{--c:#f472b6;--cs:#fde1ef;--cd:#be185d}
+.bar.is-blocked{box-shadow:0 0 0 2px var(--red)}
+.bar.is-late{outline:2px dashed var(--red);outline-offset:1px}
+.fbar{position:absolute;border-radius:5px;border:1.5px dashed var(--amber);background:repeating-linear-gradient(135deg,rgba(245,165,36,.35) 0 4px,rgba(245,165,36,.08) 4px 8px);z-index:2}
+.fbar.late{border-color:var(--red);background:repeating-linear-gradient(135deg,rgba(229,72,77,.32) 0 4px,rgba(229,72,77,.07) 4px 8px)}
+.ms-pt{position:absolute;top:0;z-index:5;cursor:pointer;height:100%}
+.ms-pt .dia{position:absolute;left:-8px;top:4px;width:16px;height:16px;transform:rotate(45deg);background:var(--mc);border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);border-radius:4px}
+.ms-pt.small{height:auto}.ms-pt.small .dia{width:12px;height:12px;left:-6px;top:0}
+.ms-lab{position:absolute;left:-7px;white-space:nowrap;font-size:.68rem;font-weight:700;color:var(--ink);background:rgba(255,255,255,.9);padding:0 4px;border-radius:4px;line-height:14px}
+.ms-lab.r{left:auto;right:-7px}
+.g-ms-line{position:absolute;left:var(--labelw);right:0;top:0;bottom:0;z-index:1;pointer-events:none}
+.ms-vline{position:absolute;top:0;bottom:0;border-left:1.5px dashed var(--mc);opacity:.5}
+.rm-legend{margin-top:14px;padding:0 4px}
+.dia-lg{width:11px;height:11px;transform:rotate(45deg);background:var(--blue);border-radius:2px;display:inline-block}
+.fb-lg{width:20px;height:8px;border:1.5px dashed var(--amber);border-radius:4px;display:inline-block;background:repeating-linear-gradient(135deg,rgba(245,165,36,.35) 0 3px,transparent 3px 6px)}
+.td-lg{width:3px;height:14px;background:var(--accent);display:inline-block;border-radius:2px}
+.bl-lg{width:18px;height:10px;border-radius:4px;box-shadow:0 0 0 2px var(--red);display:inline-block;background:#fff}
+.dot.lv0{background:#be185d}.dot.lv1{background:#f472b6}
+.rm-note{margin-top:10px;font-size:.8rem;color:#8a5a00;background:#fff6e0;padding:6px 12px;border-radius:9px}
+.gantt.compact .gantt-inner{min-width:calc(var(--labelw) + 640px)}.gantt.compact .g-month b{font-size:.74rem}
+.gantt.compact .m-lab{padding:4px 12px}
+/* technical rows */
+.tl{display:grid;grid-template-columns:minmax(0,1fr) 98px 44px 106px;align-items:center;gap:6px}
+.g-lab.tl{padding:0 10px 0 4px}
+.tl-h{font-size:.72rem}.tl-h>div:first-child{padding-left:0}
+.tl-name{display:flex;gap:6px;align-items:center;min-width:0}
+.tl-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.tl-txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.86rem}
+.tl-txt small{color:var(--ink3);font-size:.7rem;display:flex;gap:5px;align-items:center;white-space:nowrap;overflow:hidden}
+.tl-owner{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.tl-pct{font-weight:800;font-size:.8rem;text-align:right}
+.tl-stat .pill{font-size:.66rem;padding:2px 8px}
+.g-row.t-r.lvl-0 .g-lab{background:#f6f6fe}.g-row.t-r.lvl-0 .tl-txt b{font-size:.92rem}
+.g-row.t-r.lvl-2 .g-lab{background:#fcfcff}
+.g-row.t-r.lvl-0{background:#fbfbff}
+.g-row.t-r .chev{width:20px;height:20px;border-radius:6px}
+
+/* ---------- print ---------- */
+#printArea{display:none}
+.print-sheet{font-size:11px;color:#111}
+.ps-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;border-bottom:3px solid var(--brand);padding-bottom:8px}
+.ps-head h1{font-size:20px}.ps-head p{color:#555;margin-top:2px;font-size:12px}.ps-meta{text-align:right;font-size:12px}.ps-meta b{font-size:22px;color:var(--brand-d)}
+.print-sheet .gantt{--labelw:230px!important;border-radius:6px}
+.print-sheet .gantt-inner{min-width:0!important}.print-sheet .gantt-scroll{overflow:visible}
+.print-sheet .g-lab{position:static}.print-sheet .gantt-tech{--labelw:340px!important}
+.print-sheet .m-lab{padding:5px 10px}.print-sheet .ml-name b{font-size:11px}.print-sheet .ml-sub{font-size:9px}
+.print-sheet .g-row,.print-sheet .bar,.print-sheet .t-r{break-inside:avoid;page-break-inside:avoid}
+.print-sheet .bar:hover{transform:none;filter:none}
+@media print{
+  html{font-size:13px}
+  body{background:#fff}
+  body.printing .app,body.printing #toasts,body.printing #tip{display:none!important}
+  body.printing #printArea{display:block}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:1400px){
+  .t-head{display:none}
+  .t-row{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:8px;padding-top:14px;padding-bottom:14px}
+  .t-row .t-name{grid-column:1/-1}.t-row .t-act{grid-column:4;grid-row:1;justify-self:end}
+  .t-row .t-name{grid-column:1/4}
+  .t-row [data-label]:not(.t-name)::before{content:attr(data-label);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;margin-bottom:2px}
+  .t-row .t-dates{grid-column:span 2}.t-row .t-prog{grid-column:span 2}
+  .r-head,.d-head{display:none}
+  .r-row{grid-template-columns:repeat(3,minmax(0,1fr))}.r-row .r-main{grid-column:1/-1}.r-row .t-act{grid-column:3}
+  .b-table .r-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .r-row [data-label]::before,.d-row [data-label]::before{content:attr(data-label);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
+  .d-row{grid-template-columns:repeat(2,minmax(0,1fr))}.d-row .d-main{grid-column:1/-1}.d-row .arrow{display:none}.d-row .t-act{grid-column:2}
+}
+@media (max-width:1100px){
+  .dash-top{grid-template-columns:1fr}.overall{flex-direction:row;flex-wrap:wrap;justify-content:center}
+  .grid-2{grid-template-columns:1fr}.cols-3{grid-template-columns:1fr}
+  }
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:272px;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.2)}
+  .sidebar.open{transform:none}
+  .scrim.on{display:block;position:fixed;inset:0;background:rgba(20,22,50,.45);z-index:55}
+  .topbar{padding:10px 14px}.topbar .hamb{display:inline-grid}
+  #view{padding:18px 14px 60px}
+  h1{font-size:1.4rem}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fgrid{grid-template-columns:1fr}
+  .dep-row{grid-template-columns:1fr 1fr}.dep-row .dep-target{grid-column:1/-1}
+  .modal-card,.modal-card.wide{width:100vw;max-height:100vh;height:100vh;border-radius:0}
+  dialog[open]{margin:0}
+  .obj-grid{grid-template-columns:1fr}
+  .search{min-width:0;max-width:none}
+  .ms-card{flex-wrap:wrap}
+  .gantt{--labelw:170px!important}
+  .gantt-tech{--labelw:230px!important}
+  .gantt-inner{min-width:calc(var(--labelw) + 720px)}
+  .tl{grid-template-columns:minmax(0,1fr) 40px}.tl-owner,.tl-stat,.tl-h .tl-owner,.tl-h .tl-stat{display:none}
+  .m-lab{padding:6px 10px}.ml-pill .pill{font-size:.64rem;padding:2px 7px}
+  .tg-prog{width:150px}
+  #toasts{left:14px;right:14px;bottom:14px}
+}
+@media (max-width:560px){
+  .t-row{grid-template-columns:repeat(2,minmax(0,1fr))}.t-row .t-name{grid-column:1/-1}.t-row .t-act{grid-column:2;grid-row:auto;justify-self:end}
+  .t-row .t-dates,.t-row .t-prog{grid-column:1/-1}
+  .r-row{grid-template-columns:repeat(2,minmax(0,1fr))}.r-row .t-act{grid-column:2}
+  .page-head{align-items:flex-start}
+}
+
+/* ---------- additions: modal error bar, bulk add ---------- */
+.modal-err{margin:0;border-radius:0;border-left:0;border-right:0;border-bottom:0;padding:10px 22px}
+.fld input.invalid,.fld select.invalid,.fld textarea.invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(229,72,77,.2)!important}
+.csv-box{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;background:#fafbff}
+.csv-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.csv-info{font-size:.84rem;color:#13734a;background:#e6f8ef;border-radius:8px;padding:6px 10px;margin-top:4px}
+
+.tb-btn svg{margin-right:5px}
+@media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
+
+</style>
+<style id="reportCss">
+/* Status report styles — also embedded in the downloadable HTML report */
+.rep{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:#22243a;max-width:1000px;margin:0 auto;padding:6px;font-size:12px;line-height:1.45}
+.report-page{background:#fff;padding:28px}
+.rep h1{font-size:24px;margin:0 0 4px}.rep h2{font-size:15px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid #ececfd;color:#3a3aa8}
+.rep p{margin:2px 0}.rep .muted{color:#8a8fa8}
+.rep-head{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:4px solid #5b5bd6;padding-bottom:12px}
+.rep-sub{color:#575c78}
+.rep-ring .ring{width:120px;height:120px}
+.ring-bg{fill:none;stroke:#e9ebf6;stroke-width:13}.ring-fg{fill:none;stroke:#5b5bd6;stroke-width:13;stroke-linecap:round}
+.ring-t{font-size:30px;font-weight:800;fill:#22243a}.ring-s{font-size:12px;fill:#8a8fa8;font-weight:600}
+.rep-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}
+.rep-kpis div{border:1px solid #e5e7f2;border-radius:10px;padding:8px 10px;border-left:4px solid #5b5bd6}
+.rep-kpis div.r{border-left-color:#e5484d}.rep-kpis div.a{border-left-color:#f5a524}
+.rep-kpis b{display:block;font-size:20px}.rep-kpis span{color:#575c78;font-size:11px}
+.rep table{width:100%;border-collapse:collapse;margin:4px 0}
+.rep th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8a8fa8;padding:5px 7px;border-bottom:1px solid #d9dcec}
+.rep td{padding:6px 7px;border-bottom:1px solid #eff0f8;vertical-align:top}
+.rep tr{break-inside:avoid;page-break-inside:avoid}
+.rbar{display:inline-block;width:70px;height:7px;border-radius:9px;background:#e9ebf5;vertical-align:middle;overflow:hidden}
+.rbar i{display:block;height:100%;background:var(--c)}
+.rep-foot{margin-top:24px;color:#8a8fa8;font-size:10px;text-align:center}
+.st-not-started{--c:#a3a9c2;--cs:#eceef5;--cd:#555b75}.st-in-progress{--c:#3b82f6;--cs:#dbe9ff;--cd:#1d4ed8}.st-completed{--c:#22b573;--cs:#d6f5e6;--cd:#13734a}
+.st-at-risk{--c:#f5a524;--cs:#fdecc8;--cd:#8a5a00}.st-blocked,.st-delayed{--c:#e5484d;--cs:#fbdadb;--cd:#a3191e}.st-on-hold{--c:#9a8cc7;--cs:#ebe7f6;--cd:#5b4d94}
+.rep .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:var(--cs);color:var(--cd);white-space:nowrap}
+.rep .pill i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.rep .band{font-size:10px;font-weight:800;padding:1px 7px;border-radius:6px;display:inline-block;white-space:nowrap}
+.band-low{background:#d6f5e6;color:#13734a}.band-medium{background:#fdecc8;color:#8a5a00}.band-high{background:#ffd9c2;color:#9a4300}.band-critical{background:#fbc9cb;color:#8f1d22}
+@media print{.report-page{padding:0}}
+
+</style>
+</head>
+<body>
+<noscript><p style="padding:2rem;font-family:sans-serif">This application needs JavaScript enabled in your browser.</p></noscript>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></svg></div><div><b>Backup &amp; DR</b><small>Programme Manager</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn hamb" data-action="nav-toggle" aria-label="Open menu"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h2 id="pageTitle">Dashboard</h2>
+      <span class="sp"></span>
+      <span id="saveChip" class="save-chip" role="status" aria-live="polite">Ready</span>
+      <button class="btn small tb-btn" data-action="import-json" title="Load a project from a JSON file (replaces current data after confirmation)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg><span>Import JSON</span></button>
+      <button class="btn small tb-btn" data-action="export-json" title="Download the full project as a JSON file"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+</div>
+<dialog id="modal" aria-modal="true"></dialog>
+<dialog id="confirm" aria-modal="true"></dialog>
+<div id="toasts" aria-live="polite"></div>
+<div id="tip" hidden></div>
+<div id="printArea" aria-hidden="true"></div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<script>
+(function () {
+'use strict';
+/* =====================================================================
+   Backup & DR Programme Manager — core: constants, dates, data model,
+   validation, central progress engine, persistence
+   ===================================================================== */
+const SCHEMA_VERSION = 1;
+const APP_ID = 'backup-dr-project';
+const APP_VERSION = '1.1.0';
+const LS_KEY = 'backupdr.project.v1';
+const LS_BACKUPS = 'backupdr.backups.v1';
+const LS_UI = 'backupdr.ui.v1';
+const PREFIX = { objective: 'OBJ', task: 'TSK', subtask: 'SUB', risk: 'RSK', dependency: 'DEP', milestone: 'MS' };
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MON = MONTHS.map(m => m.slice(0, 3));
+const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
+const LEAF_STATUSES = ['not-started', 'in-progress', 'at-risk', 'on-hold', 'completed'];
+const FLAG_STATUSES = ['at-risk', 'on-hold'];
+const STATUS_LABEL = {
+  'not-started': 'Not started', 'in-progress': 'In progress', 'completed': 'Completed',
+  'at-risk': 'At risk', 'blocked': 'Blocked', 'delayed': 'Delayed', 'on-hold': 'On hold'
+};
+const STATUS_ORDER = ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'delayed', 'on-hold'];
+const RISK_STATUS = ['open', 'mitigating', 'accepted', 'closed'];
+const MS_STATUS = ['planned', 'at-risk', 'achieved'];
+const DEP_TYPES = { task: 'Task dependency', objective: 'Objective dependency', asset: 'Asset dependency', recovery: 'Recovery dependency' };
+const DEP_STATUS = ['open', 'at-risk', 'satisfied'];
+const IMPACT = ['Very low', 'Low', 'Medium', 'High', 'Very high'];
+const LIKELIHOOD = ['Rare', 'Unlikely', 'Possible', 'Likely', 'Almost certain'];
+const DAY = 86400000;
+
+/* ---------- date helpers (ISO strings only; no local-time parsing) ---------- */
+const pad2 = n => String(n).padStart(2, '0');
+function parseISO(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  const t = Date.UTC(y, mo - 1, d);
+  const dt = new Date(t);
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  return { y, mo, d, t };
+}
+function dayNum(s) { const p = parseISO(s); return p ? Math.round(p.t / DAY) : null; }
+function isoFromDayNum(n) { const dt = new Date(n * DAY); return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`; }
+function todayISO() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function fmtDate(s) { const p = parseISO(s); return p ? `${p.d} ${MON[p.mo - 1]} ${p.y}` : '—'; }
+function fmtShort(s) { const p = parseISO(s); return p ? `${p.d} ${MON[p.mo - 1]}` : '—'; }
+function rangeText(a, b) {
+  const p = parseISO(a), q = parseISO(b);
+  if (!p || !q) return '—';
+  return p.y === q.y ? `${fmtShort(a)} – ${fmtShort(b)} ${q.y}` : `${fmtDate(a)} – ${fmtDate(b)}`;
+}
+function fmtStamp(date) { return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`; }
+function fmtDateTime(iso) {
+  if (!iso) return 'never';
+  const d = new Date(iso);
+  if (isNaN(d)) return 'never';
+  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/* ---------- misc helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const clamp01 = v => { v = Number(v); return isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+function pct(p) { if (p >= 100) return 100; let r = Math.round(p); if (r >= 100) r = 99; if (p > 0 && r === 0) r = 1; return r; }
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+/* ---------- data model ---------- */
+function blankProject() {
+  const now = new Date().toISOString();
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    app: APP_ID,
+    project: { id: 'PRJ-001', name: 'Backup & Disaster Recovery Programme', description: '', manager: '', startDate: '2026-10-01', endDate: '2027-06-30' },
+    counters: { objective: 0, task: 0, subtask: 0, risk: 0, dependency: 0, milestone: 0 },
+    objectives: [], risks: [], dependencies: [], milestones: [],
+    meta: { createdAt: now, modifiedAt: now, lastExportedAt: null }
+  };
+}
+let data = blankProject();
+let D = null;     // derived values (progress, status, totals) — recalculated from `data` on every change
+let IDX = null;   // id lookup indexes
+const SYS_ID = 'OBJ-000';   // hidden bucket for tasks that are not linked to an objective yet
+const realObjs = () => data.objectives.filter(o => !o.system);
+function ensureUnassigned() {
+  let o = data.objectives.find(x => x.system);
+  if (!o) {
+    o = { id: SYS_ID, system: true, name: 'Unassigned tasks', description: 'Tasks not yet linked to an objective', owner: '', priority: 'Medium', startDate: data.project.startDate, endDate: data.project.endDate, forecastStart: '', forecastEnd: '', status: 'auto', progress: 0, blocked: false, blocker: '', notes: [], tasks: [] };
+    data.objectives.unshift(o);
+  }
+  return o;
+}
+
+function allIds(d = data) {
+  const s = new Set();
+  d.objectives.forEach(o => { s.add(o.id); o.tasks.forEach(t => { s.add(t.id); t.subtasks.forEach(x => s.add(x.id)); }); });
+  d.risks.forEach(x => s.add(x.id)); d.dependencies.forEach(x => s.add(x.id)); d.milestones.forEach(x => s.add(x.id));
+  return s;
+}
+function nextId(kind) {
+  const used = allIds();
+  let n = data.counters[kind] || 0, id;
+  do { n++; id = `${PREFIX[kind]}-${String(n).padStart(3, '0')}`; } while (used.has(id));
+  data.counters[kind] = n;
+  return id;
+}
+
+/* Keep stored status/progress fields internally consistent. */
+function syncLeaf(x) {
+  x.progress = Math.round(clamp01(x.progress));
+  if (x.status === 'completed') x.progress = 100;
+  if (x.progress >= 100) { x.progress = 100; x.status = 'completed'; }
+  else if (x.status === 'completed' || x.status === 'auto' || !LEAF_STATUSES.includes(x.status)) x.status = x.progress > 0 ? 'in-progress' : 'not-started';
+  else if (x.status === 'not-started' && x.progress > 0) x.status = 'in-progress';
+}
+function syncStored(d = data) {
+  d.objectives.forEach(o => {
+    o.tasks.forEach(t => {
+      t.subtasks.forEach(syncLeaf);
+      if (t.subtasks.length) { if (!FLAG_STATUSES.includes(t.status)) t.status = 'auto'; }
+      else syncLeaf(t);
+    });
+    if (!FLAG_STATUSES.includes(o.status)) o.status = 'auto';
+  });
+}
+
+/* =====================================================================
+   Validation / normalisation of imported JSON
+   ===================================================================== */
+function parseProject(raw) {
+  const errors = [], warnings = [];
+  const E = m => errors.push(m), W = m => warnings.push(m);
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { E('The file does not contain a JSON object.'); return { errors, warnings }; }
+  if (typeof raw.schemaVersion !== 'number' || !isFinite(raw.schemaVersion)) E('Missing or invalid "schemaVersion" (expected a number).');
+  else if (raw.schemaVersion > SCHEMA_VERSION) E(`The file uses schema version ${raw.schemaVersion}, which is newer than this application supports (${SCHEMA_VERSION}). Please use a newer version of the application.`);
+  else if (raw.schemaVersion < 1) E('Invalid "schemaVersion" (must be 1 or greater).');
+  if (raw.app && raw.app !== APP_ID) W(`The file's "app" value is "${raw.app}" (expected "${APP_ID}").`);
+  if (!raw.project || typeof raw.project !== 'object' || Array.isArray(raw.project)) E('Missing "project" object.');
+  if (!Array.isArray(raw.objectives)) E('"objectives" must be an array.');
+  ['risks', 'dependencies', 'milestones'].forEach(k => { if (raw[k] !== undefined && !Array.isArray(raw[k])) E(`"${k}" must be an array.`); });
+  if (errors.length) return { errors, warnings };
+
+  const out = blankProject();
+  const str = (v, def = '') => typeof v === 'string' ? v : (v == null ? def : String(v));
+  const chkDate = (v, label, required) => {
+    if (v == null || v === '') { if (required) E(`${label}: a date is required.`); return ''; }
+    if (!parseISO(v)) { E(`${label}: "${v}" is not a valid ISO date (YYYY-MM-DD).`); return ''; }
+    return v;
+  };
+  const chkRange = (s, e, label) => { if (s && e && dayNum(e) < dayNum(s)) E(`${label}: end date ${e} is before start date ${s}.`); };
+  const chkEnum = (v, list, def, label) => { if (list.includes(v)) return v; if (v != null && v !== '') W(`${label}: unknown value "${v}", using "${def}".`); return def; };
+  const chkProg = (v, label) => {
+    if (v == null || v === '') return 0;
+    const n = Number(v);
+    if (!isFinite(n)) { W(`${label}: invalid progress "${v}", set to 0.`); return 0; }
+    if (n < 0 || n > 100) W(`${label}: progress ${n} is outside 0–100 and was clamped.`);
+    return clamp01(n);
+  };
+  const notesOf = (v, label) => {
+    if (v == null) return [];
+    if (typeof v === 'string') return v.trim() ? [{ date: '', text: v }] : [];
+    if (!Array.isArray(v)) { W(`${label}: "notes" should be an array, ignored.`); return []; }
+    return v.filter(n => n && typeof n.text === 'string' && n.text.trim()).map(n => ({ date: parseISO(n.date) ? n.date : '', text: n.text }));
+  };
+
+  // Pass 1: collect explicit IDs and detect duplicates
+  const seen = new Set();
+  const regId = (id, label) => {
+    if (typeof id !== 'string' || !id.trim()) return false;
+    if (seen.has(id.trim())) E(`Duplicate ID "${id}" (${label}).`);
+    seen.add(id.trim());
+    return true;
+  };
+  (raw.objectives || []).forEach((o, i) => {
+    if (!o || typeof o !== 'object') return;
+    regId(o.id, `objective #${i + 1}`);
+    (Array.isArray(o.tasks) ? o.tasks : []).forEach((t, j) => {
+      if (!t || typeof t !== 'object') return;
+      regId(t.id, `task #${j + 1} of objective #${i + 1}`);
+      (Array.isArray(t.subtasks) ? t.subtasks : []).forEach((s, k) => { if (s && typeof s === 'object') regId(s.id, `subtask #${k + 1}`); });
+    });
+  });
+  ['risks', 'dependencies', 'milestones'].forEach(k => (raw[k] || []).forEach((x, i) => { if (x && typeof x === 'object') regId(x.id, `${k} #${i + 1}`); }));
+  const genCounters = {};
+  const gen = kind => {
+    let n = genCounters[kind] || 0, id;
+    do { n++; id = `${PREFIX[kind]}-${String(n).padStart(3, '0')}`; } while (seen.has(id));
+    genCounters[kind] = n; seen.add(id);
+    W(`A record had no ID; "${id}" was generated.`);
+    return id;
+  };
+  const idOf = (v, kind) => (typeof v === 'string' && v.trim()) ? v.trim() : gen(kind);
+
+  // project
+  const p = raw.project;
+  out.project = {
+    id: str(p.id, 'PRJ-001') || 'PRJ-001',
+    name: str(p.name, '').trim() || 'Backup & Disaster Recovery Programme',
+    description: str(p.description), manager: str(p.manager),
+    startDate: chkDate(p.startDate || '2026-10-01', 'Project start date', true),
+    endDate: chkDate(p.endDate || '2027-06-30', 'Project end date', true)
+  };
+  chkRange(out.project.startDate, out.project.endDate, 'Project');
+
+  const common = (s, label, hasKids) => {
+    if (!s || typeof s !== 'object' || Array.isArray(s)) { E(`${label}: must be an object.`); return null; }
+    const name = str(s.name).trim();
+    if (!name) E(`${label}: name is required.`);
+    const startDate = chkDate(s.startDate, `${label} start date`, true);
+    const endDate = chkDate(s.endDate, `${label} end date`, true);
+    chkRange(startDate, endDate, label);
+    const forecastStart = chkDate(s.forecastStart, `${label} forecast start`, false);
+    const forecastEnd = chkDate(s.forecastEnd, `${label} forecast end`, false);
+    chkRange(forecastStart || startDate, forecastEnd || endDate, `${label} forecast`);
+    let status = s.status, blocked = s.blocked === true;
+    if (status === 'blocked') { blocked = true; status = null; }
+    if (status === 'delayed') status = null;
+    let progress = chkProg(s.progress, label);
+    if (hasKids) status = FLAG_STATUSES.includes(status) ? status : 'auto';
+    else {
+      if (status != null && status !== '' && status !== 'auto' && !LEAF_STATUSES.includes(status)) W(`${label}: unknown status "${status}", derived from progress.`);
+      if (status === 'completed' && progress < 100) { W(`${label}: status "completed" but progress ${progress}%; progress set to 100.`); }
+      status = LEAF_STATUSES.includes(status) ? status : (progress > 0 ? 'in-progress' : 'not-started');
+    }
+    return {
+      name, description: str(s.description), owner: str(s.owner),
+      priority: chkEnum(s.priority, PRIORITIES, 'Medium', `${label} priority`),
+      startDate, endDate, forecastStart, forecastEnd, status, progress, blocked, blocker: blocked ? str(s.blocker) : str(s.blocker),
+      notes: notesOf(s.notes, label)
+    };
+  };
+
+  raw.objectives.forEach((o, i) => {
+    const lab = `Objective #${i + 1}${o && o.name ? ` "${o.name}"` : ''}`;
+    if (o && Array.isArray(o.tasks) === false && o.tasks !== undefined) E(`${lab}: "tasks" must be an array.`);
+    const base = common(o, lab, true);
+    if (!base) return;
+    const obj = { id: idOf(o.id, 'objective'), ...(o.system === true ? { system: true } : {}), ...base, tasks: [] };
+    (Array.isArray(o.tasks) ? o.tasks : []).forEach((t, j) => {
+      const tl = `${lab} › Task #${j + 1}${t && t.name ? ` "${t.name}"` : ''}`;
+      if (t && t.subtasks !== undefined && !Array.isArray(t.subtasks)) E(`${tl}: "subtasks" must be an array.`);
+      const hasSubs = !!(t && Array.isArray(t.subtasks) && t.subtasks.length);
+      const tb = common(t, tl, hasSubs);
+      if (!tb) return;
+      const task = { id: idOf(t.id, 'task'), ...tb, subtasks: [] };
+      (hasSubs ? t.subtasks : []).forEach((s, k) => {
+        const sl = `${tl} › Subtask #${k + 1}${s && s.name ? ` "${s.name}"` : ''}`;
+        const sb = common(s, sl, false);
+        if (!sb) return;
+        task.subtasks.push({ id: idOf(s.id, 'subtask'), ...sb });
+      });
+      obj.tasks.push(task);
+    });
+    out.objectives.push(obj);
+  });
+
+  // reference lookup for the relational records
+  const kindOf = new Map();
+  out.objectives.forEach(o => { kindOf.set(o.id, 'objective'); o.tasks.forEach(t => { kindOf.set(t.id, 'task'); t.subtasks.forEach(s => kindOf.set(s.id, 'subtask')); }); });
+
+  (raw.risks || []).forEach((r, i) => {
+    const lab = `Risk #${i + 1}`;
+    if (!r || typeof r !== 'object') { E(`${lab}: must be an object.`); return; }
+    const description = str(r.description).trim();
+    if (!description) E(`${lab}: description is required.`);
+    const num = (v, l) => { const n = Math.round(Number(v)); if (!isFinite(n) || n < 1 || n > 5) { W(`${lab}: ${l} should be 1–5, using 3.`); return 3; } return n; };
+    let rel = str(r.relatedId);
+    if (rel && !kindOf.has(rel)) { W(`${lab}: related item "${rel}" not found; link removed.`); rel = ''; }
+    out.risks.push({
+      id: idOf(r.id, 'risk'), description, impact: num(r.impact, 'impact'), likelihood: num(r.likelihood, 'likelihood'),
+      owner: str(r.owner), mitigation: str(r.mitigation), status: chkEnum(r.status, RISK_STATUS, 'open', `${lab} status`), relatedId: rel
+    });
+  });
+  (raw.milestones || []).forEach((m, i) => {
+    const lab = `Milestone #${i + 1}`;
+    if (!m || typeof m !== 'object') { E(`${lab}: must be an object.`); return; }
+    const name = str(m.name).trim();
+    if (!name) E(`${lab}: name is required.`);
+    const date = chkDate(m.date, `${lab} date`, true);
+    let ob = str(m.objectiveId);
+    if (ob && kindOf.get(ob) !== 'objective') { W(`${lab}: objective "${ob}" not found; link removed.`); ob = ''; }
+    out.milestones.push({ id: idOf(m.id, 'milestone'), name, description: str(m.description), date, objectiveId: ob, status: chkEnum(m.status, MS_STATUS, 'planned', `${lab} status`) });
+  });
+  (raw.dependencies || []).forEach((d, i) => {
+    const lab = `Dependency #${i + 1}`;
+    if (!d || typeof d !== 'object') { E(`${lab}: must be an object.`); return; }
+    const type = chkEnum(d.type, Object.keys(DEP_TYPES), 'task', `${lab} type`);
+    if (!kindOf.has(d.fromId)) { W(`${lab}: dependent item "${d.fromId}" not found; dependency skipped.`); return; }
+    const dep = { id: idOf(d.id, 'dependency'), type, fromId: d.fromId, toId: '', assetName: '', note: str(d.note), status: chkEnum(d.status, DEP_STATUS, 'open', `${lab} status`) };
+    if (type === 'task' || type === 'objective') {
+      const k = kindOf.get(d.toId);
+      if (!k || (type === 'objective' ? k !== 'objective' : k === 'objective')) { W(`${lab}: target "${d.toId}" not found or wrong kind; dependency skipped.`); return; }
+      if (d.toId === d.fromId) { W(`${lab}: an item cannot depend on itself; skipped.`); return; }
+      dep.toId = d.toId;
+    } else {
+      dep.assetName = str(d.assetName).trim();
+      if (!dep.assetName) { W(`${lab}: asset / recovery name is missing; dependency skipped.`); return; }
+    }
+    out.dependencies.push(dep);
+  });
+
+  // meta + counters
+  const meta = raw.meta && typeof raw.meta === 'object' ? raw.meta : {};
+  out.meta = { createdAt: str(meta.createdAt) || out.meta.createdAt, modifiedAt: str(meta.modifiedAt) || out.meta.modifiedAt, lastExportedAt: meta.lastExportedAt || null };
+  Object.keys(PREFIX).forEach(k => {
+    let max = Number(raw.counters && raw.counters[k]) || 0;
+    allIds(out).forEach(id => { const m = new RegExp('^' + PREFIX[k] + '-(\\d+)$').exec(id); if (m) max = Math.max(max, +m[1]); });
+    out.counters[k] = max;
+  });
+  syncStored(out);
+  return { errors, warnings, data: out };
+}
+
+/* =====================================================================
+   CENTRAL PROGRESS ENGINE
+   Everything the UI shows (progress, status, dashboard counts, roadmap)
+   is derived here from `data`. Nothing derived is edited by hand.
+   Rules: subtask = manual; task = manual (no subtasks) or mean of its
+   subtasks; objective = mean of its top-level tasks; programme = mean of
+   objectives (subtasks are never counted separately => no double counting).
+   ===================================================================== */
+function statusOf(o) {
+  // o: {done, ownBlocked, childBlocked, overdue, flagRisk, childRisk, flagHold, progress, flagProg, childStarted}
+  if (o.done) return 'completed';
+  if (o.ownBlocked || o.childBlocked) return 'blocked';
+  if (o.flagHold) return 'on-hold';
+  if (o.overdue) return 'delayed';
+  if (o.flagRisk || o.childRisk) return 'at-risk';
+  if (o.progress > 0 || o.flagProg || o.childStarted) return 'in-progress';
+  return 'not-started';
+}
+function derive() {
+  const today = todayISO(), T = dayNum(today);
+  const d = { today, T, obj: new Map(), task: new Map(), sub: new Map(), node: new Map(), depsFrom: new Map(), depsTo: new Map(), cycle: new Set(), conflicts: new Set(), blockedItems: [], overdueItems: [], totals: null };
+  const idx = { objective: new Map(), task: new Map(), sub: new Map() };
+  const endOf = it => dayNum(it.forecastEnd || it.endDate);
+  const isLate = (it, done) => { const e = endOf(it); return !done && e !== null && e < T; };
+  const base = (it, kind) => ({ id: it.id, kind, item: it });
+
+  data.objectives.forEach(o => {
+    idx.objective.set(o.id, { item: o });
+    const tInfos = [];
+    o.tasks.forEach(t => {
+      idx.task.set(t.id, { item: t, obj: o });
+      const sInfos = [];
+      t.subtasks.forEach(s => {
+        idx.sub.set(s.id, { item: s, task: t, obj: o });
+        const p = clamp01(s.progress), done = p >= 100;
+        const ownBlocked = !done && s.blocked === true;
+        const overdue = isLate(s, done);
+        const info = {
+          ...base(s, 'sub'), leaf: true, progress: done ? 100 : p, done, overdue, ownBlocked,
+          started: !done && (p > 0 || s.status === 'in-progress')
+        };
+        info.status = statusOf({ done, ownBlocked, overdue, flagRisk: s.status === 'at-risk', flagHold: s.status === 'on-hold', progress: p, flagProg: s.status === 'in-progress' });
+        info.blocked = info.status === 'blocked';
+        d.sub.set(s.id, info); d.node.set(s.id, info); sInfos.push(info);
+        if (ownBlocked) d.blockedItems.push({ id: s.id, kind: 'sub', name: s.name, blocker: s.blocker, owner: s.owner, parent: t.name, objective: o.name });
+        if (overdue) d.overdueItems.push(info);
+      });
+      const leaf = sInfos.length === 0;
+      let p = leaf ? clamp01(t.progress) : avg(sInfos.map(x => x.progress));
+      const done = leaf ? p >= 100 : sInfos.every(x => x.done);
+      if (done) p = 100;
+      const ownBlocked = !done && t.blocked === true;
+      const overdue = isLate(t, done);
+      const info = {
+        ...base(t, 'task'), leaf, progress: p, done, overdue, ownBlocked, subCount: sInfos.length, subDone: sInfos.filter(x => x.done).length,
+        started: !done && (p > 0 || t.status === 'in-progress' || sInfos.some(x => x.started || x.done))
+      };
+      info.status = statusOf({
+        done, ownBlocked, childBlocked: sInfos.some(x => x.blocked), overdue, flagRisk: t.status === 'at-risk',
+        childRisk: sInfos.some(x => x.status === 'at-risk' || x.status === 'delayed'), flagHold: t.status === 'on-hold',
+        progress: p, flagProg: t.status === 'in-progress', childStarted: info.started
+      });
+      info.blocked = info.status === 'blocked';
+      d.task.set(t.id, info); d.node.set(t.id, info); tInfos.push(info);
+      if (ownBlocked) d.blockedItems.push({ id: t.id, kind: 'task', name: t.name, blocker: t.blocker, owner: t.owner, parent: o.name, objective: o.name });
+      if (overdue) d.overdueItems.push(info);
+    });
+    const p = avg(tInfos.map(x => x.progress));
+    const done = tInfos.length > 0 && tInfos.every(x => x.done);
+    const ownBlocked = !done && o.blocked === true;
+    const overdue = isLate(o, done);
+    const info = {
+      ...base(o, 'obj'), progress: done ? 100 : p, done, overdue, ownBlocked,
+      taskCount: tInfos.length, taskDone: tInfos.filter(x => x.done).length, taskBlocked: tInfos.filter(x => x.blocked).length,
+      subCount: tInfos.reduce((a, x) => a + x.subCount, 0), started: !done && (p > 0 || tInfos.some(x => x.started))
+    };
+    info.status = statusOf({
+      done, ownBlocked, childBlocked: tInfos.some(x => x.blocked), overdue, flagRisk: o.status === 'at-risk',
+      childRisk: tInfos.some(x => x.status === 'at-risk' || x.status === 'delayed'), flagHold: o.status === 'on-hold',
+      progress: info.progress, childStarted: info.started
+    });
+    info.blocked = info.status === 'blocked';
+    d.obj.set(o.id, info); d.node.set(o.id, info);
+    if (ownBlocked) d.blockedItems.push({ id: o.id, kind: 'obj', name: o.name, blocker: o.blocker, owner: o.owner, parent: '', objective: o.name });
+  });
+
+  // dependencies
+  data.dependencies.forEach(x => {
+    if (!d.depsFrom.has(x.fromId)) d.depsFrom.set(x.fromId, []);
+    d.depsFrom.get(x.fromId).push(x);
+    if (x.toId) { if (!d.depsTo.has(x.toId)) d.depsTo.set(x.toId, []); d.depsTo.get(x.toId).push(x); }
+  });
+  // scheduling conflicts: dependent starts before the thing it depends on has finished
+  data.dependencies.forEach(x => {
+    if (!x.toId || x.status === 'satisfied') return;
+    const a = d.node.get(x.fromId), b = d.node.get(x.toId);
+    if (!a || !b || b.done) return;
+    const s = dayNum(a.item.forecastStart || a.item.startDate), e = endOf(b.item);
+    if (s !== null && e !== null && s <= e) d.conflicts.add(x.id);
+  });
+  // circular dependencies
+  const state = new Map();
+  const visit = (id, path) => {
+    state.set(id, 1); path.push(id);
+    for (const x of (d.depsFrom.get(id) || [])) {
+      if (!x.toId) continue;
+      if (state.get(x.toId) === 1) { path.slice(path.indexOf(x.toId)).forEach(i => d.cycle.add(i)); }
+      else if (!state.has(x.toId)) visit(x.toId, path);
+    }
+    path.pop(); state.set(id, 2);
+  };
+  Array.from(d.node.keys()).forEach(id => { if (!state.has(id)) visit(id, []); });
+
+  // totals
+  const tasks = Array.from(d.task.values()), objs = Array.from(d.obj.values()).filter(x => !x.item.system);
+  const byObj = {};
+  STATUS_ORDER.forEach(k => byObj[k] = 0);
+  objs.forEach(x => byObj[x.status]++);
+  d.totals = {
+    objectives: objs.length, tasks: tasks.length, subtasks: d.sub.size,
+    tasksDone: tasks.filter(x => x.done).length, tasksStarted: tasks.filter(x => x.started).length,
+    tasksBlocked: tasks.filter(x => x.blocked).length, tasksOverdue: tasks.filter(x => x.overdue).length,
+    tasksNotStarted: tasks.filter(x => !x.done && !x.started).length,
+    byObjStatus: byObj, overall: avg(objs.map(x => x.progress))
+  };
+  d.idx = idx;
+  IDX = idx;
+  return d;
+}
+const nodeInfo = id => D.node.get(id);
+function nameOf(id) {
+  if (!id) return '';
+  const n = D && D.node.get(id);
+  return n ? n.item.name : id;
+}
+function kindLabel(id) {
+  const n = D && D.node.get(id);
+  return n ? ({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[n.kind] : '';
+}
+
+/* ---------- mutation helpers ---------- */
+function removeWorkItems(ids) {
+  const set = new Set(ids);
+  data.dependencies = data.dependencies.filter(x => !set.has(x.fromId) && !set.has(x.toId));
+  data.risks.forEach(r => { if (set.has(r.relatedId)) r.relatedId = ''; });
+  data.milestones.forEach(m => { if (set.has(m.objectiveId)) m.objectiveId = ''; });
+}
+function deleteObjective(id) {
+  const o = IDX.objective.get(id).item, ids = [o.id];
+  o.tasks.forEach(t => { ids.push(t.id); t.subtasks.forEach(s => ids.push(s.id)); });
+  data.objectives = data.objectives.filter(x => x.id !== id);
+  removeWorkItems(ids);
+}
+function deleteTask(id) {
+  const r = IDX.task.get(id), ids = [id];
+  r.item.subtasks.forEach(s => ids.push(s.id));
+  r.obj.tasks = r.obj.tasks.filter(x => x.id !== id);
+  removeWorkItems(ids);
+}
+function deleteSub(id) {
+  const r = IDX.sub.get(id);
+  r.task.subtasks = r.task.subtasks.filter(x => x.id !== id);
+  removeWorkItems([id]);
+}
+function setLeafProgress(item, v) {
+  item.progress = Math.round(clamp01(v));
+  if (item.progress >= 100) item.status = 'completed';
+  else if (item.status === 'completed') item.status = item.progress > 0 ? 'in-progress' : 'not-started';
+  else if (item.progress > 0 && item.status === 'not-started') item.status = 'in-progress';
+}
+
+/* =====================================================================
+   Persistence: autosave, backups, export / import
+   ===================================================================== */
+const ui = {
+  view: 'dashboard', rmMode: 'management', rmColor: 'level', rmObj: 'all', rmMilestones: true, rmForecast: true,
+  collapsed: new Set(), objOpen: new Set(),
+  objFilter: { q: '', status: 'all' },
+  taskFilter: { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false },
+  riskTab: 'risks', depTab: 'register', saveState: 'idle', lastSaved: null, storageOk: true
+};
+let saveTimer = null;
+
+function computedFields() {
+  D = derive();
+  data.objectives.forEach(o => {
+    const oi = D.obj.get(o.id); o.computedProgress = Math.round(oi.progress * 10) / 10; o.computedStatus = oi.status;
+    o.tasks.forEach(t => {
+      const ti = D.task.get(t.id); t.computedProgress = Math.round(ti.progress * 10) / 10; t.computedStatus = ti.status;
+      if (t.subtasks.length) t.progress = Math.round(ti.progress);
+      t.subtasks.forEach(s => { const si = D.sub.get(s.id); s.computedProgress = si.progress; s.computedStatus = si.status; });
+    });
+  });
+}
+function saveLocal() {
+  clearTimeout(saveTimer); saveTimer = null;
+  try {
+    computedFields();
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    ui.saveState = 'saved'; ui.lastSaved = new Date(); ui.storageOk = true;
+  } catch (e) { ui.saveState = 'error'; ui.storageOk = false; }
+  updateSaveChip();
+  return ui.saveState === 'saved';
+}
+function scheduleSave() {
+  ui.saveState = 'pending'; updateSaveChip();
+  clearTimeout(saveTimer); saveTimer = setTimeout(saveLocal, 350);
+}
+function countsOf(d) {
+  let t = 0, s = 0;
+  d.objectives.forEach(o => { t += o.tasks.length; o.tasks.forEach(x => s += x.subtasks.length); });
+  return { objectives: d.objectives.filter(o => !o.system).length, tasks: t, subtasks: s, risks: d.risks.length, milestones: d.milestones.length, dependencies: d.dependencies.length };
+}
+function readBackups() { try { return JSON.parse(localStorage.getItem(LS_BACKUPS) || '[]'); } catch (e) { return []; } }
+function snapshot(reason) {
+  try {
+    computedFields();
+    let list = readBackups();
+    const c = countsOf(data);
+    list.unshift({ at: new Date().toISOString(), reason, name: data.project.name, counts: c, json: JSON.stringify(data) });
+    list = list.slice(0, 8);
+    for (;;) {
+      try { localStorage.setItem(LS_BACKUPS, JSON.stringify(list)); break; }
+      catch (e) { if (list.length <= 1) throw e; list.pop(); }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function loadLocal() {
+  let raw = null;
+  try { raw = localStorage.getItem(LS_KEY); } catch (e) { ui.storageOk = false; return { status: 'unavailable' }; }
+  if (!raw) return { status: 'empty' };
+  try {
+    const r = parseProject(JSON.parse(raw));
+    if (r.errors.length) return { status: 'corrupt', errors: r.errors };
+    data = r.data; return { status: 'ok' };
+  } catch (e) { return { status: 'corrupt', errors: [String(e.message || e)] }; }
+}
+function download(name, text, mime) {
+  const blob = new Blob([text], { type: (mime || 'application/json') + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 800);
+}
+function stampName(prefix, ext) { const t = todayISO(); const n = new Date(); return `${prefix}_${t}_${pad2(n.getHours())}${pad2(n.getMinutes())}.${ext}`; }
+function exportJSON(kind) {
+  computedFields();
+  data.meta.lastExportedAt = new Date().toISOString();
+  saveLocal();
+  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), JSON.stringify(data, null, 2));
+}
+
+/* =====================================================================
+   UI infrastructure: icons, small components, modals, toasts, tooltips
+   ===================================================================== */
+const ICONS = {
+  dashboard: '<rect x="3" y="3" width="7" height="9" rx="1.8"/><rect x="14" y="3" width="7" height="5" rx="1.8"/><rect x="14" y="12" width="7" height="9" rx="1.8"/><rect x="3" y="16" width="7" height="5" rx="1.8"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  tasks: '<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 4.5M3.5 12l1.5 1.5 2.5-3M3.5 18l1.5 1.5 2.5-3"/>',
+  roadmap: '<path d="M4 6h7M8 12h12M6 18h9"/><circle cx="4" cy="6" r="0.5"/>',
+  risk: '<path d="M12 3.5l10 17.5H2z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  diamond: '<path d="M12 2.5l9 9.5-9 9.5L3 12z"/>',
+  report: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  chevron: '<path d="M9 6l6 6-6 6"/>',
+  print: '<path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/>',
+  download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  save: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h7M8 21v-7h8v7"/>',
+  ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  shield: '<path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  refresh: '<path d="M20 5v5h-5M4 19v-5h5"/><path d="M5.5 9A7 7 0 0 1 19 10M18.5 15A7 7 0 0 1 5 14"/>'
+};
+const icon = (n, s = 18) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+const pill = (st, label) => `<span class="pill st-${st}"><i></i>${esc(label || STATUS_LABEL[st] || st)}</span>`;
+const prioChip = p => `<span class="prio prio-${esc(String(p).toLowerCase())}">${esc(p)}</span>`;
+const idChip = id => `<span class="idchip">${esc(id)}</span>`;
+const AV_COLORS = ['#5b5bd6', '#0ea5a4', '#e5484d', '#f59e0b', '#8b5cf6', '#2563eb', '#db2777', '#16a34a'];
+function avatar(name, withName = true) {
+  if (!name || !name.trim()) return '<span class="muted small">Unassigned</span>';
+  const parts = name.trim().split(/\s+/);
+  const ini = ((parts[0][0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return `<span class="avatar-wrap"><span class="avatar" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(ini)}</span>${withName ? `<span class="av-name">${esc(name)}</span>` : ''}</span>`;
+}
+const pbar = (p, st) => `<div class="pbar st-${st}" role="progressbar" aria-valuenow="${pct(p)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct(p)}%"></i></div>`;
+function forecastText(it) {
+  if (!it.forecastStart && !it.forecastEnd) return '';
+  const fs = it.forecastStart || it.startDate, fe = it.forecastEnd || it.endDate;
+  const slip = dayNum(fe) - dayNum(it.endDate);
+  const tag = slip > 0 ? `<span class="slip bad">+${slip}d</span>` : slip < 0 ? `<span class="slip good">${slip}d</span>` : '';
+  return `<span class="fc">Forecast ${esc(rangeText(fs, fe))} ${tag}</span>`;
+}
+function emptyState(title, text, btnHtml = '') {
+  return `<div class="empty"><div class="empty-ic">${icon('target', 30)}</div><h3>${esc(title)}</h3><p>${text}</p>${btnHtml}</div>`;
+}
+
+/* ---------- toasts ---------- */
+function toast(msg, type = 'ok', ms = 3200) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type; el.setAttribute('role', 'status');
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 300); }, ms);
+}
+
+/* ---------- modal + confirm (native <dialog>) ---------- */
+function closeModal() { const d = $('#modal'); if (d.open) d.close(); d.innerHTML = ''; }
+function openModal({ title, html, saveLabel = 'Save', onSave, wide = false, hideSave = false, danger = false, cancelLabel = 'Cancel', onOpen }) {
+  const dlg = $('#modal');
+  dlg.innerHTML = `<form class="modal-card ${wide ? 'wide' : ''}" novalidate>
+    <header><h3>${esc(title)}</h3><button type="button" class="icon-btn" data-modal-close aria-label="Close">${icon('x')}</button></header>
+    <div class="modal-body">${html}</div>
+    <div class="form-error modal-err" id="formError" role="alert" hidden></div>
+    <footer><button type="button" class="btn ghost" data-modal-close>${esc(cancelLabel)}</button>${hideSave ? '' : `<button type="button" data-modal-save class="btn ${danger ? 'danger' : 'primary'}">${esc(saveLabel)}</button>`}</footer></form>`;
+  const form = $('form', dlg);
+  // Saving is driven by button clicks / Enter, NOT by native form submission (which is blocked when the
+  // page runs inside a sandboxed viewer without "allow-forms").
+  const doSave = () => {
+    if (!onSave) { closeModal(); return; }
+    const r = onSave(form);
+    $$('.invalid', form).forEach(x => x.classList.remove('invalid'));
+    if (r && r.error) {
+      const fe = $('#formError', dlg); fe.textContent = r.error; fe.hidden = false;
+      const bad = r.field && form.elements[r.field];
+      if (bad) { bad.classList.add('invalid'); bad.scrollIntoView({ block: 'center' }); try { bad.focus(); } catch (e) { /* ignore */ } }
+      return;
+    }
+    closeModal();
+  };
+  form.addEventListener('submit', e => { e.preventDefault(); doSave(); });
+  form.addEventListener('click', e => { if (e.target.closest('[data-modal-save]')) { e.preventDefault(); doSave(); } });
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'file' && e.target.type !== 'checkbox' && !e.isComposing) { e.preventDefault(); doSave(); } });
+  if (!dlg.open) { try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); } }
+  // when the start date changes, the end date follows it unless the user already moved it later
+  const sd = form.elements.startDate, ed = form.elements.endDate;
+  if (sd && ed && sd.type === 'date') {
+    let prev = sd.value;
+    sd.addEventListener('change', () => { if (!ed.value || ed.value === prev || (sd.value && dayNum(ed.value) < dayNum(sd.value))) ed.value = sd.value; prev = sd.value; });
+  }
+  if (onOpen) onOpen(form);
+  const first = $('input:not([type=hidden]):not([disabled]),select,textarea', form);
+  if (first && !('ontouchstart' in window)) first.focus();
+  return form;
+}
+function confirmDialog({ title = 'Are you sure?', message = '', html = '', okLabel = 'Confirm', danger = false }) {
+  return new Promise(res => {
+    const d = $('#confirm');
+    d.innerHTML = `<div class="modal-card small"><header><h3>${esc(title)}</h3></header>
+      <div class="modal-body"><p class="confirm-msg">${message}</p>${html}</div>
+      <footer><button type="button" data-confirm="cancel" value="cancel" class="btn ghost">Cancel</button><button type="button" data-confirm="ok" value="ok" class="btn ${danger ? 'danger' : 'primary'}" autofocus>${esc(okLabel)}</button></footer></div>`;
+    d.returnValue = '';
+    d.addEventListener('close', () => res(d.returnValue === 'ok'), { once: true });
+    d.showModal();
+  });
+}
+function infoDialog({ title, html }) {
+  return new Promise(res => {
+    const d = $('#confirm');
+    d.innerHTML = `<div class="modal-card"><header><h3>${esc(title)}</h3></header><div class="modal-body">${html}</div><footer><button type="button" data-confirm="ok" value="ok" class="btn primary" autofocus>OK</button></footer></div>`;
+    d.addEventListener('close', () => res(), { once: true });
+    d.showModal();
+  });
+}
+
+/* ---------- tooltip ---------- */
+function initTooltip() {
+  const tip = $('#tip');
+  const place = e => {
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + 14, y = e.clientY + 16;
+    if (x + w > window.innerWidth - 8) x = Math.max(8, e.clientX - w - 14);
+    if (y + h > window.innerHeight - 8) y = Math.max(8, e.clientY - h - 14);
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  };
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if (!el) { tip.hidden = true; return; }
+    tip.textContent = el.dataset.tip; tip.hidden = false; place(e);
+  });
+  document.addEventListener('mousemove', e => { if (!tip.hidden) place(e); });
+  document.addEventListener('mouseleave', () => { tip.hidden = true; });
+  document.addEventListener('scroll', () => { tip.hidden = true; }, true);
+}
+
+/* ---------- form helpers ---------- */
+const fld = (label, inner, cls = '', hint = '') => `<label class="fld ${cls}"><span class="fl">${label}</span>${inner}${hint ? `<small class="hint">${hint}</small>` : ''}</label>`;
+const inp = (name, val = '', attrs = '') => `<input name="${name}" value="${esc(val)}" ${attrs}>`;
+const dateInp = (name, val = '', attrs = '') => `<input type="date" name="${name}" value="${esc(val)}" ${attrs}>`;
+const txt = (name, val = '', rows = 3, attrs = '') => `<textarea name="${name}" rows="${rows}" ${attrs}>${esc(val)}</textarea>`;
+const sel = (name, opts, val, attrs = '') => `<select name="${name}" ${attrs}>${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`; }).join('')}</select>`;
+const ownerList = () => {
+  const s = new Set();
+  data.objectives.forEach(o => { if (o.owner) s.add(o.owner); o.tasks.forEach(t => { if (t.owner) s.add(t.owner); t.subtasks.forEach(x => { if (x.owner) s.add(x.owner); }); }); });
+  data.risks.forEach(r => { if (r.owner) s.add(r.owner); });
+  if (data.project.manager) s.add(data.project.manager);
+  return Array.from(s).sort((a, b) => a.localeCompare(b));
+};
+const ownerDatalist = () => `<datalist id="owners">${ownerList().map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+function notesBlock(notes) {
+  const hist = (notes || []).slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('');
+  return `<div class="fld full"><span class="fl">Notes &amp; updates</span>
+    ${hist ? `<ul class="notes">${hist}</ul>` : ''}
+    <textarea name="newNote" rows="2" placeholder="Add a note or progress update (dated automatically)…"></textarea></div>`;
+}
+function pushNote(item, text) { text = (text || '').trim(); if (text) { item.notes = item.notes || []; item.notes.push({ date: todayISO(), text }); } }
+const val = (form, name) => { const el = form.elements[name]; return el ? (el.type === 'checkbox' ? el.checked : el.value.trim()) : ''; };
+function dateWarning(start, end, pStart, pEnd, what) {
+  if (!start || !end || !pStart || !pEnd) return '';
+  if (dayNum(start) < dayNum(pStart) || dayNum(end) > dayNum(pEnd)) return `Note: dates fall outside the ${what}'s dates (${rangeText(pStart, pEnd)}).`;
+  return '';
+}
+
+/* ---------- dependency editor (embedded in objective / task / subtask forms) ---------- */
+function itemOptions(excludeId, kinds) {
+  const out = [];
+  if (kinds.includes('objective')) realObjs().forEach(o => out.push([o.id, `${o.id} · ${o.name}`, 'Objectives']));
+  if (kinds.includes('task')) data.objectives.forEach(o => o.tasks.forEach(t => {
+    out.push([t.id, `${t.id} · ${t.name}`, `Tasks — ${o.name}`]);
+    t.subtasks.forEach(s => out.push([s.id, `${s.id} · ${s.name}`, `Subtasks — ${t.name}`]));
+  }));
+  return out.filter(x => x[0] !== excludeId);
+}
+function groupedSelect(name, opts, val, placeholder) {
+  const groups = [];
+  opts.forEach(o => { let g = groups.find(x => x.l === o[2]); if (!g) { g = { l: o[2], items: [] }; groups.push(g); } g.items.push(o); });
+  return `<select name="${name}"><option value="">${esc(placeholder)}</option>${groups.map(g => `<optgroup label="${esc(g.l)}">${g.items.map(o => `<option value="${esc(o[0])}" ${o[0] === val ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</optgroup>`).join('')}</select>`;
+}
+function depTargetControl(type, d, selfId) {
+  if (type === 'task') return groupedSelect('dTo', itemOptions(selfId, ['task']), d.toId, 'Select task / subtask…');
+  if (type === 'objective') return groupedSelect('dTo', itemOptions(selfId, ['objective']), d.toId, 'Select objective…');
+  const ph = type === 'recovery' ? 'e.g. Tier-1 DR site ready' : 'e.g. Backup storage array';
+  return `<input name="dTo" list="assets" value="${esc(d.assetName || '')}" placeholder="${ph}">`;
+}
+const assetDatalist = () => {
+  const s = new Set(); data.dependencies.forEach(x => { if (x.assetName) s.add(x.assetName); });
+  return `<datalist id="assets">${Array.from(s).sort().map(a => `<option value="${esc(a)}">`).join('')}</datalist>`;
+};
+function depRowHtml(d, selfId) {
+  return `<div class="dep-row" data-dep-id="${esc(d.id || '')}">
+    ${sel('dType', Object.entries(DEP_TYPES), d.type || 'task')}
+    <span class="dep-target">${depTargetControl(d.type || 'task', d, selfId)}</span>
+    ${sel('dStatus', DEP_STATUS.map(s => [s, cap(s)]), d.status || 'open')}
+    <input name="dNote" value="${esc(d.note || '')}" placeholder="Note (optional)">
+    <button type="button" class="icon-btn danger" data-action="dep-row-del" aria-label="Remove dependency">${icon('trash', 16)}</button></div>`;
+}
+function depEditorHtml(fromId) {
+  const rows = fromId ? data.dependencies.filter(x => x.fromId === fromId) : [];
+  return `<div class="fld full" data-depeditor data-self="${esc(fromId || '')}"><span class="fl">Dependencies <small class="hint inline">(what this item depends on — tasks, objectives, assets or recovery capabilities)</small></span>
+    <div class="dep-list">${rows.map(r => depRowHtml(r, fromId)).join('')}</div>
+    <button type="button" class="btn small ghost" data-action="dep-row-add">${icon('plus', 14)} Add dependency</button>${assetDatalist()}</div>`;
+}
+function collectDeps(form) {
+  const out = [];
+  let err = '';
+  $$('.dep-row', form).forEach(r => {
+    const type = $('[name=dType]', r).value, to = $('[name=dTo]', r).value.trim();
+    if (!to) { err = 'Each dependency needs a target — choose one or remove the empty row.'; return; }
+    const d = { id: r.dataset.depId || '', type, toId: '', assetName: '', note: $('[name=dNote]', r).value.trim(), status: $('[name=dStatus]', r).value };
+    if (type === 'task' || type === 'objective') d.toId = to; else d.assetName = to;
+    out.push(d);
+  });
+  return { list: out, error: err };
+}
+function applyDeps(fromId, list) {
+  const keep = data.dependencies.filter(x => x.fromId !== fromId);
+  const old = new Map(data.dependencies.filter(x => x.fromId === fromId).map(x => [x.id, x]));
+  const mine = list.map(d => ({ id: d.id && old.has(d.id) ? d.id : nextId('dependency'), type: d.type, fromId, toId: d.toId, assetName: d.assetName, note: d.note, status: d.status }));
+  data.dependencies = keep.concat(mine);
+}
+
+/* ---------- generic delegated handlers for modal inner widgets ---------- */
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-confirm]');
+  if (c) { const d = $('#confirm'); d.returnValue = c.dataset.confirm; d.close(c.dataset.confirm); }
+});
+let downOnBackdrop = false;
+document.addEventListener('mousedown', e => { downOnBackdrop = e.target === $('#modal'); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-modal-close]');
+  if (t) { e.preventDefault(); closeModal(); return; }
+  // close only on a genuine click on the backdrop (not a drag that started inside the form)
+  if (e.target === $('#modal') && downOnBackdrop) closeModal();
+});
+document.addEventListener('change', e => {
+  const sel = e.target;
+  if (sel.name === 'dType') {
+    const row = sel.closest('.dep-row') || sel.closest('form'), editor = sel.closest('[data-depeditor]');
+    $('.dep-target', row).innerHTML = depTargetControl(sel.value, {}, editor ? editor.dataset.self : (row.dataset.self || ''));
+  }
+});
+
+/* =====================================================================
+   Forms (modals): objective, task / subtask, risk, dependency, milestone,
+   blocker, plus confirm-and-delete flows
+   ===================================================================== */
+function dateErr(s, e, fs, fe) {
+  if (!parseISO(s) || !parseISO(e)) return 'A valid start date and end date are required.';
+  if (dayNum(e) < dayNum(s)) return 'The end date cannot be before the start date.';
+  if ((fs && !parseISO(fs)) || (fe && !parseISO(fe))) return 'Forecast dates must be valid dates.';
+  if (dayNum(fe || e) < dayNum(fs || s)) return 'The forecast end cannot be before the forecast start.';
+  return '';
+}
+function forecastFields(v) {
+  return `<details class="full fc-details" ${v.forecastStart || v.forecastEnd ? 'open' : ''}><summary>Revised forecast dates <small class="hint inline">(optional — the baseline dates above never change automatically)</small></summary>
+    <div class="fgrid">${fld('Forecast start', dateInp('forecastStart', v.forecastStart))}${fld('Forecast end', dateInp('forecastEnd', v.forecastEnd))}</div></details>`;
+}
+function blockerFields(v) {
+  return `<div class="fld full blockbox"><label class="chk"><input type="checkbox" name="blocked" ${v.blocked ? 'checked' : ''}> <b>Blocked</b> — work cannot proceed</label>
+    ${txt('blocker', v.blocker, 2, 'placeholder="What is blocking this? Who needs to act?"')}</div>`;
+}
+
+/* ---------------- Objective ---------------- */
+function objectiveModal(id) {
+  const o = id ? IDX.objective.get(id).item : null;
+  const v = o || { name: '', description: '', owner: '', priority: 'Medium', startDate: todayISO(), endDate: todayISO(), forecastStart: '', forecastEnd: '', status: 'auto', blocked: false, blocker: '', notes: [] };
+  const info = o ? D.obj.get(o.id) : null;
+  const html = `<div class="fgrid">
+    ${o ? `<div class="full calc-box">${idChip(o.id)} ${pill(info.status)} <span class="muted">Progress is calculated automatically from tasks:</span> <b>${pct(info.progress)}%</b> (${info.taskDone}/${info.taskCount} tasks complete)</div>` : ''}
+    ${fld('Objective name *', inp('name', v.name, 'required maxlength="160" placeholder="e.g. Modernise backup platform"'), 'full')}
+    ${fld('Description', txt('description', v.description, 3), 'full')}
+    ${fld('Owner', inp('owner', v.owner, 'list="owners" placeholder="Name"') + ownerDatalist())}
+    ${fld('Priority', sel('priority', PRIORITIES, v.priority))}
+    ${fld('Start date *', dateInp('startDate', v.startDate, 'required'))}
+    ${fld('Target completion *', dateInp('endDate', v.endDate, 'required'))}
+    ${forecastFields(v)}
+    ${fld('Status override', sel('status', [['auto', 'Automatic (calculated from tasks)'], ['at-risk', 'Flag as At risk'], ['on-hold', 'Put On hold']], v.status), 'full', 'Normally leave on Automatic. Blocked, delayed and completed are always derived.')}
+    ${blockerFields(v)}
+    ${depEditorHtml(o ? o.id : '')}
+    ${notesBlock(v.notes)}
+  </div>`;
+  openModal({
+    title: o ? `Edit objective · ${o.id}` : 'New objective', html, wide: true, saveLabel: o ? 'Save changes' : 'Create objective',
+    onSave: f => {
+      const name = val(f, 'name');
+      if (!name) return { error: 'Please enter an objective name.', field: 'name' };
+      const de = dateErr(val(f, 'startDate'), val(f, 'endDate'), val(f, 'forecastStart'), val(f, 'forecastEnd'));
+      if (de) return { error: de, field: 'startDate' };
+      const deps = collectDeps(f); if (deps.error) return { error: deps.error };
+      const rec = o || { id: nextId('objective'), tasks: [], notes: [] };
+      Object.assign(rec, { name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), status: val(f, 'status'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') });
+      pushNote(rec, val(f, 'newNote'));
+      if (!o) data.objectives.push(rec);
+      applyDeps(rec.id, deps.list);
+      afterChange(); toast(o ? 'Objective updated' : 'Objective created');
+    }
+  });
+}
+async function deleteObjectiveFlow(id) {
+  const r = IDX.objective.get(id); if (!r) return;
+  const o = r.item, nT = o.tasks.length, nS = o.tasks.reduce((a, t) => a + t.subtasks.length, 0);
+  const ok = await confirmDialog({
+    title: 'Delete objective?', danger: true, okLabel: 'Delete objective',
+    message: `This permanently deletes <b>${esc(o.name)}</b>${nT ? ` together with its <b>${nT}</b> task${nT === 1 ? '' : 's'}${nS ? ` and <b>${nS}</b> subtask${nS === 1 ? '' : 's'}` : ''}` : ''}, and removes any dependencies that reference them. This cannot be undone (export or back up first if unsure).`
+  });
+  if (!ok) return;
+  deleteObjective(id); afterChange(); toast('Objective deleted');
+}
+
+/* ---------------- Task / Subtask ---------------- */
+function workItemModal(kind, id, ctx = {}) {
+  const isTask = kind === 'task';
+  const rec = id ? (isTask ? IDX.task.get(id) : IDX.sub.get(id)) : null;
+  const item = rec ? rec.item : null;
+  let parentId;
+  if (rec) parentId = isTask ? (rec.obj.system ? '' : rec.obj.id) : rec.task.id;
+  else if (isTask) parentId = ctx.parentId !== undefined ? ctx.parentId : (realObjs().length === 1 ? realObjs()[0].id : '');
+  else parentId = ctx.parentId || '';
+  if (!isTask && !parentId) { toast('Create a task first.', 'warn'); return; }
+  const parent = isTask ? (parentId ? IDX.objective.get(parentId).item : { startDate: data.project.startDate, endDate: data.project.endDate, owner: '', priority: 'Medium' }) : IDX.task.get(parentId).item;
+  const hasSubs = isTask && item && item.subtasks.length > 0;
+  const v = item || { name: '', description: '', owner: parent.owner || '', priority: parent.priority || 'Medium', startDate: todayISO(), endDate: todayISO(), forecastStart: '', forecastEnd: '', status: 'not-started', progress: 0, blocked: false, blocker: '', notes: [] };
+  const info = item ? D.node.get(item.id) : null;
+  let parentSel;
+  if (isTask) parentSel = sel('parent', [['', '— No objective yet (unassigned) —']].concat(realObjs().map(o => [o.id, `${o.id} · ${o.name}`])), parentId);
+  else parentSel = `<select name="parent">${data.objectives.filter(o => o.tasks.length).map(o => `<optgroup label="${esc(o.name)}">${o.tasks.map(t => `<option value="${esc(t.id)}" ${t.id === parentId ? 'selected' : ''}>${esc(t.id + ' · ' + t.name)}</option>`).join('')}</optgroup>`).join('')}</select>`;
+  const statusOpts = hasSubs
+    ? [['auto', 'Automatic (from subtasks)'], ['at-risk', 'Flag as At risk'], ['on-hold', 'Put On hold']]
+    : LEAF_STATUSES.map(s => [s, STATUS_LABEL[s]]);
+  const stVal = hasSubs ? (FLAG_STATUSES.includes(v.status) ? v.status : 'auto') : v.status;
+  const progressBlock = hasSubs
+    ? `<div class="fld"><span class="fl">Progress</span><div class="auto-prog">${pbar(info.progress, info.status)}<b>${pct(info.progress)}%</b><small class="hint">Automatic — average of ${info.subCount} subtask${info.subCount === 1 ? '' : 's'}</small></div></div>`
+    : `<div class="fld"><span class="fl">Progress (%)</span><div class="prog-ed"><input type="number" name="progress" min="0" max="100" step="1" value="${v.progress}">
+        <span class="quick">${[0, 25, 50, 75, 100].map(n => `<button type="button" class="chip-btn" data-action="set-prog" data-v="${n}">${n}%</button>`).join('')}</span></div></div>`;
+  const html = `<div class="fgrid">
+    ${item ? `<div class="full calc-box">${idChip(item.id)} ${pill(info.status)} <b>${pct(info.progress)}%</b> <span class="muted">${isTask ? 'Part of ' + esc(rec.obj.name) : 'Subtask of ' + esc(rec.task.name)}</span></div>` : ''}
+    ${fld(isTask ? 'Objective' : 'Parent task *', parentSel, 'full', isTask ? 'Optional — you can leave a task unassigned and link it to an objective later.' : '')}
+    ${fld(`${isTask ? 'Task' : 'Subtask'} name *`, inp('name', v.name, 'required maxlength="160"'), 'full')}
+    ${fld('Description', txt('description', v.description, 2), 'full')}
+    ${fld('Owner', inp('owner', v.owner, 'list="owners" placeholder="Name"') + ownerDatalist())}
+    ${fld('Priority', sel('priority', PRIORITIES, v.priority))}
+    ${fld('Start date *', dateInp('startDate', v.startDate, 'required'))}
+    ${fld('End date *', dateInp('endDate', v.endDate, 'required'))}
+    ${forecastFields(v)}
+    ${fld('Status', sel('status', statusOpts, stVal))}
+    ${progressBlock}
+    ${blockerFields(v)}
+    ${depEditorHtml(item ? item.id : '')}
+    ${isTask ? fld('Quick-add subtasks', txt('quickSubs', '', 3, 'placeholder="One subtask per line…"'), 'full', 'Each line becomes a subtask with this task\'s owner and dates. Tasks with subtasks calculate progress automatically.') : ''}
+    ${notesBlock(v.notes)}
+    <div class="full warn-note" id="dateWarn" hidden></div>
+  </div>`;
+  openModal({
+    title: item ? `Edit ${isTask ? 'task' : 'subtask'} · ${item.id}` : `New ${isTask ? 'task' : 'subtask'}`, html, wide: true, saveLabel: item ? 'Save changes' : `Create ${isTask ? 'task' : 'subtask'}`,
+    onOpen: f => {
+      const checkWarn = () => {
+        const pid = f.elements.parent.value; if (!pid) { const el0 = $('#dateWarn', f); el0.hidden = true; return; }
+        const par = isTask ? IDX.objective.get(pid) : IDX.task.get(pid);
+        const w = par ? dateWarning(val(f, 'startDate'), val(f, 'endDate'), par.item.startDate, par.item.endDate, isTask ? 'objective' : 'parent task') : '';
+        const el = $('#dateWarn', f); el.textContent = w; el.hidden = !w;
+      };
+      f.addEventListener('input', e => { if (['startDate', 'endDate', 'parent'].includes(e.target.name)) checkWarn(); });
+      // keep status and progress consistent while editing
+      const st = f.elements.status, pr = f.elements.progress;
+      if (pr && st) {
+        st.addEventListener('change', () => { if (st.value === 'completed') pr.value = 100; else if (Number(pr.value) >= 100) pr.value = 90; });
+        pr.addEventListener('input', () => { const n = Number(pr.value); if (n >= 100) st.value = 'completed'; else if (st.value === 'completed') st.value = n > 0 ? 'in-progress' : 'not-started'; else if (n > 0 && st.value === 'not-started') st.value = 'in-progress'; });
+      }
+      checkWarn();
+    },
+    onSave: f => {
+      const name = val(f, 'name');
+      if (!name) return { error: `Please enter a ${isTask ? 'task' : 'subtask'} name.`, field: 'name' };
+      const de = dateErr(val(f, 'startDate'), val(f, 'endDate'), val(f, 'forecastStart'), val(f, 'forecastEnd'));
+      if (de) return { error: de, field: 'startDate' };
+      const newParent = val(f, 'parent'); if (!isTask && !newParent) return { error: 'Please choose a parent task.', field: 'parent' };
+      const deps = collectDeps(f); if (deps.error) return { error: deps.error };
+      const quick = isTask ? val(f, 'quickSubs').split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
+      const rec2 = item || (isTask ? { id: nextId('task'), subtasks: [], notes: [] } : { id: nextId('subtask'), notes: [] });
+      const common = { name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') };
+      Object.assign(rec2, common);
+      const willHaveSubs = isTask && (rec2.subtasks.length + quick.length) > 0;
+      const stSel = val(f, 'status');
+      if (willHaveSubs) { rec2.status = FLAG_STATUSES.includes(stSel) ? stSel : 'auto'; }
+      else {
+        rec2.status = stSel === 'auto' ? 'not-started' : stSel;
+        const pv = f.elements.progress ? Number(f.elements.progress.value) : rec2.progress;
+        rec2.progress = isFinite(pv) ? Math.max(0, Math.min(100, Math.round(pv))) : 0;
+        if (rec2.status === 'completed') rec2.progress = 100;
+      }
+      pushNote(rec2, val(f, 'newNote'));
+      // attach to (possibly new) parent
+      if (isTask) {
+        const target = newParent ? IDX.objective.get(newParent).item : ensureUnassigned();
+        if (item && rec.obj.id !== target.id) { rec.obj.tasks = rec.obj.tasks.filter(x => x.id !== item.id); }
+        if (!item || rec.obj.id !== target.id) target.tasks.push(rec2);
+        quick.forEach(line => target.tasks.find(t => t.id === rec2.id).subtasks.push({
+          id: nextId('subtask'), name: line, description: '', owner: rec2.owner, priority: rec2.priority, startDate: rec2.startDate, endDate: rec2.endDate,
+          forecastStart: '', forecastEnd: '', status: 'not-started', progress: 0, blocked: false, blocker: '', notes: []
+        }));
+      } else {
+        const target = IDX.task.get(newParent).item;
+        if (item && rec.task.id !== newParent) { rec.task.subtasks = rec.task.subtasks.filter(x => x.id !== item.id); }
+        if (!item || rec.task.id !== newParent) target.subtasks.push(rec2);
+      }
+      applyDeps(rec2.id, deps.list);
+      afterChange(); toast(item ? 'Changes saved' : `${isTask ? 'Task' : 'Subtask'} created`);
+      if (isTask && quick.length) ui.collapsed.delete(rec2.id);
+    }
+  });
+}
+async function deleteTaskFlow(id) {
+  const r = IDX.task.get(id); if (!r) return;
+  const n = r.item.subtasks.length;
+  const ok = await confirmDialog({ title: 'Delete task?', danger: true, okLabel: 'Delete task', message: `Delete <b>${esc(r.item.name)}</b>${n ? ` and its <b>${n}</b> subtask${n === 1 ? '' : 's'}` : ''}? Related dependencies will be removed. This cannot be undone.` });
+  if (!ok) return;
+  deleteTask(id); afterChange(); toast('Task deleted');
+}
+async function deleteSubFlow(id) {
+  const r = IDX.sub.get(id); if (!r) return;
+  const ok = await confirmDialog({ title: 'Delete subtask?', danger: true, okLabel: 'Delete subtask', message: `Delete subtask <b>${esc(r.item.name)}</b>? The progress of <b>${esc(r.task.name)}</b> will be recalculated.` });
+  if (!ok) return;
+  deleteSub(id); afterChange(); toast('Subtask deleted');
+}
+function openItem(id) {
+  const n = D.node.get(id); if (!n) return;
+  if (n.kind === 'obj') objectiveModal(id); else if (n.kind === 'task') workItemModal('task', id); else workItemModal('sub', id);
+}
+
+/* ---------------- Blocker flag ---------------- */
+function blockerModal() {
+  const opts = [];
+  data.objectives.forEach(o => o.tasks.forEach(t => {
+    if (!D.node.get(t.id).done) opts.push([t.id, `${t.id} · ${t.name}`, `Tasks — ${o.name}`]);
+    t.subtasks.forEach(s => { if (!D.node.get(s.id).done) opts.push([s.id, `${s.id} · ${s.name}`, `Subtasks — ${t.name}`]); });
+  }));
+  if (!opts.length) { toast('There are no open tasks to flag.', 'warn'); return; }
+  openModal({
+    title: 'Flag a blocker', saveLabel: 'Flag as blocked',
+    html: `<div class="fgrid">${fld('Task or subtask *', groupedSelect('target', opts, '', 'Select…'), 'full')}${fld('What is blocking it? *', txt('blocker', '', 3, 'placeholder="Describe the blocker and who needs to act"'), 'full')}</div>`,
+    onSave: f => {
+      const id = val(f, 'target'), text = val(f, 'blocker');
+      if (!id) return { error: 'Choose the blocked task or subtask.' };
+      if (!text) return { error: 'Please describe the blocker.' };
+      const it = D.node.get(id).item; it.blocked = true; it.blocker = text;
+      afterChange(); toast('Blocker recorded', 'warn');
+    }
+  });
+}
+function resolveBlocker(id) {
+  const n = D.node.get(id); if (!n) return;
+  n.item.blocked = false; pushNote(n.item, 'Blocker resolved: ' + (n.item.blocker || '(no description)'));
+  n.item.blocker = '';
+  afterChange(); toast('Blocker resolved');
+}
+
+/* ---------------- Risk ---------------- */
+const riskScore = r => r.impact * r.likelihood;
+const riskBand = s => s >= 15 ? 'critical' : s >= 10 ? 'high' : s >= 5 ? 'medium' : 'low';
+function relatedOptions() {
+  const out = [];
+  realObjs().forEach(o => { out.push([o.id, `${o.id} · ${o.name}`, 'Objectives']); });
+  data.objectives.forEach(o => o.tasks.forEach(t => { out.push([t.id, `${t.id} · ${t.name}`, `Tasks — ${o.name}`]); }));
+  data.objectives.forEach(o => o.tasks.forEach(t => t.subtasks.forEach(s => out.push([s.id, `${s.id} · ${s.name}`, `Subtasks — ${t.name}`]))));
+  return out;
+}
+function riskModal(id) {
+  const r = id ? data.risks.find(x => x.id === id) : null;
+  const v = r || { description: '', impact: 3, likelihood: 3, owner: '', mitigation: '', status: 'open', relatedId: '' };
+  const html = `<div class="fgrid">
+    ${fld('Risk description *', txt('description', v.description, 3, 'required'), 'full')}
+    ${fld('Impact', sel('impact', IMPACT.map((l, i) => [i + 1, `${i + 1} · ${l}`]), v.impact))}
+    ${fld('Likelihood', sel('likelihood', LIKELIHOOD.map((l, i) => [i + 1, `${i + 1} · ${l}`]), v.likelihood))}
+    <div class="full calc-box" id="riskCalc"></div>
+    ${fld('Risk owner', inp('owner', v.owner, 'list="owners"') + ownerDatalist())}
+    ${fld('Status', sel('status', RISK_STATUS.map(s => [s, cap(s)]), v.status))}
+    ${fld('Mitigation', txt('mitigation', v.mitigation, 3), 'full')}
+    ${fld('Related objective / task', groupedSelect('relatedId', relatedOptions(), v.relatedId, '— None / programme-wide —'), 'full')}
+  </div>`;
+  openModal({
+    title: r ? `Edit risk · ${r.id}` : 'New risk', html, wide: true, saveLabel: r ? 'Save changes' : 'Add risk',
+    onOpen: f => {
+      const upd = () => { const s = f.elements.impact.value * f.elements.likelihood.value; $('#riskCalc', f).innerHTML = `Rating: <b>${s}</b> ${`<span class="band band-${riskBand(s)}">${cap(riskBand(s))}</span>`} <span class="muted">(impact × likelihood)</span>`; };
+      f.addEventListener('change', upd); upd();
+    },
+    onSave: f => {
+      const description = val(f, 'description');
+      if (!description) return { error: 'Please describe the risk.' };
+      const rec = r || { id: nextId('risk') };
+      Object.assign(rec, { description, impact: +val(f, 'impact'), likelihood: +val(f, 'likelihood'), owner: val(f, 'owner'), mitigation: val(f, 'mitigation'), status: val(f, 'status'), relatedId: val(f, 'relatedId') });
+      if (!r) data.risks.push(rec);
+      afterChange(); toast(r ? 'Risk updated' : 'Risk added');
+    }
+  });
+}
+async function deleteRiskFlow(id) {
+  const ok = await confirmDialog({ title: 'Delete risk?', danger: true, okLabel: 'Delete risk', message: `Delete risk <b>${esc(id)}</b>? This cannot be undone.` });
+  if (!ok) return;
+  data.risks = data.risks.filter(x => x.id !== id); afterChange(); toast('Risk deleted');
+}
+
+/* ---------------- Dependency (register) ---------------- */
+function depModal(id) {
+  const d = id ? data.dependencies.find(x => x.id === id) : null;
+  const v = d || { type: 'task', fromId: '', toId: '', assetName: '', note: '', status: 'open' };
+  const html = `<div class="fgrid" data-self="">
+    ${fld('This item… (dependent) *', groupedSelect('fromId', itemOptions('', ['objective', 'task']), v.fromId, 'Select objective / task / subtask…'), 'full')}
+    ${fld('…depends on (type)', sel('dType', Object.entries(DEP_TYPES), v.type))}
+    ${fld('Status', sel('dStatus', DEP_STATUS.map(s => [s, cap(s)]), v.status))}
+    <label class="fld full"><span class="fl">Depends on *</span><span class="dep-target">${depTargetControl(v.type, v, v.fromId)}</span></label>
+    ${fld('Note', txt('dNote', v.note, 2), 'full')}
+    ${assetDatalist()}
+  </div>`;
+  openModal({
+    title: d ? `Edit dependency · ${d.id}` : 'New dependency', html, saveLabel: d ? 'Save changes' : 'Add dependency',
+    onSave: f => {
+      const fromId = val(f, 'fromId'), type = val(f, 'dType'), to = val(f, 'dTo');
+      if (!fromId) return { error: 'Choose the dependent objective, task or subtask.' };
+      if (!to) return { error: 'Choose or enter what it depends on.' };
+      if (to === fromId) return { error: 'An item cannot depend on itself.' };
+      const rec = d || { id: nextId('dependency') };
+      Object.assign(rec, { type, fromId, toId: (type === 'task' || type === 'objective') ? to : '', assetName: (type === 'task' || type === 'objective') ? '' : to, note: val(f, 'dNote'), status: val(f, 'dStatus') });
+      if (!d) data.dependencies.push(rec);
+      afterChange(); toast(d ? 'Dependency updated' : 'Dependency added');
+    }
+  });
+}
+async function deleteDepFlow(id) {
+  const ok = await confirmDialog({ title: 'Delete dependency?', danger: true, okLabel: 'Delete', message: `Delete dependency <b>${esc(id)}</b>?` });
+  if (!ok) return;
+  data.dependencies = data.dependencies.filter(x => x.id !== id); afterChange(); toast('Dependency deleted');
+}
+
+/* ---------------- Milestone ---------------- */
+function milestoneModal(id) {
+  const m = id ? data.milestones.find(x => x.id === id) : null;
+  const v = m || { name: '', description: '', date: '', objectiveId: '', status: 'planned' };
+  const html = `<div class="fgrid">
+    ${fld('Milestone name *', inp('name', v.name, 'required maxlength="120"'), 'full')}
+    ${fld('Description', txt('description', v.description, 2), 'full')}
+    ${fld('Target date *', dateInp('date', v.date, 'required'))}
+    ${fld('Status', sel('status', MS_STATUS.map(s => [s, cap(s)]), v.status))}
+    ${fld('Related objective', sel('objectiveId', [['', '— Programme-level —']].concat(realObjs().map(o => [o.id, `${o.id} · ${o.name}`])), v.objectiveId), 'full')}
+  </div>`;
+  openModal({
+    title: m ? `Edit milestone · ${m.id}` : 'New milestone', html, saveLabel: m ? 'Save changes' : 'Add milestone',
+    onSave: f => {
+      const name = val(f, 'name'); if (!name) return { error: 'Please enter a milestone name.' };
+      if (!parseISO(val(f, 'date'))) return { error: 'Please choose a valid target date.' };
+      const rec = m || { id: nextId('milestone') };
+      Object.assign(rec, { name, description: val(f, 'description'), date: val(f, 'date'), objectiveId: val(f, 'objectiveId'), status: val(f, 'status') });
+      if (!m) data.milestones.push(rec);
+      afterChange(); toast(m ? 'Milestone updated' : 'Milestone added');
+    }
+  });
+}
+async function deleteMilestoneFlow(id) {
+  const m = data.milestones.find(x => x.id === id);
+  const ok = await confirmDialog({ title: 'Delete milestone?', danger: true, okLabel: 'Delete', message: `Delete milestone <b>${esc(m ? m.name : id)}</b>?` });
+  if (!ok) return;
+  data.milestones = data.milestones.filter(x => x.id !== id); afterChange(); toast('Milestone deleted');
+}
+function msEffective(m) {
+  if (m.status === 'achieved') return 'achieved';
+  const late = dayNum(m.date) < D.T;
+  if (late) return 'missed';
+  return m.status;
+}
+const MS_LABEL = { planned: 'Planned', 'at-risk': 'At risk', achieved: 'Achieved', missed: 'Overdue' };
+const MS_STATUS_CLASS = { planned: 'in-progress', 'at-risk': 'at-risk', achieved: 'completed', missed: 'blocked' };
+
+/* =====================================================================
+   Add several tasks at once: pasted list (one per line) and/or CSV file
+   ===================================================================== */
+function parseCSV(text) {
+  text = String(text).replace(/^﻿/, '');
+  const first = text.split(/\r?\n/).find(l => l.trim()) || '';
+  const count = ch => (first.match(new RegExp('\\' + ch, 'g')) || []).length;
+  const delim = count(';') > count(',') && count(';') > count('\t') ? ';' : (count('\t') > count(',') ? '\t' : ',');
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(x => x.trim())) rows.push(row); row = []; }
+    else cell += c;
+  }
+  row.push(cell); if (row.some(x => x.trim())) rows.push(row);
+  return rows;
+}
+function looseDate(s) {
+  s = (s || '').trim();
+  if (parseISO(s)) return s;
+  const m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/.exec(s);   // day/month/year (Irish / UK style)
+  if (m) { const iso = `${m[3]}-${pad2(+m[2])}-${pad2(+m[1])}`; if (parseISO(iso)) return iso; }
+  return '';
+}
+function findObjective(txt) {
+  txt = (txt || '').trim().toLowerCase(); if (!txt) return null;
+  return realObjs().find(o => o.id.toLowerCase() === txt || o.name.trim().toLowerCase() === txt) || null;
+}
+/* CSV rows -> [{name, owner, start, end, priority, objective, level}] ; header row is optional */
+function csvToTaskRows(rows) {
+  if (!rows.length) return { items: [], header: false };
+  const norm = s => s.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const h = rows[0].map(norm);
+  const idx = names => h.findIndex(x => names.includes(x));
+  const nameCol = idx(['task', 'name', 'taskname', 'title', 'tasks']);
+  const header = nameCol >= 0;
+  const col = header ? { name: nameCol, owner: idx(['owner', 'assignee', 'assignedto']), start: idx(['start', 'startdate']), end: idx(['end', 'enddate', 'due', 'duedate', 'targetdate']), prio: idx(['priority']), obj: idx(['objective']) } : { name: 0, owner: -1, start: -1, end: -1, prio: -1, obj: -1 };
+  const get = (r, c) => c >= 0 && r[c] !== undefined ? r[c].trim() : '';
+  const items = rows.slice(header ? 1 : 0).map(r => ({ name: get(r, col.name), owner: get(r, col.owner), start: looseDate(get(r, col.start)), end: looseDate(get(r, col.end)), priority: PRIORITIES.find(p => p.toLowerCase() === get(r, col.prio).toLowerCase()) || '', objective: get(r, col.obj), level: 0 })).filter(x => x.name);
+  return { items, header, extra: header && (col.owner >= 0 || col.start >= 0 || col.end >= 0 || col.prio >= 0 || col.obj >= 0) };
+}
+/* pasted text -> rows. Indented / "-" lines become subtasks of the line above. */
+function textToTaskRows(text) {
+  const out = [];
+  String(text).split(/\r?\n/).forEach(line => {
+    if (!line.trim()) return;
+    const sub = /^(\s{2,}|\t|[-•*–]\s+)/.test(line) && out.some(x => x.level === 0);
+    let name = line.replace(/^(\s+|[-•*–]\s+)+/, '').split('\t')[0].replace(/^"|"$/g, '').trim();
+    if (name) out.push({ name, owner: '', start: '', end: '', priority: '', objective: '', level: sub ? 1 : 0 });
+  });
+  return out;
+}
+const CSV_TEMPLATE = 'Task,Owner,Start,End,Priority,Objective\r\nExample task - replace me,Jane Doe,2026-11-02,2026-11-30,High,\r\nAnother task (only the Task column is required),,,,,\r\n';
+
+function bulkTasksModal(ctx = {}) {
+  let csvItems = [], csvInfo = '';
+  const startObj = ctx.parentId !== undefined ? ctx.parentId : '';
+  const objOpts = [['', '— No objective yet (unassigned) —']].concat(realObjs().map(o => [o.id, `${o.id} · ${o.name}`]));
+  const base = startObj ? IDX.objective.get(startObj).item : data.project;
+  const html = `<div class="fgrid">
+    <p class="full muted small">Create many tasks in one go. Type or paste names below (one per line), import a CSV file, or both. Only the name is required — everything else uses the defaults you set here and can be edited later.</p>
+    ${fld('Add to objective', sel('parent', objOpts, startObj), 'full')}
+    ${fld('Default owner', inp('owner', '', 'list="owners" placeholder="Optional"') + ownerDatalist())}
+    ${fld('Default priority', sel('priority', PRIORITIES, 'Medium'))}
+    ${fld('Default start date *', dateInp('startDate', todayISO()))}
+    ${fld('Default end date *', dateInp('endDate', todayISO()))}
+    ${fld('Task names — one per line', txt('names', '', 8, 'placeholder="Inventory servers\nClassify recovery tiers\n   Draft tier model      (indent = subtask of the task above)\n   Business sign-off"'), 'full', 'Tip: indent a line (spaces, Tab or “- ”) to make it a <b>subtask</b> of the task above. You can paste a column straight from Excel.')}
+    <div class="fld full csv-box"><span class="fl">Or import a CSV file</span>
+      <div class="csv-row"><input type="file" name="csvFile" accept=".csv,.txt,text/csv"><button type="button" class="btn small ghost" data-action="download-csv-template">${icon('download', 14)} Download CSV template</button></div>
+      <small class="hint">Just a list of names works. With a header row you may also include Owner, Start, End (YYYY-MM-DD or DD/MM/YYYY), Priority and Objective (name or ID) columns.</small>
+      <div id="csvInfo" class="csv-info" hidden></div></div>
+    <div class="full calc-box" id="bulkPreview"></div>
+  </div>`;
+  openModal({
+    title: 'Add several tasks', html, wide: true, saveLabel: 'Create tasks',
+    onOpen: f => {
+      const rowsNow = () => textToTaskRows(f.elements.names.value).concat(csvItems);
+      const preview = () => {
+        const r = rowsNow(), t = r.filter(x => x.level === 0).length, s = r.length - t;
+        $('#bulkPreview', f).innerHTML = r.length ? `Ready to create <b>${t}</b> task${t === 1 ? '' : 's'}${s ? ` and <b>${s}</b> subtask${s === 1 ? '' : 's'}` : ''}.` : '<span class="muted">Nothing to create yet.</span>';
+      };
+      f.addEventListener('input', e => { if (e.target.name === 'names') preview(); });
+      f.elements.csvFile.addEventListener('change', () => {
+        const file = f.elements.csvFile.files[0]; const info = $('#csvInfo', f);
+        csvItems = []; info.hidden = true; if (!file) { preview(); return; }
+        readFileText(file).then(txt => {
+          const res = csvToTaskRows(parseCSV(txt));
+          csvItems = res.items;
+          info.hidden = false;
+          info.textContent = res.items.length ? `${file.name}: ${res.items.length} row${res.items.length === 1 ? '' : 's'} found${res.header ? ' (header row detected' + (res.extra ? ', extra columns will be used' : '') + ')' : ' (no header — first column used as the task name)'}.` : `${file.name}: no task names found.`;
+          preview();
+        }).catch(() => { info.hidden = false; info.textContent = 'Could not read that file.'; });
+      });
+      preview();
+    },
+    onSave: f => {
+      const rows = textToTaskRows(f.elements.names.value).concat(csvItems);
+      if (!rows.length) return { error: 'Enter at least one task name or choose a CSV file.', field: 'names' };
+      if (rows.length > 1000) return { error: 'That is a lot — please import at most 1,000 rows at a time.' };
+      const dS = val(f, 'startDate'), dE = val(f, 'endDate');
+      if (!parseISO(dS) || !parseISO(dE) || dayNum(dE) < dayNum(dS)) return { error: 'Please set a valid default start and end date (end on or after start).', field: 'startDate' };
+      const dOwner = val(f, 'owner'), dPrio = val(f, 'priority'), pid = val(f, 'parent');
+      const defObj = pid ? IDX.objective.get(pid).item : null;
+      let nT = 0, nS = 0, nUn = 0, lastTask = null, missingObj = 0;
+      rows.forEach(r => {
+        if (r.level === 1 && lastTask) {
+          lastTask.subtasks.push({ id: nextId('subtask'), name: r.name, description: '', owner: r.owner || lastTask.owner, priority: r.priority || lastTask.priority, startDate: lastTask.startDate, endDate: lastTask.endDate, forecastStart: '', forecastEnd: '', status: 'not-started', progress: 0, blocked: false, blocker: '', notes: [] });
+          nS++; return;
+        }
+        let target = defObj;
+        if (r.objective) { const m = findObjective(r.objective); if (m) target = m; else missingObj++; }
+        const tgt = target || ensureUnassigned();
+        let s = r.start || dS, e = r.end || dE;
+        if (dayNum(e) < dayNum(s)) { s = dS; e = dE; }
+        const t = { id: nextId('task'), name: r.name, description: '', owner: r.owner || dOwner, priority: r.priority || dPrio, startDate: s, endDate: e, forecastStart: '', forecastEnd: '', status: 'not-started', progress: 0, blocked: false, blocker: '', notes: [], subtasks: [] };
+        tgt.tasks.push(t); lastTask = t; nT++; if (tgt.system) nUn++;
+      });
+      afterChange();
+      toast(`Created ${nT} task${nT === 1 ? '' : 's'}${nS ? ` and ${nS} subtask${nS === 1 ? '' : 's'}` : ''}${nUn ? ` (${nUn} unassigned)` : ''}.${missingObj ? ` ${missingObj} row(s) named an objective that wasn't found.` : ''}`, missingObj ? 'warn' : 'ok', missingObj ? 6000 : 3500);
+    }
+  });
+}
+
+/* =====================================================================
+   Views: dashboard, objectives, tasks, risks, dependencies, milestones,
+   reports & data
+   ===================================================================== */
+const pageHead = (title, sub, actions = '') => `<div class="page-head"><div><h1>${esc(title)}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div><div class="head-actions">${actions}</div></div>`;
+const btn = (label, action, extra = '', cls = '', ic = '') => `<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ic ? icon(ic, 16) : ''}${label}</button>`;
+
+/* ---------------- Dashboard ---------------- */
+function ringSvg(p) {
+  const r = 54, c = 2 * Math.PI * r, off = c * (1 - pct(p) / 100);
+  return `<svg viewBox="0 0 140 140" class="ring" role="img" aria-label="Overall progress ${pct(p)} percent"><circle cx="70" cy="70" r="${r}" class="ring-bg"/><circle cx="70" cy="70" r="${r}" class="ring-fg" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 70 70)"/><text x="70" y="75" text-anchor="middle" class="ring-t">${pct(p)}%</text><text x="70" y="96" text-anchor="middle" class="ring-s">overall</text></svg>`;
+}
+function relDays(iso) {
+  const n = dayNum(iso) - D.T;
+  if (n === 0) return 'today';
+  return n > 0 ? `in ${n} day${n === 1 ? '' : 's'}` : `${-n} day${n === -1 ? '' : 's'} overdue`;
+}
+function viewDashboard() {
+  const t = D.totals, p = data.project, empty = !realObjs().length && !t.tasks;
+  const kpi = (n, label, sub, cls, go = 'tasks') => `<button class="kpi ${cls}" data-action="goto" data-view="${go}"><span class="kpi-n">${n}</span><span class="kpi-l">${label}</span><span class="kpi-s">${sub}</span></button>`;
+  const upcoming = data.milestones.filter(m => m.status !== 'achieved').sort((a, b) => dayNum(a.date) - dayNum(b.date)).slice(0, 5);
+  const topRisks = data.risks.filter(r => r.status !== 'closed').sort((a, b) => riskScore(b) - riskScore(a)).slice(0, 4);
+  const blocked = D.blockedItems.slice(0, 5);
+  const overdue = D.overdueItems.filter(x => x.kind !== 'obj').slice(0, 4);
+  const stTotal = t.objectives || 1;
+  const segs = STATUS_ORDER.filter(k => t.byObjStatus[k] > 0).map(k => `<i class="sg st-${k}" style="flex:${t.byObjStatus[k]}" data-tip="${STATUS_LABEL[k]}: ${t.byObjStatus[k]}"></i>`).join('');
+  let h = pageHead('Dashboard', `${esc(p.name)} · ${esc(rangeText(p.startDate, p.endDate))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}`,
+    btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'));
+  if (empty) {
+    h += `<div class="card onboard"><div class="onb-ic">${icon('shield', 34)}</div><div><h2>Welcome — your programme is empty</h2>
+      <p>Start by defining what the programme must achieve. Everything else — progress, status, dashboard and roadmap — is calculated from your objectives and tasks.</p>
+      <ol class="onb-steps"><li><b>Add an objective</b> with an owner and start / target dates.</li><li><b>Break it into tasks</b> and subtasks; update their % complete as work progresses.</li><li><b>Open the Roadmap</b> — it builds itself from your data (Management and Technical views).</li></ol>
+      <div class="onb-actions">${btn('Create first objective', 'obj-new', '', 'primary', 'plus')}${btn('Add tasks without an objective', 'tasks-bulk', '', '', 'plus')}${btn('Import a JSON file', 'import-json', '', '', 'upload')}</div></div></div>`;
+  }
+  h += `<div class="dash-top"><div class="card overall"><h3>Overall progress</h3>${ringSvg(t.overall)}<p class="muted small center">Average of ${t.objectives} objective${t.objectives === 1 ? '' : 's'}, each the average of its tasks</p></div>
+    <div class="kpis">
+      ${kpi(t.objectives, 'Objectives', 'in programme', 'k-brand', 'objectives')}
+      ${kpi(t.tasks, 'Tasks', `${t.subtasks} subtask${t.subtasks === 1 ? '' : 's'}`, 'k-brand')}
+      ${kpi(t.tasksDone, 'Completed', 'tasks', 'k-done')}
+      ${kpi(t.tasksStarted, 'In progress', 'tasks started', 'k-prog')}
+      ${kpi(t.tasksBlocked, 'Blocked', 'tasks', 'k-block', 'risks')}
+      ${kpi(t.tasksOverdue, 'Overdue', 'tasks past end date', 'k-late')}
+    </div></div>`;
+  h += `<div class="grid-2">
+    <div class="card"><div class="card-h"><h3>Objectives by status</h3></div>
+      ${t.objectives ? `<div class="stack">${segs}</div>` : '<p class="muted">No objectives yet.</p>'}
+      <div class="legend">${STATUS_ORDER.map(k => `<span class="lg ${t.byObjStatus[k] ? '' : 'dim'}"><i class="dot st-${k}"></i>${STATUS_LABEL[k]} <b>${t.byObjStatus[k]}</b></span>`).join('')}</div>
+      ${realObjs().length ? `<div class="obj-mini">${realObjs().slice(0, 6).map(o => { const i = D.obj.get(o.id); return `<div class="om"><span class="om-n" title="${esc(o.name)}">${esc(o.name)}</span>${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>`; }).join('')}${realObjs().length > 6 ? `<p class="muted small">+ ${realObjs().length - 6} more</p>` : ''}</div>` : ''}
+    </div>
+    <div class="card"><div class="card-h"><h3>Upcoming milestones</h3>${btn('All', 'goto', 'data-view="milestones"', 'small ghost')}</div>
+      ${upcoming.length ? `<ul class="list">${upcoming.map(m => { const e = msEffective(m); return `<li><span class="ms-dot ms-${e}"></span><div class="li-main"><b>${esc(m.name)}</b><small>${esc(fmtDate(m.date))}${m.objectiveId ? ' · ' + esc(nameOf(m.objectiveId)) : ''}</small></div><span class="rel ${e === 'missed' ? 'bad' : ''}">${relDays(m.date)}</span></li>`; }).join('')}</ul>` : '<p class="muted">No upcoming milestones. Add delivery milestones to show them on the roadmap.</p>'}
+    </div>
+    <div class="card span2"><div class="card-h"><h3>Key risks &amp; blockers</h3>${btn('Open', 'goto', 'data-view="risks"', 'small ghost')}</div>
+      <div class="cols-3">
+        <div><h4 class="sec-t t-red">${icon('ban', 15)} Blocked (${D.blockedItems.length})</h4>${blocked.length ? `<ul class="list">${blocked.map(b => `<li><div class="li-main"><b>${esc(b.name)}</b><small>${esc(b.blocker || 'No description')} ${b.owner ? '· ' + esc(b.owner) : ''}</small></div></li>`).join('')}</ul>` : '<p class="muted small">Nothing is blocked.</p>'}</div>
+        <div><h4 class="sec-t t-amber">${icon('clock', 15)} Overdue (${D.overdueItems.length})</h4>${overdue.length ? `<ul class="list">${overdue.map(b => `<li><div class="li-main"><b>${esc(b.item.name)}</b><small>Due ${esc(fmtDate(b.item.forecastEnd || b.item.endDate))}${b.item.owner ? ' · ' + esc(b.item.owner) : ''}</small></div></li>`).join('')}</ul>` : '<p class="muted small">Nothing is overdue.</p>'}</div>
+        <div><h4 class="sec-t t-brand">${icon('risk', 15)} Top open risks</h4>${topRisks.length ? `<ul class="list">${topRisks.map(r => `<li><span class="band band-${riskBand(riskScore(r))}">${riskScore(r)}</span><div class="li-main"><b>${esc(r.description.length > 80 ? r.description.slice(0, 78) + '…' : r.description)}</b><small>${esc(r.owner || 'No owner')}</small></div></li>`).join('')}</ul>` : '<p class="muted small">No open risks recorded.</p>'}</div>
+      </div></div>
+    <div class="card span2"><div class="card-h"><h3>Roadmap preview</h3>${btn('Open roadmap', 'goto', 'data-view="roadmap"', 'small', 'roadmap')}</div>${mgmtRoadmapHtml({ compact: true })}</div>
+  </div>`;
+  return h;
+}
+
+/* ---------------- Objectives ---------------- */
+function objCard(o) {
+  const i = D.obj.get(o.id), open = ui.objOpen.has(o.id);
+  const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-edit" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
+  return `<article class="obj-card st-${i.status}">
+    <div class="obj-top"><div class="obj-ids">${idChip(o.id)}${prioChip(o.priority)}</div>${pill(i.status)}</div>
+    <h3 class="obj-title">${esc(o.name)}</h3>
+    ${o.description ? `<p class="obj-desc">${esc(o.description)}</p>` : ''}
+    <div class="obj-meta">${avatar(o.owner)}<span class="dates">${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>
+    ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
+    <div class="obj-prog">${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>
+    <div class="obj-stats"><span>${i.taskDone}/${i.taskCount} tasks complete</span>${i.subCount ? `<span>${i.subCount} subtasks</span>` : ''}${i.taskBlocked ? `<span class="t-red">${i.taskBlocked} blocked</span>` : ''}${!i.taskCount ? '<span class="muted">No tasks yet — progress 0%</span>' : ''}</div>
+    ${o.blocked ? `<div class="callout red">${icon('ban', 15)} ${esc(o.blocker || 'Blocked')}</div>` : ''}
+    <div class="obj-actions">
+      ${btn(open ? 'Hide tasks' : `View tasks (${o.tasks.length})`, 'obj-toggle', `data-id="${esc(o.id)}"`, 'small ghost')}
+      ${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small ghost', 'plus')}
+      <span class="sp"></span>
+      <button class="icon-btn" data-action="obj-edit" data-id="${esc(o.id)}" aria-label="Edit objective" data-tip="Edit">${icon('edit', 17)}</button>
+      <button class="icon-btn danger" data-action="obj-del" data-id="${esc(o.id)}" aria-label="Delete objective" data-tip="Delete">${icon('trash', 17)}</button>
+    </div>
+    ${open ? `<div class="obj-tasks">${tasks || '<p class="muted small">No tasks yet.</p>'}</div>` : ''}
+  </article>`;
+}
+function viewObjectives() {
+  const f = ui.objFilter, q = f.q.toLowerCase();
+  const list = realObjs().filter(o => {
+    const i = D.obj.get(o.id);
+    if (f.status !== 'all' && i.status !== f.status) return false;
+    return !q || (o.name + ' ' + o.description + ' ' + o.owner + ' ' + o.id).toLowerCase().includes(q);
+  });
+  let h = pageHead('Objectives', 'What the programme must achieve. Progress and status are calculated automatically from the tasks beneath each objective.', btn('New objective', 'obj-new', '', 'primary', 'plus'));
+  if (!realObjs().length) return h + emptyState('No objectives yet', 'Create your first objective, then break it down into tasks and subtasks.', btn('Create objective', 'obj-new', '', 'primary', 'plus'));
+  h += `<div class="toolbar"><input type="search" id="objQ" class="search" placeholder="Search objectives…" value="${esc(f.q)}" data-f="objFilter.q" aria-label="Search objectives">
+    <select data-f="objFilter.status" aria-label="Filter by status"><option value="all">All statuses</option>${STATUS_ORDER.map(s => `<option value="${s}" ${f.status === s ? 'selected' : ''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
+    <span class="muted small">${list.length} of ${realObjs().length}</span></div>`;
+  h += list.length ? `<div class="obj-grid">${list.map(objCard).join('')}</div>` : '<p class="muted">No objectives match the filters.</p>';
+  return h;
+}
+
+/* ---------------- Tasks & subtasks ---------------- */
+function ownerCell(n) { return avatar(n); }
+function taskRowHtml(kind, item, parentLabel) {
+  const info = D.node.get(item.id), isSub = kind === 'sub';
+  const hasSubs = !isSub && item.subtasks.length > 0, collapsed = ui.collapsed.has(item.id);
+  const deps = D.depsFrom.get(item.id) || [];
+  const chips = [];
+  if (info.blocked || info.ownBlocked) chips.push(`<span class="chip red" data-tip="${esc(item.blocker || 'Blocked')}">${icon('ban', 12)} Blocked</span>`);
+  if (info.overdue) chips.push('<span class="chip amber">Overdue</span>');
+  if (deps.length) chips.push(`<span class="chip" data-tip="${esc(deps.map(d => '• ' + depTargetName(d)).join('\n'))}">${icon('link', 12)} ${deps.length}</span>`);
+  if (info.ownBlocked && item.blocker) chips.push(`<span class="blocker-txt">${esc(item.blocker)}</span>`);
+  const prog = info.leaf
+    ? `<div class="prog-ctl"><input type="range" min="0" max="100" step="5" value="${pct(info.progress)}" data-progress data-id="${esc(item.id)}" aria-label="Progress for ${esc(item.name)}" class="st-${info.status}"><span class="ptxt">${pct(info.progress)}%</span></div>`
+    : `<div class="prog-auto">${pbar(info.progress, info.status)}<span class="ptxt">${pct(info.progress)}%</span><small class="auto">auto</small></div>`;
+  return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}">
+    <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
+      <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
+      <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}</div></div></div>
+    <div class="t-owner" data-label="Owner">${ownerCell(item.owner)}</div>
+    <div class="t-dates" data-label="Dates"><span>${esc(rangeText(item.startDate, item.endDate))}</span>${forecastText(item) ? `<br>${forecastText(item)}` : ''}</div>
+    <div class="t-prio" data-label="Priority">${prioChip(item.priority)}</div>
+    <div class="t-stat" data-label="Status">${pill(info.status)}</div>
+    <div class="t-prog" data-label="Progress">${prog}</div>
+    <div class="t-act">${isSub ? '' : `<button class="icon-btn" data-action="sub-new" data-task="${esc(item.id)}" data-tip="Add subtask" aria-label="Add subtask">${icon('plus', 16)}</button>`}
+      <button class="icon-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}" data-tip="Edit" aria-label="Edit">${icon('edit', 16)}</button>
+      <button class="icon-btn danger" data-action="${isSub ? 'sub-del' : 'task-del'}" data-id="${esc(item.id)}" data-tip="Delete" aria-label="Delete">${icon('trash', 16)}</button></div>
+  </div>`;
+}
+function depTargetName(d) {
+  if (d.toId) return `${d.type === 'objective' ? 'Objective' : 'Task'}: ${nameOf(d.toId)}`;
+  return `${d.type === 'recovery' ? 'Recovery' : 'Asset'}: ${d.assetName}`;
+}
+function viewTasks() {
+  let h = pageHead('Tasks & Subtasks', 'Every task belongs to an objective. Tasks with subtasks calculate their progress automatically; others are updated by hand.', btn('New task', 'task-new', '', 'primary', 'plus') + btn('Add several / import CSV', 'tasks-bulk', '', '', 'plus'));
+  if (!D.totals.tasks) return h + emptyState('No tasks yet', 'Add tasks one at a time, or paste a list of names / import a CSV to create many at once. Tasks do not need an objective — link them to one later.', btn('Add several tasks', 'tasks-bulk', '', 'primary', 'plus') + ' ' + btn('New task', 'task-new', '', '', 'plus') + ' ' + btn('Create objective', 'obj-new', '', '', 'plus'));
+  const f = ui.taskFilter, q = f.q.toLowerCase();
+  const owners = ownerList();
+  h += `<div class="toolbar wrap"><input type="search" id="taskQ" class="search" placeholder="Search tasks, owners, IDs…" value="${esc(f.q)}" data-f="taskFilter.q" aria-label="Search tasks">
+    <select data-f="taskFilter.obj" aria-label="Objective"><option value="all">All objectives</option>${data.objectives.map(o => `<option value="${esc(o.id)}" ${f.obj === o.id ? 'selected' : ''}>${o.system ? 'Unassigned tasks' : esc(o.name)}</option>`).join('')}</select>
+    <select data-f="taskFilter.status" aria-label="Status"><option value="all">All statuses</option>${STATUS_ORDER.map(s => `<option value="${s}" ${f.status === s ? 'selected' : ''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
+    <select data-f="taskFilter.owner" aria-label="Owner"><option value="all">All owners</option>${owners.map(o => `<option ${f.owner === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>
+    <label class="chk"><input type="checkbox" data-f="taskFilter.blockedOnly" ${f.blockedOnly ? 'checked' : ''}> Blocked only</label>
+    <label class="chk"><input type="checkbox" data-f="taskFilter.hideDone" ${f.hideDone ? 'checked' : ''}> Hide completed</label></div>`;
+  const text = x => (x.name + ' ' + x.owner + ' ' + x.id + ' ' + x.description).toLowerCase();
+  const passes = (item) => {
+    const i = D.node.get(item.id);
+    if (f.status !== 'all' && i.status !== f.status) return false;
+    if (f.owner !== 'all' && item.owner !== f.owner) return false;
+    if (f.blockedOnly && !i.blocked) return false;
+    if (f.hideDone && i.done) return false;
+    return !q || text(item).includes(q);
+  };
+  let rows = '', shownT = 0, shownS = 0;
+  const filtering = q || f.status !== 'all' || f.owner !== 'all' || f.blockedOnly || f.hideDone;
+  data.objectives.forEach(o => {
+    if (f.obj !== 'all' && f.obj !== o.id) return;
+    const oi = D.obj.get(o.id);
+    let body = '';
+    o.tasks.forEach(t => {
+      const subsPass = t.subtasks.filter(passes);
+      const tPass = passes(t);
+      if (filtering && !tPass && !subsPass.length) return;
+      shownT++;
+      body += taskRowHtml('task', t);
+      const showSubs = filtering ? (tPass ? t.subtasks.filter(s => !(f.hideDone && D.node.get(s.id).done)) : subsPass) : t.subtasks;
+      if (!ui.collapsed.has(t.id) || filtering) showSubs.forEach(s => { shownS++; body += taskRowHtml('sub', s); });
+    });
+    if (filtering && !body) return;
+    const hdr = o.system
+      ? `<div class="t-group-h st-not-started"><div class="tg-l"><span class="tg-bar"></span><div><h3>Unassigned tasks</h3><small><span class="muted">Not linked to an objective yet — open a task and choose an objective when you are ready.</span></small></div></div><div class="tg-r">${btn('Task', 'task-new', 'data-obj="unassigned"', 'small', 'plus')}</div></div>`
+      : `<div class="t-group-h st-${oi.status}"><div class="tg-l"><span class="tg-bar"></span><div><h3>${esc(o.name)}</h3><small>${idChip(o.id)} ${pill(oi.status)} <span class="muted">${esc(rangeText(o.startDate, o.endDate))}${o.owner ? ' · ' + esc(o.owner) : ''}</span></small></div></div>
+      <div class="tg-r"><div class="tg-prog">${pbar(oi.progress, oi.status)}<b>${pct(oi.progress)}%</b></div>${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small', 'plus')}</div></div>`;
+    rows += `<section class="t-group">${hdr}
+      <div class="t-head"><div>Task / subtask</div><div>Owner</div><div>Dates</div><div>Priority</div><div>Status</div><div>Progress</div><div></div></div>
+      ${body || '<p class="muted pad">No tasks yet. Use “Task” to add one.</p>'}</section>`;
+  });
+  h += rows || '<p class="muted">No tasks match the filters.</p>';
+  h += `<p class="muted small foot">Showing ${shownT} task${shownT === 1 ? '' : 's'} and ${shownS} subtask${shownS === 1 ? '' : 's'}. Drag a slider to update progress — parent task and objective progress, status, dashboard and roadmap update instantly.</p>`;
+  return h;
+}
+
+/* ---------------- Risks & blockers ---------------- */
+function heatmapHtml() {
+  const open = data.risks.filter(r => r.status !== 'closed');
+  let rows = '';
+  for (let l = 5; l >= 1; l--) {
+    rows += `<tr><th>${l}</th>${[1, 2, 3, 4, 5].map(i => { const n = open.filter(r => r.impact === i && r.likelihood === l).length; return `<td class="hm band-${riskBand(i * l)}">${n || ''}</td>`; }).join('')}</tr>`;
+  }
+  return `<table class="heat"><caption>Likelihood ↑ / Impact →</caption><tbody>${rows}<tr><th></th>${[1, 2, 3, 4, 5].map(i => `<th>${i}</th>`).join('')}</tr></tbody></table>`;
+}
+function viewRisks() {
+  const tab = ui.riskTab;
+  let h = pageHead('Risks & Blockers', 'Record risks with mitigation, and track blocked work that needs unblocking.',
+    tab === 'risks' ? btn('New risk', 'risk-new', '', 'primary', 'plus') : btn('Flag blocker', 'blocker-flag', '', 'primary', 'ban'));
+  h += `<div class="tabs"><button class="${tab === 'risks' ? 'on' : ''}" data-action="tab" data-group="riskTab" data-tab="risks">Risk register <span class="count">${data.risks.length}</span></button>
+    <button class="${tab === 'blockers' ? 'on' : ''}" data-action="tab" data-group="riskTab" data-tab="blockers">Blockers <span class="count ${D.blockedItems.length ? 'red' : ''}">${D.blockedItems.length}</span></button></div>`;
+  if (tab === 'risks') {
+    if (!data.risks.length) return h + emptyState('No risks recorded', 'Capture programme risks with impact, likelihood, owner and mitigation.', btn('Add first risk', 'risk-new', '', 'primary', 'plus'));
+    const sorted = data.risks.slice().sort((a, b) => (a.status === 'closed') - (b.status === 'closed') || riskScore(b) - riskScore(a));
+    h += `<div class="risk-layout"><div class="card heat-card"><h4>Heat map <small class="muted">(open risks)</small></h4>${heatmapHtml()}</div><div class="r-table">
+      <div class="r-head"><div>Risk</div><div>Impact</div><div>Likelihood</div><div>Rating</div><div>Owner</div><div>Status</div><div></div></div>
+      ${sorted.map(r => { const s = riskScore(r); return `<div class="r-row ${r.status === 'closed' ? 'closed' : ''}">
+        <div class="r-main"><div>${idChip(r.id)} ${r.relatedId ? `<span class="chip">${icon('link', 12)} ${esc(nameOf(r.relatedId))}</span>` : ''}</div><b>${esc(r.description)}</b>${r.mitigation ? `<small><i>Mitigation:</i> ${esc(r.mitigation)}</small>` : ''}</div>
+        <div data-label="Impact">${r.impact} · ${IMPACT[r.impact - 1]}</div><div data-label="Likelihood">${r.likelihood} · ${LIKELIHOOD[r.likelihood - 1]}</div>
+        <div data-label="Rating"><span class="band band-${riskBand(s)}">${s} · ${cap(riskBand(s))}</span></div>
+        <div data-label="Owner">${avatar(r.owner)}</div><div data-label="Status"><span class="rs rs-${r.status}">${cap(r.status)}</span></div>
+        <div class="t-act"><button class="icon-btn" data-action="risk-edit" data-id="${esc(r.id)}" aria-label="Edit risk">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="risk-del" data-id="${esc(r.id)}" aria-label="Delete risk">${icon('trash', 16)}</button></div></div>`; }).join('')}
+    </div></div>`;
+  } else {
+    if (!D.blockedItems.length) return h + emptyState('Nothing is blocked', 'Blocked tasks appear here and are highlighted on the dashboard and technical roadmap. Flag one from a task, or use “Flag blocker”.', btn('Flag a blocker', 'blocker-flag', '', 'primary', 'ban'));
+    h += `<div class="r-table b-table"><div class="r-head"><div>Blocked item</div><div>Blocker</div><div>Owner</div><div>Parent / objective</div><div></div></div>
+      ${D.blockedItems.map(b => `<div class="r-row blocked"><div class="r-main"><div>${idChip(b.id)} <span class="chip">${({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[b.kind]}</span></div><b>${esc(b.name)}</b></div>
+        <div data-label="Blocker">${esc(b.blocker || '—')}</div><div data-label="Owner">${avatar(b.owner)}</div><div data-label="Parent">${esc(b.parent || b.objective)}</div>
+        <div class="t-act">${btn('Resolve', 'blocker-resolve', `data-id="${esc(b.id)}"`, 'small', 'check')}<button class="icon-btn" data-action="open-item" data-id="${esc(b.id)}" aria-label="Edit">${icon('edit', 16)}</button></div></div>`).join('')}</div>`;
+  }
+  return h;
+}
+
+/* ---------------- Dependencies ---------------- */
+function depRegisterRow(d) {
+  const flags = [];
+  if (D.conflicts.has(d.id)) flags.push('<span class="chip amber" data-tip="The dependent item is scheduled to start before the item it depends on finishes.">⚠ Schedule conflict</span>');
+  if (D.cycle.has(d.fromId)) flags.push('<span class="chip red" data-tip="This item is part of a circular dependency chain.">⟲ Circular</span>');
+  const fromKind = kindLabel(d.fromId);
+  return `<div class="d-row"><div class="d-main">${idChip(d.id)}<span class="chip">${DEP_TYPES[d.type]}</span> ${flags.join('')}</div>
+    <div data-label="Dependent item"><small class="muted">${fromKind}</small><br><b>${esc(nameOf(d.fromId))}</b></div>
+    <div class="arrow">→</div>
+    <div data-label="Depends on"><small class="muted">${d.toId ? kindLabel(d.toId) : (d.type === 'recovery' ? 'Recovery' : 'Asset')}</small><br><b>${esc(d.toId ? nameOf(d.toId) : d.assetName)}</b></div>
+    <div data-label="Status"><span class="ds ds-${d.status}">${cap(d.status)}</span></div>
+    <div data-label="Note" class="muted">${esc(d.note || '')}</div>
+    <div class="t-act"><button class="icon-btn" data-action="dep-edit" data-id="${esc(d.id)}" aria-label="Edit">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="dep-del" data-id="${esc(d.id)}" aria-label="Delete">${icon('trash', 16)}</button></div></div>`;
+}
+function depMatrixHtml() {
+  const deps = data.dependencies;
+  const rows = Array.from(new Set(deps.map(d => d.fromId)));
+  const colMap = new Map();
+  deps.forEach(d => { const key = d.toId || `${d.type}:${d.assetName}`; if (!colMap.has(key)) colMap.set(key, { key, label: d.toId ? nameOf(d.toId) : d.assetName, kind: d.toId ? kindLabel(d.toId) : (d.type === 'recovery' ? 'Recovery' : 'Asset') }); });
+  const cols = Array.from(colMap.values()).sort((a, b) => a.kind.localeCompare(b.kind) || a.label.localeCompare(b.label));
+  const cell = (r, c) => {
+    const m = deps.filter(d => d.fromId === r && (d.toId || `${d.type}:${d.assetName}`) === c.key);
+    if (!m.length) return '<td></td>';
+    const d = m[0];
+    return `<td class="mx-on"><button class="mx-dot ds-${d.status} ${D.conflicts.has(d.id) ? 'conf' : ''}" data-action="dep-edit" data-id="${esc(d.id)}" data-tip="${esc(`${nameOf(r)} → ${c.label}\n${DEP_TYPES[d.type]} · ${cap(d.status)}${d.note ? '\n' + d.note : ''}`)}" aria-label="Dependency ${esc(d.id)}"></button></td>`;
+  };
+  return `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="corner">Depends on →<br><small>Dependent ↓</small></th>${cols.map(c => `<th class="col"><span><small>${c.kind}</small> ${esc(c.label)}</span></th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr><th class="row"><small>${kindLabel(r)}</small> ${esc(nameOf(r))}</th>${cols.map(c => cell(r, c)).join('')}</tr>`).join('')}</tbody></table>
+    <div class="legend mt"><span class="lg"><i class="dot ds-open"></i>Open</span><span class="lg"><i class="dot ds-at-risk"></i>At risk</span><span class="lg"><i class="dot ds-satisfied"></i>Satisfied</span><span class="lg"><i class="dot conf-d"></i>Schedule conflict (ring)</span></div></div>`;
+}
+function viewDependencies() {
+  const tab = ui.depTab, deps = data.dependencies;
+  let h = pageHead('Dependencies', 'Link tasks and objectives to the tasks, objectives, assets and recovery capabilities they depend on.', btn('New dependency', 'dep-new', '', 'primary', 'plus'));
+  h += `<div class="tabs"><button class="${tab === 'register' ? 'on' : ''}" data-action="tab" data-group="depTab" data-tab="register">Register <span class="count">${deps.length}</span></button>
+    <button class="${tab === 'matrix' ? 'on' : ''}" data-action="tab" data-group="depTab" data-tab="matrix">Dependency matrix</button></div>`;
+  if (!deps.length) return h + emptyState('No dependencies recorded', 'Dependencies can also be added while editing any objective, task or subtask.', btn('Add dependency', 'dep-new', '', 'primary', 'plus'));
+  if (D.cycle.size) h += `<div class="callout red">${icon('risk', 16)} Circular dependency detected involving: ${Array.from(D.cycle).map(id => esc(nameOf(id))).join(', ')}.</div>`;
+  if (D.conflicts.size) h += `<div class="callout amber">${icon('risk', 16)} ${D.conflicts.size} dependency schedule conflict${D.conflicts.size === 1 ? '' : 's'}: a dependent item starts before the item it relies on finishes.</div>`;
+  h += tab === 'register'
+    ? `<div class="d-table"><div class="d-head"><div>Type</div><div>Dependent item</div><div></div><div>Depends on</div><div>Status</div><div>Note</div><div></div></div>${deps.map(depRegisterRow).join('')}</div>`
+    : depMatrixHtml();
+  return h;
+}
+
+/* ---------------- Milestones ---------------- */
+function viewMilestones() {
+  let h = pageHead('Milestones', 'Key delivery points. Milestones appear as diamonds on the roadmap.', btn('New milestone', 'ms-new', '', 'primary', 'plus'));
+  if (!data.milestones.length) return h + emptyState('No milestones yet', 'Add delivery milestones such as “DR site ready” or “First successful failover test”.', btn('Add milestone', 'ms-new', '', 'primary', 'plus'));
+  const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
+  h += `<div class="ms-list">${list.map(m => {
+    const e = msEffective(m);
+    return `<div class="card ms-card"><div class="ms-diamond ms-${e}">${icon('diamond', 22)}</div><div class="ms-body"><div class="ms-top">${idChip(m.id)}${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</div><h3>${esc(m.name)}</h3>
+      ${m.description ? `<p class="muted">${esc(m.description)}</p>` : ''}<div class="ms-meta"><span>${icon('clock', 14)} ${esc(fmtDate(m.date))} <small class="muted">(${relDays(m.date)})</small></span>${m.objectiveId ? `<span>${icon('target', 14)} ${esc(nameOf(m.objectiveId))}</span>` : '<span class="muted">Programme-level</span>'}</div></div>
+      <div class="t-act"><button class="icon-btn" data-action="ms-edit" data-id="${esc(m.id)}" aria-label="Edit milestone">${icon('edit', 17)}</button><button class="icon-btn danger" data-action="ms-del" data-id="${esc(m.id)}" aria-label="Delete milestone">${icon('trash', 17)}</button></div></div>`;
+  }).join('')}</div>`;
+  return h;
+}
+
+/* ---------------- Reports & data management ---------------- */
+function viewReports() {
+  const c = countsOf(data), p = data.project, backups = readBackups();
+  const unexported = !data.meta.lastExportedAt || (data.meta.modifiedAt > data.meta.lastExportedAt);
+  let h = pageHead('Reports & Data Management', 'Print the roadmap, produce a status report, and move your project data between computers as JSON.');
+  h += `<div class="grid-2 rep-grid">
+    <div class="card"><h3>${icon('print', 18)} Print &amp; PDF</h3>
+      <p class="muted">Prints in landscape with colours preserved. To make a PDF, choose <b>Save as PDF</b> as the destination in the print dialog.</p>
+      <div class="btn-col">${btn('Print management roadmap', 'print-roadmap', 'data-mode="management"', 'primary', 'print')}${btn('Print technical roadmap', 'print-roadmap', 'data-mode="technical"', '', 'print')}</div></div>
+    <div class="card"><h3>${icon('report', 18)} Project status report</h3>
+      <p class="muted">A one-document summary: progress, objectives, blockers, overdue work, milestones, risks and dependencies.</p>
+      <div class="btn-col">${btn('Download status report (HTML)', 'download-report', '', 'primary', 'download')}${btn('Print / save report as PDF', 'print-report', '', '', 'print')}</div></div>
+    <div class="card span2"><h3>${icon('save', 18)} Project data (JSON)</h3>
+      <div class="data-stat"><span><b>${c.objectives}</b> objectives</span><span><b>${c.tasks}</b> tasks</span><span><b>${c.subtasks}</b> subtasks</span><span><b>${c.milestones}</b> milestones</span><span><b>${c.risks}</b> risks</span><span><b>${c.dependencies}</b> dependencies</span><span>Schema v${SCHEMA_VERSION}</span></div>
+      <p class="${unexported && (c.objectives || c.risks || c.milestones) ? 'callout amber' : 'muted'}">${unexported && (c.objectives || c.risks || c.milestones) ? icon('risk', 15) : ''}<span>${unexported && (c.objectives || c.risks || c.milestones) ? 'You have changes that have not been exported. ' : ''}Last JSON export: <b>${esc(fmtDateTime(data.meta.lastExportedAt))}</b>. Browser autosave is a convenience — <b>export regularly</b> and keep the JSON file safe; it is your master copy.</span></p>
+      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
+      <h4 class="sec-t mt">Browser backups <small class="muted">(stored in this browser only — last ${8})</small></h4>
+      ${backups.length ? `<div class="bk-list">${backups.map((b, i) => `<div class="bk"><div><b>${esc(fmtDateTime(b.at))}</b><small>${esc(b.reason)} · ${b.counts.objectives} obj, ${b.counts.tasks} tasks, ${b.counts.subtasks} subtasks</small></div><div class="btn-row">${btn('Restore', 'restore-backup', `data-i="${i}"`, 'small')}${btn('Download', 'download-backup', `data-i="${i}"`, 'small ghost')}<button class="icon-btn danger" data-action="delete-backup" data-i="${i}" aria-label="Delete backup">${icon('trash', 15)}</button></div></div>`).join('')}</div>` : '<p class="muted small">No backups yet. One is created automatically before any import, reset or restore, and when you press “Save &amp; back up now”.</p>'}
+    </div>
+    <div class="card span2"><h3>Project settings</h3>
+      <form id="settingsForm" data-submit="save-settings" class="fgrid" novalidate>
+        ${fld('Project name', inp('pname', p.name, 'required maxlength="120"'), 'full')}
+        ${fld('Description', txt('pdesc', p.description, 2), 'full')}
+        ${fld('Programme manager', inp('pmanager', p.manager, 'list="owners"') + ownerDatalist())}
+        <span></span>
+        ${fld('Timeline start', dateInp('pstart', p.startDate), '', 'First month shown on the roadmap')}
+        ${fld('Timeline end', dateInp('pend', p.endDate), '', 'Last month shown. The roadmap widens automatically if items fall outside.')}
+        <div class="full"><button class="btn primary" type="button" data-action="save-settings">Save settings</button> <span id="settingsErr" class="form-error inline" hidden></span></div>
+      </form></div>
+  </div>`;
+  return h;
+}
+function reportBodyHtml() {
+  const t = D.totals, p = data.project;
+  const upcoming = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
+  const risks = data.risks.filter(r => r.status !== 'closed').sort((a, b) => riskScore(b) - riskScore(a));
+  const atRisk = Array.from(D.task.values()).filter(x => x.status === 'at-risk' || x.status === 'delayed');
+  return `<div class="rep">
+    <div class="rep-head"><div><h1>${esc(p.name)}</h1><p>Project status report · ${esc(fmtDate(D.today))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}</p><p class="rep-sub">Timeline: ${esc(rangeText(p.startDate, p.endDate))}</p></div><div class="rep-ring">${ringSvg(t.overall)}</div></div>
+    <div class="rep-kpis"><div><b>${t.objectives}</b><span>Objectives</span></div><div><b>${t.tasks}</b><span>Tasks</span></div><div><b>${t.tasksDone}</b><span>Completed</span></div><div><b>${t.tasksStarted}</b><span>In progress</span></div><div class="r"><b>${t.tasksBlocked}</b><span>Blocked</span></div><div class="a"><b>${t.tasksOverdue}</b><span>Overdue</span></div></div>
+    <h2>Objectives</h2>
+    ${realObjs().length ? `<table><thead><tr><th>ID</th><th>Objective</th><th>Owner</th><th>Baseline</th><th>Forecast</th><th>Tasks</th><th>Progress</th><th>Status</th></tr></thead><tbody>
+    ${realObjs().map(o => { const i = D.obj.get(o.id); return `<tr><td>${esc(o.id)}</td><td><b>${esc(o.name)}</b></td><td>${esc(o.owner || '—')}</td><td>${esc(rangeText(o.startDate, o.endDate))}</td><td>${o.forecastStart || o.forecastEnd ? esc(rangeText(o.forecastStart || o.startDate, o.forecastEnd || o.endDate)) : '—'}</td><td>${i.taskDone}/${i.taskCount}</td><td><span class="rbar"><i class="st-${i.status}" style="width:${pct(i.progress)}%"></i></span> ${pct(i.progress)}%</td><td>${pill(i.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No objectives defined.</p>'}
+    <h2>Blocked work (${D.blockedItems.length})</h2>
+    ${D.blockedItems.length ? `<table><thead><tr><th>Item</th><th>Blocker</th><th>Owner</th><th>Objective</th></tr></thead><tbody>${D.blockedItems.map(b => `<tr><td><b>${esc(b.name)}</b></td><td>${esc(b.blocker || '—')}</td><td>${esc(b.owner || '—')}</td><td>${esc(b.objective)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Nothing is currently blocked.</p>'}
+    <h2>Overdue &amp; at-risk tasks (${D.overdueItems.length + atRisk.filter(x => !x.overdue).length})</h2>
+    ${(D.overdueItems.length || atRisk.length) ? `<table><thead><tr><th>Task</th><th>Owner</th><th>End date</th><th>Progress</th><th>Status</th></tr></thead><tbody>${Array.from(new Set(D.overdueItems.concat(atRisk))).filter(x => x.kind !== 'obj').map(x => `<tr><td><b>${esc(x.item.name)}</b></td><td>${esc(x.item.owner || '—')}</td><td>${esc(fmtDate(x.item.forecastEnd || x.item.endDate))}</td><td>${pct(x.progress)}%</td><td>${pill(x.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No overdue or at-risk tasks.</p>'}
+    <h2>Milestones</h2>
+    ${upcoming.length ? `<table><thead><tr><th>Milestone</th><th>Date</th><th>Objective</th><th>Status</th></tr></thead><tbody>${upcoming.map(m => { const e = msEffective(m); return `<tr><td><b>${esc(m.name)}</b></td><td>${esc(fmtDate(m.date))}</td><td>${esc(m.objectiveId ? nameOf(m.objectiveId) : 'Programme')}</td><td>${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No milestones defined.</p>'}
+    <h2>Open risks (${risks.length})</h2>
+    ${risks.length ? `<table><thead><tr><th>Risk</th><th>Rating</th><th>Owner</th><th>Mitigation</th><th>Status</th></tr></thead><tbody>${risks.map(r => `<tr><td>${esc(r.description)}</td><td><span class="band band-${riskBand(riskScore(r))}">${riskScore(r)} · ${cap(riskBand(riskScore(r)))}</span></td><td>${esc(r.owner || '—')}</td><td>${esc(r.mitigation || '—')}</td><td>${cap(r.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No open risks recorded.</p>'}
+    <h2>Open dependencies (${data.dependencies.filter(d => d.status !== 'satisfied').length})</h2>
+    ${data.dependencies.filter(d => d.status !== 'satisfied').length ? `<table><thead><tr><th>Dependent item</th><th>Depends on</th><th>Type</th><th>Status</th></tr></thead><tbody>${data.dependencies.filter(d => d.status !== 'satisfied').map(d => `<tr><td>${esc(nameOf(d.fromId))}</td><td>${esc(d.toId ? nameOf(d.toId) : d.assetName)}${D.conflicts.has(d.id) ? ' ⚠' : ''}</td><td>${DEP_TYPES[d.type]}</td><td>${cap(d.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No open dependencies.</p>'}
+    <p class="rep-foot">Generated by Backup &amp; DR Programme Manager v${APP_VERSION} · schema v${SCHEMA_VERSION}</p></div>`;
+}
+
+/* =====================================================================
+   Roadmap — generated directly from `data` + derived values on every
+   render. There is no separate roadmap dataset.
+   ===================================================================== */
+function roadmapRange() {
+  let s = dayNum(data.project.startDate), e = dayNum(data.project.endDate), extended = false;
+  if (s === null || e === null || e < s) { s = dayNum('2026-10-01'); e = dayNum('2027-06-30'); }
+  const eat = (a, b) => {
+    const x = dayNum(a), y = dayNum(b || a);
+    if (x !== null && x < s) { s = x; extended = true; }
+    if (y !== null && y > e) { e = y; extended = true; }
+  };
+  data.objectives.forEach(o => {
+    if (!o.system) { eat(o.startDate, o.endDate); eat(o.forecastStart || o.startDate, o.forecastEnd || o.endDate); }
+    o.tasks.forEach(t => {
+      eat(t.startDate, t.endDate); eat(t.forecastStart || t.startDate, t.forecastEnd || t.endDate);
+      t.subtasks.forEach(x => { eat(x.startDate, x.endDate); eat(x.forecastStart || x.startDate, x.forecastEnd || x.endDate); });
+    });
+  });
+  data.milestones.forEach(m => eat(m.date));
+  const sd = new Date(s * DAY), ed = new Date(e * DAY);
+  let y = sd.getUTCFullYear(), m = sd.getUTCMonth();
+  const ey = ed.getUTCFullYear(), em = ed.getUTCMonth(), months = [];
+  while ((y < ey || (y === ey && m <= em)) && months.length < 72) {
+    const st = Date.UTC(y, m, 1) / DAY, nx = Date.UTC(y, m + 1, 1) / DAY;
+    months.push({ y, mo: m + 1, start: st, days: nx - st });
+    m++; if (m > 11) { m = 0; y++; }
+  }
+  const last = months[months.length - 1];
+  const start = months[0].start, end = last.start + last.days - 1;
+  return { start, end, total: end - start + 1, months, extended };
+}
+function mkPos(R) {
+  return (a, b) => {
+    const x = dayNum(a), y = dayNum(b);
+    return { l: (x - R.start) / R.total * 100, w: Math.max((y - x + 1) / R.total * 100, 0.45) };
+  };
+}
+function ganttHead(R, labelInner) {
+  return `<div class="g-head"><div class="g-lab g-lab-head">${labelInner}</div><div class="g-months">${R.months.map(m => `<div class="g-month" style="flex:${m.days} 1 0"><b>${MONTHS[m.mo - 1]}</b><small>${m.y}</small></div>`).join('')}</div></div>`;
+}
+function ganttGrid(R) {
+  const T = D.T;
+  const today = (T >= R.start && T <= R.end) ? `<div class="g-today" style="left:${((T - R.start + 0.5) / R.total * 100).toFixed(3)}%"><span>Today</span></div>` : '';
+  return `<div class="g-grid">${R.months.map(m => `<div class="g-gl" style="flex:${m.days} 1 0"></div>`).join('')}<div class="g-today-wrap">${today}</div></div>`;
+}
+function itemTip(it, info, extra = '') {
+  const lines = [`${it.name}  (${it.id})`];
+  if (it.owner) lines.push('Owner: ' + it.owner);
+  lines.push(`Baseline: ${rangeText(it.startDate, it.endDate)}`);
+  if (it.forecastStart || it.forecastEnd) lines.push(`Forecast: ${rangeText(it.forecastStart || it.startDate, it.forecastEnd || it.endDate)}`);
+  lines.push(`Progress: ${pct(info.progress)}%   Status: ${STATUS_LABEL[info.status]}`);
+  if (info.ownBlocked && it.blocker) lines.push('Blocker: ' + it.blocker);
+  const deps = D.depsFrom.get(it.id) || [];
+  if (deps.length) lines.push('Depends on: ' + deps.map(depTargetName).join('; '));
+  if (extra) lines.push(extra);
+  return lines.join('\n');
+}
+function barHtml(o) {
+  // o: {pos, progress, cls, tip, id, chip, top, h, label, note}
+  const narrow = o.pos.w < 6.5;
+  let h = `<div class="bar ${o.cls}${narrow ? ' narrow' : ''}" style="left:${o.pos.l.toFixed(3)}%;width:${o.pos.w.toFixed(3)}%;${o.top != null ? `top:${o.top}px;` : ''}${o.h ? `height:${o.h}px;` : ''}" data-tip="${esc(o.tip)}" data-action="open-item" data-id="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(o.label || '')}">
+    <span class="bar-in"><i class="fill" style="width:${pct(o.progress)}%"></i></span><span class="chip-p">${o.chip}</span></div>`;
+  if (o.note) {
+    const end = o.pos.l + o.pos.w, left = end < 62;
+    const t = o.top != null ? o.top : 8;
+    h += `<span class="bar-note ${narrow && left ? 'nn' : ''}" style="top:${t + 2}px;${left ? `left:${end.toFixed(3)}%` : `right:${(100 - o.pos.l).toFixed(3)}%`}" data-tip="${esc(o.note)}">${left ? '' : ''}⛔ ${esc(o.note.length > 46 ? o.note.slice(0, 45) + '…' : o.note)}</span>`;
+  }
+  return h;
+}
+function fbarHtml(it, P, top, h) {
+  if (!ui.rmForecast || (!it.forecastStart && !it.forecastEnd)) return '';
+  const p = P(it.forecastStart || it.startDate, it.forecastEnd || it.endDate);
+  const slip = dayNum(it.forecastEnd || it.endDate) - dayNum(it.endDate);
+  return `<div class="fbar ${slip > 0 ? 'late' : ''}" style="left:${p.l.toFixed(3)}%;width:${p.w.toFixed(3)}%;top:${top}px;height:${h}px" data-tip="${esc('Revised forecast: ' + rangeText(it.forecastStart || it.startDate, it.forecastEnd || it.endDate) + (slip ? `\n${slip > 0 ? 'Slips' : 'Ahead by'} ${Math.abs(slip)} day${Math.abs(slip) === 1 ? '' : 's'} vs baseline` : ''))}"></div>`;
+}
+function milestoneMarkers(R, P, opts) {
+  const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
+  const levelEnd = [];
+  const trackPx = opts.compact ? 640 : 900;
+  let maxLevel = 0;
+  const pts = list.map(m => {
+    const l = (dayNum(m.date) - R.start + 0.5) / R.total * 100;
+    const nm = m.name.length > 26 ? m.name.slice(0, 25) + '…' : m.name;
+    const wPct = (nm.length * 6.4 + 26) / trackPx * 100;
+    const left = l > 82 ? l - wPct + 1.2 : l - 0.8;
+    let lv = 0; while (levelEnd[lv] !== undefined && levelEnd[lv] > left - 0.4) lv++;
+    levelEnd[lv] = left + wPct; maxLevel = Math.max(maxLevel, lv);
+    return { m, l, nm, lv, right: l > 82 };
+  });
+  const html = pts.map(p => {
+    const e = msEffective(p.m);
+    return `<div class="ms-pt ms-${e}" style="left:${p.l.toFixed(3)}%" data-tip="${esc(`${p.m.name}\n${fmtDate(p.m.date)} · ${MS_LABEL[e]}${p.m.objectiveId ? '\nObjective: ' + nameOf(p.m.objectiveId) : ''}${p.m.description ? '\n' + p.m.description : ''}`)}" data-action="ms-edit" data-id="${esc(p.m.id)}" role="button" tabindex="0">
+      <span class="dia"></span><span class="ms-lab ${p.right ? 'r' : ''}" style="top:${22 + p.lv * 15}px">${esc(p.nm)}</span></div>`;
+  }).join('');
+  return { html, height: 28 + (maxLevel + 1) * 15 + 6, count: list.length };
+}
+function rmWrap(R, headLabel, bodyHtml, cls, labelW) {
+  return `<div class="gantt ${cls}" style="--labelw:${labelW}px"><div class="gantt-scroll"><div class="gantt-inner">${ganttHead(R, headLabel)}<div class="g-body">${ganttGrid(R)}${bodyHtml}</div></div></div></div>`;
+}
+
+/* ---------------- Management view: objectives + milestones only ---------------- */
+function mgmtRoadmapHtml(opts = {}) {
+  const R = roadmapRange(), P = mkPos(R), compact = !!opts.compact;
+  const rowH = compact ? 46 : 86, labelW = compact ? 200 : 300;
+  let body = '';
+  if (ui.rmMilestones && data.milestones.length) {
+    const ms = milestoneMarkers(R, P, opts);
+    body += `<div class="g-row g-ms-row" style="height:${ms.height}px"><div class="g-lab m-lab"><div class="ml-name"><span class="ms-ico">${icon('diamond', 14)}</span><b>Milestones</b></div>${compact ? '' : `<div class="ml-sub">${ms.count} delivery milestone${ms.count === 1 ? '' : 's'}</div>`}</div><div class="g-track">${ms.html}</div></div>`;
+  }
+  if (!realObjs().length) body += `<div class="g-empty">No objectives yet — add one in <b>Objectives</b> and it will appear here automatically.</div>`;
+  realObjs().forEach(o => {
+    const i = D.obj.get(o.id), pos = P(o.startDate, o.endDate);
+    const linked = ui.rmMilestones ? data.milestones.filter(m => m.objectiveId === o.id).map(m => {
+      const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100;
+      return `<div class="ms-pt small ms-${e}" style="left:${l.toFixed(3)}%;top:${compact ? 1 : 3}px" data-tip="${esc(m.name + '\n' + fmtDate(m.date) + ' · ' + MS_LABEL[e])}" data-action="ms-edit" data-id="${esc(m.id)}"><span class="dia"></span></div>`;
+    }).join('') : '';
+    const barTop = compact ? 10 : 16, barH = compact ? 24 : 30;
+    body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab">
+        <div class="ml-name"><b title="${esc(o.name)}">${esc(o.name)}</b></div>
+        ${compact ? '' : `<div class="ml-sub">${o.owner ? esc(o.owner) + ' · ' : ''}${esc(rangeText(o.startDate, o.endDate))}</div>`}
+        <div class="ml-pill">${pill(i.status)}${compact ? '' : `<span class="ml-pct">${pct(i.progress)}%</span>`}</div></div>
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}`, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
+        ${compact ? '' : fbarHtml(o, P, barTop + barH + 6, 8)}${linked}</div></div>`;
+  });
+  const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline (${esc(rangeText(data.project.startDate, data.project.endDate))}).</p>` : '';
+  return rmWrap(R, 'Objective', body, 'gantt-mgmt' + (compact ? ' compact' : ''), labelW) + (opts.print ? '' : note);
+}
+
+/* ---------------- Technical view: objectives › tasks › subtasks ---------------- */
+function techRoadmapHtml(opts = {}) {
+  const R = roadmapRange(), P = mkPos(R), labelW = 470;
+  const byStatus = ui.rmColor === 'status';
+  let body = '';
+  if (!data.objectives.some(o => o.tasks.length || !o.system)) body += `<div class="g-empty">No objectives or tasks yet — add some and they will appear here automatically.</div>`;
+  const row = (it, lvl, kind, hasKids) => {
+    const i = D.node.get(it.id), pos = P(it.startDate, it.endDate), collapsed = ui.collapsed.has(it.id);
+    const deps = D.depsFrom.get(it.id) || [];
+    const chips = [];
+    if (i.ownBlocked) chips.push(`<span class="chip red" data-tip="${esc(it.blocker || 'Blocked')}">${icon('ban', 11)} Blocked</span>`);
+    else if (i.blocked) chips.push(`<span class="chip red">${icon('ban', 11)} Blocked below</span>`);
+    if (i.overdue) chips.push('<span class="chip amber">Overdue</span>');
+    if (deps.length) chips.push(`<span class="chip" data-tip="${esc(deps.map(d => '• ' + depTargetName(d)).join('\n'))}">${icon('link', 11)} ${deps.length}</span>`);
+    const owner = it.owner ? esc(it.owner) : '<span class="muted">—</span>';
+    const barTop = lvl === 0 ? 9 : 11, barH = lvl === 0 ? 24 : 20;
+    const cls = `${byStatus ? 'st-' + i.status : 'bl' + lvl + ' st-' + i.status}${i.ownBlocked ? ' is-blocked' : ''}${i.overdue ? ' is-late' : ''}`;
+    return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl">
+        <div class="tl-name" style="padding-left:${6 + lvl * 20}px">${hasKids ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(it.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'}">${icon('chevron', 14)}</button>` : '<span class="chev-sp"></span>'}
+          <div class="tl-txt"><b title="${esc(it.name)}">${esc(it.name)}</b><small>${esc(rangeText(it.startDate, it.endDate))}${chips.join('')}</small></div></div>
+        <div class="tl-owner" title="${esc(it.owner || '')}">${owner}</div><div class="tl-pct">${pct(i.progress)}%</div><div class="tl-stat">${pill(i.status)}</div></div>
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
+  };
+  data.objectives.forEach(o => {
+    if (ui.rmObj !== 'all' && ui.rmObj !== o.id) return;
+    if (o.system) {
+      if (!o.tasks.length) return;
+      const col = ui.collapsed.has(o.id);
+      body += `<div class="g-row t-r lvl-0" style="height:40px"><div class="g-lab tl"><div class="tl-name" style="padding-left:6px"><button class="chev ${col ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(o.id)}" aria-label="Toggle">${icon('chevron', 14)}</button><div class="tl-txt"><b>Unassigned tasks</b><small>Not linked to an objective yet</small></div></div></div><div class="g-track"></div></div>`;
+      if (col) return;
+    } else body += row(o, 0, 'obj', o.tasks.length > 0);
+    if (ui.collapsed.has(o.id)) return;
+    o.tasks.forEach(t => {
+      body += row(t, 1, 'task', t.subtasks.length > 0);
+      if (ui.collapsed.has(t.id)) return;
+      t.subtasks.forEach(s => { body += row(s, 2, 'sub', false); });
+    });
+  });
+  const head = `<div class="tl tl-h"><div>Work item</div><div class="tl-owner">Owner</div><div class="tl-pct">%</div><div class="tl-stat">Status</div></div>`;
+  let msOverlay = '';
+  if (ui.rmMilestones && data.milestones.length) {
+    msOverlay = `<div class="g-ms-line">${data.milestones.map(m => { const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100; return `<i class="ms-vline ms-${e}" style="left:${l.toFixed(3)}%" data-tip="${esc('◆ ' + m.name + '\n' + fmtDate(m.date))}"></i>`; }).join('')}</div>`;
+  }
+  const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline.</p>` : '';
+  const html = `<div class="gantt gantt-tech" style="--labelw:${labelW}px"><div class="gantt-scroll"><div class="gantt-inner">${ganttHead(R, head)}<div class="g-body">${ganttGrid(R)}${msOverlay}${body}</div></div></div></div>`;
+  return html + (opts.print ? '' : note);
+}
+
+/* ---------------- Roadmap page ---------------- */
+function roadmapLegend(mode) {
+  const items = mode === 'management' || ui.rmColor === 'status'
+    ? ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'on-hold'].map(k => `<span class="lg"><i class="dot st-${k}"></i>${k === 'blocked' ? 'Blocked / Delayed' : STATUS_LABEL[k]}</span>`).join('')
+    : `<span class="lg"><i class="dot lv0"></i>Objective</span><span class="lg"><i class="dot lv1"></i>Task / subtask</span>`;
+  return `<div class="legend rm-legend">${items}<span class="lg"><i class="dia-lg"></i>Milestone</span><span class="lg"><i class="fb-lg"></i>Revised forecast</span><span class="lg"><i class="td-lg"></i>Today</span>${mode === 'technical' ? '<span class="lg"><i class="bl-lg"></i>Blocked</span>' : ''}</div>`;
+}
+function viewRoadmap() {
+  const mode = ui.rmMode;
+  let h = pageHead('Roadmap', 'Generated live from your objectives, tasks and subtasks — it updates whenever anything changes.',
+    btn('Print / PDF', 'print-roadmap', `data-mode="${mode}"`, '', 'print'));
+  h += `<div class="toolbar wrap"><div class="seg" role="tablist"><button class="${mode === 'management' ? 'on' : ''}" data-action="rm-mode" data-mode="management" role="tab">Management view</button><button class="${mode === 'technical' ? 'on' : ''}" data-action="rm-mode" data-mode="technical" role="tab">Technical view</button></div>
+    <label class="chk"><input type="checkbox" data-f="rmMilestones" ${ui.rmMilestones ? 'checked' : ''}> Milestones</label>
+    <label class="chk"><input type="checkbox" data-f="rmForecast" ${ui.rmForecast ? 'checked' : ''}> Revised forecast</label>
+    ${mode === 'technical' ? `<select data-f="rmObj" aria-label="Objective filter"><option value="all">All objectives</option>${data.objectives.map(o => `<option value="${esc(o.id)}" ${ui.rmObj === o.id ? 'selected' : ''}>${o.system ? 'Unassigned tasks' : esc(o.name)}</option>`).join('')}</select>
+    <select data-f="rmColor" aria-label="Colour bars by"><option value="level" ${ui.rmColor === 'level' ? 'selected' : ''}>Colour by work level</option><option value="status" ${ui.rmColor === 'status' ? 'selected' : ''}>Colour by status</option></select>
+    ${btn('Expand all', 'rm-expand', '', 'small ghost')}${btn('Collapse all', 'rm-collapse', '', 'small ghost')}` : ''}</div>`;
+  h += `<div class="card rm-card">${mode === 'management' ? mgmtRoadmapHtml() : techRoadmapHtml()}${roadmapLegend(mode)}</div>`;
+  if (mode === 'management') h += `<p class="muted small">Management view shows objectives and milestones only. Switch to the Technical view for tasks, subtasks, owners, dependencies and blockers.</p>`;
+  return h;
+}
+
+/* ---------------- Print ---------------- */
+function preparePrint(kind, mode) {
+  const area = $('#printArea');
+  let html, orient = 'landscape';
+  if (kind === 'roadmap') {
+    const p = data.project;
+    html = `<div class="print-sheet"><div class="ps-head"><div><h1>${esc(p.name)}</h1><p>${mode === 'management' ? 'Programme roadmap — management view' : 'Programme roadmap — technical view'} · ${esc(rangeText(p.startDate, p.endDate))}</p></div>
+      <div class="ps-meta"><b>${pct(D.totals.overall)}%</b> overall<br><small>As at ${esc(fmtDate(D.today))}</small></div></div>
+      ${mode === 'management' ? mgmtRoadmapHtml({ print: true }) : techRoadmapHtml({ print: true })}${roadmapLegend(mode)}</div>`;
+  } else { html = `<div class="print-sheet report-sheet">${reportBodyHtml()}</div>`; orient = 'portrait'; }
+  area.innerHTML = html;
+  let st = $('#pageStyle'); if (!st) { st = document.createElement('style'); st.id = 'pageStyle'; document.head.appendChild(st); }
+  st.textContent = `@page{size:A4 ${orient};margin:9mm}`;
+  document.body.classList.add('printing');
+}
+function endPrint() { document.body.classList.remove('printing'); $('#printArea').innerHTML = ''; }
+function doPrint(kind, mode) {
+  preparePrint(kind, mode);
+  window.addEventListener('afterprint', endPrint, { once: true });
+  setTimeout(() => { try { window.print(); } catch (e) { endPrint(); } }, 80);
+}
+function downloadReport() {
+  const css = $('#reportCss').textContent;
+  const doc = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(data.project.name)} — Status report ${esc(todayISO())}</title><style>${css}</style></head><body class="report-page">${reportBodyHtml()}</body></html>`;
+  download(stampName('Backup-DR-Status-Report', 'html'), doc, 'text/html');
+}
+
+/* =====================================================================
+   Application shell: navigation, render loop, actions, import / export, init
+   ===================================================================== */
+const NAV = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', fn: () => viewDashboard() },
+  { id: 'objectives', label: 'Objectives', icon: 'target', fn: () => viewObjectives() },
+  { id: 'tasks', label: 'Tasks & Subtasks', icon: 'tasks', fn: () => viewTasks() },
+  { id: 'roadmap', label: 'Roadmap', icon: 'roadmap', fn: () => viewRoadmap() },
+  { id: 'risks', label: 'Risks & Blockers', icon: 'risk', fn: () => viewRisks() },
+  { id: 'dependencies', label: 'Dependencies', icon: 'link', fn: () => viewDependencies() },
+  { id: 'milestones', label: 'Milestones', icon: 'diamond', fn: () => viewMilestones() },
+  { id: 'reports', label: 'Reports & Data Management', icon: 'report', fn: () => viewReports() }
+];
+
+function renderNav() {
+  const unexp = !data.meta.lastExportedAt || data.meta.modifiedAt > data.meta.lastExportedAt;
+  const hasContent = countsOf(data).tasks || data.objectives.length || data.risks.length || data.milestones.length;
+  $('#nav').innerHTML = NAV.map(n => {
+    const badge = n.id === 'risks' && D.blockedItems.length ? `<span class="nav-badge red" data-tip="${D.blockedItems.length} blocked item(s)">${D.blockedItems.length}</span>` : '';
+    return `<a href="#${n.id}" class="${ui.view === n.id ? 'active' : ''}" data-nav="${n.id}" ${ui.view === n.id ? 'aria-current="page"' : ''}>${icon(n.icon, 19)}<span>${n.label}</span>${badge}</a>`;
+  }).join('');
+  $('#sideFoot').innerHTML = hasContent && unexp
+    ? `<button class="export-nudge" data-action="export-json">${icon('download', 15)}<span>Unexported changes<br><small>Export JSON to keep a safe copy</small></span></button>`
+    : `<div class="side-ok">${icon('check', 14)} <span>${data.meta.lastExportedAt ? 'Exported ' + esc(fmtDateTime(data.meta.lastExportedAt)) : 'Nothing to export yet'}</span></div>`;
+  $('#pageTitle').textContent = (NAV.find(n => n.id === ui.view) || NAV[0]).label;
+}
+function updateSaveChip() {
+  const el = $('#saveChip'); if (!el) return;
+  const s = ui.saveState;
+  el.className = 'save-chip ' + s;
+  el.innerHTML = s === 'pending' ? `${icon('refresh', 14)} Saving…`
+    : s === 'saved' ? `${icon('check', 14)} Autosaved ${ui.lastSaved ? fmtStamp(ui.lastSaved) : ''}`
+    : s === 'error' ? `${icon('risk', 14)} Autosave unavailable — export JSON` : `${icon('save', 14)} Ready`;
+  el.title = s === 'error' ? 'Browser storage is unavailable or full. Use Export JSON to keep your data.' : 'Changes are saved automatically in this browser. Export JSON for a portable copy.';
+}
+function render() {
+  D = derive();
+  const ae = document.activeElement, keep = ae && ae.id && $('#view').contains(ae) ? { id: ae.id, s: ae.selectionStart, e: ae.selectionEnd } : null;
+  renderNav();
+  const nav = NAV.find(n => n.id === ui.view) || NAV[0];
+  $('#view').innerHTML = nav.fn();
+  if (keep) { const n = document.getElementById(keep.id); if (n) { n.focus(); try { n.setSelectionRange(keep.s, keep.e); } catch (e) { /* not a text input */ } } }
+  updateSaveChip();
+}
+function afterChange() {
+  data.meta.modifiedAt = new Date().toISOString();
+  syncStored(); render(); scheduleSave();
+}
+function go(view) {
+  // In-app routing: never rely on the browser navigating (links to "#x" break in some embedded viewers).
+  if (!NAV.some(n => n.id === view)) view = 'dashboard';
+  ui.view = view;
+  try { if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view); } catch (e) { /* embedded viewer: ignore */ }
+  render(); window.scrollTo(0, 0);
+}
+function saveUiPrefs() { try { localStorage.setItem(LS_UI, JSON.stringify({ rmMode: ui.rmMode, rmColor: ui.rmColor, rmMilestones: ui.rmMilestones, rmForecast: ui.rmForecast })); } catch (e) { /* ignore */ } }
+
+/* ---------------- import / export / reset ---------------- */
+function readFileText(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(r.error || new Error('Could not read the file.')); r.readAsText(file); });
+}
+function problemList(items, cls) { return `<ul class="issues ${cls}">${items.slice(0, 25).map(x => `<li>${esc(x)}</li>`).join('')}${items.length > 25 ? `<li>…and ${items.length - 25} more</li>` : ''}</ul>`; }
+async function handleImportFile(file) {
+  let text;
+  try { text = await readFileText(file); } catch (e) { toast('Could not read that file.', 'error'); return; }
+  let raw;
+  try { raw = JSON.parse(text.replace(/^﻿/, '')); }
+  catch (e) { await infoDialog({ title: 'Import failed', html: `<p><b>${esc(file.name)}</b> is not valid JSON.</p>${problemList([String(e.message)], 'err')}<p class="muted">Your current project data has not been changed.</p>` }); return; }
+  const r = parseProject(raw);
+  if (r.errors.length) {
+    await infoDialog({ title: 'Import failed — file did not pass validation', html: `<p><b>${esc(file.name)}</b> has ${r.errors.length} problem${r.errors.length === 1 ? '' : 's'}:</p>${problemList(r.errors, 'err')}${r.warnings.length ? `<p>Also:</p>${problemList(r.warnings, 'warn')}` : ''}<p class="muted">Your current project data has not been changed.</p>` });
+    return;
+  }
+  const cur = countsOf(data), inc = countsOf(r.data);
+  const fmt = c => `${c.objectives} objectives, ${c.tasks} tasks, ${c.subtasks} subtasks, ${c.milestones} milestones, ${c.risks} risks`;
+  const ok = await confirmDialog({
+    title: 'Replace current project data?', danger: true, okLabel: 'Replace with imported data',
+    message: `Importing <b>${esc(file.name)}</b> will <b>replace</b> everything currently in the application.`,
+    html: `<div class="cmp"><div><small>Current</small><b>${esc(data.project.name)}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name)}</b><span>${fmt(inc)}</span></div></div>
+      ${r.warnings.length ? `<p>The file was accepted with ${r.warnings.length} note${r.warnings.length === 1 ? '' : 's'}:</p>${problemList(r.warnings, 'warn')}` : ''}
+      <p class="muted small">A backup of your current data is saved in this browser first (Reports &amp; Data Management → Browser backups).</p>`
+  });
+  if (!ok) { toast('Import cancelled — nothing was changed.', 'warn'); return; }
+  snapshot(`Before import of ${file.name}`);
+  data = r.data; ui.collapsed.clear(); ui.objOpen.clear();
+  ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
+  syncStored(); D = derive(); saveLocal(); go('dashboard'); render();
+  toast(`Imported ${inc.objectives} objectives and ${inc.tasks} tasks.`);
+}
+async function resetProject() {
+  const ok = await confirmDialog({ title: 'Reset project?', danger: true, okLabel: 'Delete everything and start blank', message: 'This removes <b>all</b> objectives, tasks, subtasks, risks, dependencies and milestones from the application. A backup is saved in this browser first, but you should export a JSON copy if you may need this data again.' });
+  if (!ok) return;
+  snapshot('Before reset'); data = blankProject(); ui.collapsed.clear(); ui.objOpen.clear(); afterChange(); toast('Project reset to a blank state.');
+}
+async function restoreBackup(i) {
+  const b = readBackups()[i]; if (!b) return;
+  let r; try { r = parseProject(JSON.parse(b.json)); } catch (e) { r = { errors: ['Backup is unreadable.'] }; }
+  if (r.errors.length) { toast('That backup could not be read.', 'error'); return; }
+  const ok = await confirmDialog({ title: 'Restore this backup?', danger: true, okLabel: 'Restore backup', message: `Replace the current project data with the backup from <b>${esc(fmtDateTime(b.at))}</b> (${esc(b.reason)})? The current data is backed up first.` });
+  if (!ok) return;
+  snapshot('Before restore'); data = r.data; ui.collapsed.clear(); afterChange(); toast('Backup restored.');
+}
+
+/* ---------------- actions ---------------- */
+const ACTIONS = {
+  goto: ds => go(ds.view),
+  'obj-new': () => objectiveModal(),
+  'obj-edit': ds => objectiveModal(ds.id),
+  'obj-del': ds => deleteObjectiveFlow(ds.id),
+  'obj-toggle': ds => { ui.objOpen.has(ds.id) ? ui.objOpen.delete(ds.id) : ui.objOpen.add(ds.id); render(); },
+  'task-new': ds => {
+    let pid;
+    if (ds.obj === 'unassigned') pid = '';
+    else if (ds.obj) pid = ds.obj;
+    else if (ui.view === 'tasks' && ui.taskFilter.obj !== 'all') pid = ui.taskFilter.obj === SYS_ID ? '' : ui.taskFilter.obj;
+    workItemModal('task', null, pid === undefined ? {} : { parentId: pid });
+  },
+  'tasks-bulk': ds => {
+    let pid;
+    if (ds.obj === 'unassigned') pid = '';
+    else if (ds.obj) pid = ds.obj;
+    else if (ui.view === 'tasks' && ui.taskFilter.obj !== 'all') pid = ui.taskFilter.obj === SYS_ID ? '' : ui.taskFilter.obj;
+    bulkTasksModal(pid === undefined ? {} : { parentId: pid });
+  },
+  'save-settings': (ds, el) => SUBMITS['save-settings'](el.closest('form')),
+  'download-csv-template': () => download('Backup-DR-Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
+  'task-edit': ds => workItemModal('task', ds.id),
+  'task-del': ds => deleteTaskFlow(ds.id),
+  'sub-new': ds => workItemModal('sub', null, { parentId: ds.task }),
+  'sub-edit': ds => workItemModal('sub', ds.id),
+  'sub-del': ds => deleteSubFlow(ds.id),
+  'open-item': ds => openItem(ds.id),
+  toggle: ds => { ui.collapsed.has(ds.id) ? ui.collapsed.delete(ds.id) : ui.collapsed.add(ds.id); render(); },
+  'rm-toggle': ds => { ui.collapsed.has(ds.id) ? ui.collapsed.delete(ds.id) : ui.collapsed.add(ds.id); render(); },
+  'rm-expand': () => { ui.collapsed.clear(); render(); },
+  'rm-collapse': () => { data.objectives.forEach(o => ui.collapsed.add(o.id)); render(); },
+  'rm-mode': ds => { ui.rmMode = ds.mode; saveUiPrefs(); render(); },
+  'risk-new': () => riskModal(), 'risk-edit': ds => riskModal(ds.id), 'risk-del': ds => deleteRiskFlow(ds.id),
+  'blocker-flag': () => blockerModal(), 'blocker-resolve': ds => resolveBlocker(ds.id),
+  'dep-new': () => { if (!D.totals.tasks && !D.totals.objectives) { toast('Create an objective or task first.', 'warn'); return; } depModal(); },
+  'dep-edit': ds => depModal(ds.id), 'dep-del': ds => deleteDepFlow(ds.id),
+  'ms-new': () => milestoneModal(), 'ms-edit': ds => milestoneModal(ds.id), 'ms-del': ds => deleteMilestoneFlow(ds.id),
+  tab: ds => { ui[ds.group] = ds.tab; render(); },
+  'set-prog': (ds, el) => {
+    const f = el.closest('form'), pr = f && f.elements.progress; if (!pr) return;
+    pr.value = ds.v; pr.dispatchEvent(new Event('input', { bubbles: true }));
+  },
+  'dep-row-add': (ds, el) => {
+    const ed = el.closest('[data-depeditor]'); const list = $('.dep-list', ed);
+    list.insertAdjacentHTML('beforeend', depRowHtml({ type: 'task' }, ed.dataset.self));
+  },
+  'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
+  'export-json': () => { exportJSON(); toast('Project exported as JSON.'); render(); },
+  'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
+  'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
+  'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
+  'restore-backup': ds => restoreBackup(+ds.i),
+  'delete-backup': ds => { const l = readBackups(); l.splice(+ds.i, 1); try { localStorage.setItem(LS_BACKUPS, JSON.stringify(l)); } catch (e) { /* ignore */ } render(); },
+  'reset-project': () => resetProject(),
+  'download-template': () => { download('Backup-DR-Data_blank.json', JSON.stringify(blankProject(), null, 2)); },
+  'print-roadmap': ds => doPrint('roadmap', ds.mode || ui.rmMode),
+  'print-report': () => doPrint('report'),
+  'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
+  'nav-toggle': () => { $('#sidebar').classList.toggle('open'); $('#scrim').classList.toggle('on'); }
+};
+const SUBMITS = {
+  'save-settings': f => {
+    const name = f.elements.pname.value.trim(), s = f.elements.pstart.value, e = f.elements.pend.value, err = $('#settingsErr');
+    const bad = !name ? 'Project name is required.' : (!parseISO(s) || !parseISO(e)) ? 'Enter valid timeline start and end dates.' : dayNum(e) < dayNum(s) ? 'Timeline end must be after the start.' : '';
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
+    Object.assign(data.project, { name, description: f.elements.pdesc.value.trim(), manager: f.elements.pmanager.value.trim(), startDate: s, endDate: e });
+    afterChange(); toast('Project settings saved.');
+  }
+};
+document.addEventListener('click', e => {
+  const navA = e.target.closest('#nav a[data-nav]');
+  if (navA) { e.preventDefault(); $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); go(navA.dataset.nav); return; }
+  const el = e.target.closest('[data-action]');
+  if (!el) {
+    if (e.target.id === 'scrim') ACTIONS['nav-toggle']();
+    return;
+  }
+  const fn = ACTIONS[el.dataset.action];
+  if (fn) { e.preventDefault(); try { fn(el.dataset, el, e); } catch (err) { console.error(err); toast('Something went wrong: ' + (err && err.message ? err.message : err), 'error', 8000); } }
+  if (el.dataset.nav !== undefined || el.closest('#sidebar')) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.bar[data-action],.ms-pt[data-action]')) { e.preventDefault(); e.target.click(); }
+});
+document.addEventListener('submit', e => {
+  const f = e.target.closest('form[data-submit]');
+  if (f) { e.preventDefault(); SUBMITS[f.dataset.submit](f); }
+});
+function setFilter(el) {
+  const path = el.dataset.f.split('.');
+  const v = el.type === 'checkbox' ? el.checked : el.value;
+  if (path.length === 1) ui[path[0]] = v; else ui[path[0]][path[1]] = v;
+  if (['rmMode', 'rmColor', 'rmMilestones', 'rmForecast'].includes(path[0])) saveUiPrefs();
+  render();
+}
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.f && el.type === 'search') setFilter(el);
+  else if (el.matches && el.matches('[data-progress]')) { const t = el.parentElement.querySelector('.ptxt'); if (t) t.textContent = el.value + '%'; }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.f && el.type !== 'search') setFilter(el);
+  else if (el.matches && el.matches('[data-progress]')) {
+    const n = D.node.get(el.dataset.id);
+    if (n) { setLeafProgress(n.item, el.value); afterChange(); }
+  } else if (el.id === 'fileInput' && el.files && el.files[0]) handleImportFile(el.files[0]);
+});
+window.addEventListener('hashchange', () => {
+  const v = location.hash.slice(1);
+  if (NAV.some(n => n.id === v) && v !== ui.view) { ui.view = v; render(); window.scrollTo(0, 0); }
+});
+window.addEventListener('pagehide', () => { if (saveTimer) saveLocal(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && saveTimer) saveLocal(); });
+// allow dropping a JSON file anywhere on the window
+window.addEventListener('dragover', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault(); });
+window.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) { e.preventDefault(); handleImportFile(e.dataTransfer.files[0]); } });
+
+/* ---------------- init ---------------- */
+function init() {
+  initTooltip();
+  try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
+  const res = loadLocal();
+  syncStored(); D = derive();
+  const h = location.hash.slice(1); if (NAV.some(n => n.id === h)) ui.view = h;
+  render();
+  if (res.status === 'unavailable') { ui.saveState = 'error'; updateSaveChip(); toast('Browser storage is unavailable — export JSON regularly to keep your work.', 'warn', 6000); }
+  if (res.status === 'corrupt') {
+    try { localStorage.setItem('backupdr.corrupt.' + Date.now(), localStorage.getItem(LS_KEY)); } catch (e) { /* ignore */ }
+    infoDialog({ title: 'Saved data could not be loaded', html: `<p>The data stored in this browser failed validation, so the application started with a blank project. The unreadable copy was kept aside.</p>${problemList(res.errors || [], 'err')}<p>You can import a JSON export or restore a browser backup from <b>Reports &amp; Data Management</b>.</p>` });
+  }
+  // automatic daily safety snapshot (only when there is something worth keeping)
+  if (res.status === 'ok' && (data.objectives.length || data.risks.length)) {
+    const last = readBackups()[0];
+    if (!last || Date.now() - new Date(last.at).getTime() > 20 * 3600 * 1000) snapshot('Automatic daily backup');
+  }
+}
+window.addEventListener('error', ev => { try { toast('Unexpected error: ' + ev.message, 'error', 8000); } catch (e) { /* ignore */ } });
+window.BackupDR = { version: APP_VERSION, schema: SCHEMA_VERSION, getData: () => data, getDerived: () => D, parseProject, preparePrint, endPrint, roadmapRange, today: () => D.today };
+document.addEventListener('DOMContentLoaded', init);
+
+})();
+</script>
+</body>
+</html>
