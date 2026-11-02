@@ -153,6 +153,12 @@ const ACTIONS = {
     const ed = el.closest('[data-depeditor]'); const list = $('.dep-list', ed);
     list.insertAdjacentHTML('beforeend', depRowHtml({ type: 'task' }, ed.dataset.self));
   },
+  'link-row-add': (ds, el) => { const ed = el.closest('[data-linkeditor]'); $('.link-list', ed).insertAdjacentHTML('beforeend', linkRowHtml()); const n = $$('.link-row', ed).pop(); if (n) $('[name=lName]', n).focus(); },
+  'link-row-del': (ds, el) => { const r = el.closest('.link-row'); if (r) r.remove(); },
+  'copy-link': ds => {
+    const t = ds.url, ok = () => toast('Copied — paste it into File Explorer or your browser.');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, () => toast(t, 'warn', 9000)); else toast(t, 'warn', 9000);
+  },
   'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
   'export-json': () => {
     exportJSON(); render();

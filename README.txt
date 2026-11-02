@@ -31,6 +31,14 @@ NAVIGATION
   Dashboard | Objectives | Tasks & Subtasks | Roadmap | Risks & Blockers | Dependencies | Milestones |
   Reports & Data Management
 
+LINKS
+  Every objective, task and subtask has a "Links" area in its edit form: click "Add link", then enter a friendly name
+  (e.g. "Design document") and the link, side by side. The name shows as a clickable chip on the objective card and
+  the task row (opens in a new tab). Web addresses (https://, or just www.example.com), email links and file / folder
+  paths are accepted. File-share paths such as \\server\share\file cannot be opened by a web page, so they show as a
+  chip that copies the path when clicked. javascript: and similar links are always refused, also on import.
+  Links are stored in the JSON as "links": [{"name": "...", "url": "..."}].
+
 TASKS WITHOUT AN OBJECTIVE / ADDING MANY TASKS  (added in v1.1)
   - Tasks do not need an objective. Choose "No objective yet (unassigned)" in the task form; they appear in an
     "Unassigned tasks" group on the Tasks page and in the Technical roadmap. Open a task later and pick an

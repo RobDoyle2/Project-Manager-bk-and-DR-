@@ -74,6 +74,7 @@ function objCard(o) {
     ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
     <div class="obj-prog">${pbarC(i.progress, oc.c)}<b>${pct(i.progress)}%</b></div>
     <div class="obj-stats"><span>${i.taskDone}/${i.taskCount} tasks complete</span>${i.subCount ? `<span>${i.subCount} subtasks</span>` : ''}${i.taskBlocked ? `<span class="t-red">${i.taskBlocked} blocked</span>` : ''}${!i.taskCount ? '<span class="muted">No tasks yet — progress 0%</span>' : ''}</div>
+    ${(o.links || []).length ? `<div class="obj-links">${linkChips(o)}</div>` : ''}
     ${o.blocked ? `<div class="callout red">${icon('ban', 15)} ${esc(o.blocker || 'Blocked')}</div>` : ''}
     <div class="obj-actions">
       ${btn(open ? 'Hide tasks' : `View tasks (${o.tasks.length})`, 'obj-toggle', `data-id="${esc(o.id)}"`, 'small ghost')}
@@ -119,7 +120,7 @@ function taskRowHtml(kind, item, parentLabel) {
   return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}" style="--ol:${tc.l}">
     <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
       <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
-      <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}</div></div></div>
+      <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}${linkChips(item)}</div></div></div>
     <div class="t-owner" data-label="Owner">${ownerCell(item.owner)}</div>
     <div class="t-dates" data-label="Dates"><span>${esc(rangeText(item.startDate, item.endDate))}</span>${forecastText(item) ? `<br>${forecastText(item)}` : ''}</div>
     <div class="t-prio" data-label="Priority">${prioChip(item.priority)}</div>

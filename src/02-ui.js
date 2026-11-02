@@ -227,6 +227,38 @@ function applyDeps(fromId, list) {
   data.dependencies = keep.concat(mine);
 }
 
+/* ---------- links editor (friendly name + link, side by side) ---------- */
+function linkRowHtml(l = {}) {
+  return `<div class="link-row"><input name="lName" value="${esc(l.name || '')}" placeholder="Friendly name, e.g. Design document" maxlength="120" aria-label="Link name"><input name="lUrl" value="${esc(l.url || '')}" placeholder="https://… or a file / folder path" aria-label="Link address"><button type="button" class="icon-btn danger" data-action="link-row-del" aria-label="Remove link">${icon('trash', 16)}</button></div>`;
+}
+function linksEditorHtml(links) {
+  return `<div class="fld full" data-linkeditor><span class="fl">Links <small class="hint inline">(documents, tickets, SharePoint folders, runbooks…)</small></span>
+    <div class="link-head"><span>Friendly name</span><span>Link</span><span></span></div>
+    <div class="link-list">${(links || []).map(linkRowHtml).join('')}</div>
+    <button type="button" class="btn small ghost" data-action="link-row-add">${icon('plus', 14)} Add link</button></div>`;
+}
+function collectLinks(form) {
+  const list = []; let error = '';
+  $$('.link-row', form).forEach(r => {
+    const name = $('[name=lName]', r).value.trim(), raw = $('[name=lUrl]', r).value.trim();
+    if (!name && !raw) return;
+    if (!raw) { error = 'Each link needs a web address — add one or remove the row.'; return; }
+    const url = normLink(raw);
+    if (!url) { error = 'That kind of link is not allowed. Use a web address (https://…), an email link, or a file / folder path.'; return; }
+    list.push({ name: name || linkLabel({ name: '', url }), url });
+  });
+  return { list, error };
+}
+function linkChips(it) {
+  const ls = it.links || [];
+  if (!ls.length) return '';
+  return `<span class="lnks">${ls.map(l => {
+    const h = linkHref(l.url), t = esc(linkLabel(l));
+    return h ? `<a class="lnk" href="${esc(h)}" target="_blank" rel="noopener noreferrer" data-tip="${esc(l.url)}">${icon('link', 11)} ${t}</a>`
+      : `<button type="button" class="lnk plain" data-action="copy-link" data-url="${esc(l.url)}" data-tip="${esc(l.url)}\nNot a web address — click to copy it, then paste it into File Explorer or your browser.">${icon('link', 11)} ${t}</button>`;
+  }).join('')}</span>`;
+}
+
 /* ---------- generic delegated handlers for modal inner widgets ---------- */
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-confirm]');

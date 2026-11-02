@@ -35,6 +35,7 @@ function objectiveModal(id) {
     ${fld('Status override', sel('status', [['auto', 'Automatic (calculated from tasks)'], ['at-risk', 'Flag as At risk'], ['on-hold', 'Put On hold']], v.status), 'full', 'Normally leave on Automatic. Blocked, delayed and completed are always derived.')}
     ${blockerFields(v)}
     ${depEditorHtml(o ? o.id : '')}
+    ${linksEditorHtml(v.links)}
     ${notesBlock(v.notes)}
   </div>`;
   openModal({
@@ -45,8 +46,9 @@ function objectiveModal(id) {
       const de = dateErr(val(f, 'startDate'), val(f, 'endDate'), val(f, 'forecastStart'), val(f, 'forecastEnd'));
       if (de) return { error: de, field: 'startDate' };
       const deps = collectDeps(f); if (deps.error) return { error: deps.error };
+      const lks = collectLinks(f); if (lks.error) return { error: lks.error };
       const rec = o || { id: nextId('objective'), tasks: [], notes: [] };
-      Object.assign(rec, { name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), status: val(f, 'status'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') });
+      Object.assign(rec, { links: lks.list, name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), status: val(f, 'status'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') });
       pushNote(rec, val(f, 'newNote'));
       if (!o) data.objectives.push(rec);
       applyDeps(rec.id, deps.list);
@@ -105,6 +107,7 @@ function workItemModal(kind, id, ctx = {}) {
     ${blockerFields(v)}
     ${depEditorHtml(item ? item.id : '')}
     ${isTask ? fld('Quick-add subtasks', txt('quickSubs', '', 3, 'placeholder="One subtask per line…"'), 'full', 'Each line becomes a subtask with this task\'s owner and dates. Tasks with subtasks calculate progress automatically.') : ''}
+    ${linksEditorHtml(v.links)}
     ${notesBlock(v.notes)}
     <div class="full warn-note" id="dateWarn" hidden></div>
   </div>`;
@@ -133,9 +136,10 @@ function workItemModal(kind, id, ctx = {}) {
       if (de) return { error: de, field: 'startDate' };
       const newParent = val(f, 'parent'); if (!isTask && !newParent) return { error: 'Please choose a parent task.', field: 'parent' };
       const deps = collectDeps(f); if (deps.error) return { error: deps.error };
+      const lks = collectLinks(f); if (lks.error) return { error: lks.error };
       const quick = isTask ? val(f, 'quickSubs').split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
       const rec2 = item || (isTask ? { id: nextId('task'), subtasks: [], notes: [] } : { id: nextId('subtask'), notes: [] });
-      const common = { name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') };
+      const common = { links: lks.list, name, description: val(f, 'description'), owner: val(f, 'owner'), priority: val(f, 'priority'), startDate: val(f, 'startDate'), endDate: val(f, 'endDate'), forecastStart: val(f, 'forecastStart'), forecastEnd: val(f, 'forecastEnd'), blocked: val(f, 'blocked'), blocker: val(f, 'blocker') };
       Object.assign(rec2, common);
       const willHaveSubs = isTask && (rec2.subtasks.length + quick.length) > 0;
       const stSel = val(f, 'status');

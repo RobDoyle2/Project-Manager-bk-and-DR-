@@ -52,6 +52,19 @@ function similarCol(a, b) {
   return dh < 26 && Math.abs(x.l - y.l) < 0.18 && x.s > 0.15 && y.s > 0.15;
 }
 const validCI = v => Number.isInteger(v) && v >= 0;
+/* ---- links attached to objectives / tasks / subtasks: [{name, url}] ---- */
+const BAD_SCHEME = /^\s*(javascript|data|vbscript):/i;
+function normLink(url) {
+  url = String(url || '').trim();
+  if (!url || BAD_SCHEME.test(url)) return '';
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(url) && !url.startsWith('\\\\') && !url.startsWith('/') && /^[^\s]+\.[^\s]+$/.test(url)) return 'https://' + url;   // www.example.com -> https://...
+  return url;
+}
+const linkHref = u => /^(https?:|mailto:|ftp:|file:)/i.test(u) ? u : null;
+function linkLabel(l) {
+  if (l.name && l.name.trim()) return l.name.trim();
+  try { return new URL(l.url).hostname || l.url; } catch (e) { return l.url; }
+}
 function objCol(o) { return (!o || o.system) ? SYS_COL : PALETTE[(validCI(o.colorIndex) ? o.colorIndex : 0) % PALETTE.length]; }
 /* Give every objective that has no colour the next unused palette slot (avoiding a look-alike of its neighbour).
    Existing assignments are never changed, so deleting or reordering objectives cannot recolour the rest. */
@@ -202,6 +215,18 @@ function parseProject(raw) {
     if (n < 0 || n > 100) W(`${label}: progress ${n} is outside 0–100 and was clamped.`);
     return clamp01(n);
   };
+  const linksOf = (v, label) => {
+    if (v == null) return [];
+    if (!Array.isArray(v)) { W(`${label}: "links" should be an array, ignored.`); return []; }
+    const out = [];
+    v.forEach(l => {
+      if (!l || typeof l !== 'object' || typeof l.url !== 'string' || !l.url.trim()) { W(`${label}: a link without a web address was skipped.`); return; }
+      const url = normLink(l.url);
+      if (!url) { W(`${label}: a link with a disallowed address type was skipped.`); return; }
+      out.push({ name: typeof l.name === 'string' ? l.name.trim() : '', url });
+    });
+    return out;
+  };
   const notesOf = (v, label) => {
     if (v == null) return [];
     if (typeof v === 'string') return v.trim() ? [{ date: '', text: v }] : [];
@@ -272,7 +297,8 @@ function parseProject(raw) {
       name, description: str(s.description), owner: str(s.owner),
       priority: chkEnum(s.priority, PRIORITIES, 'Medium', `${label} priority`),
       startDate, endDate, forecastStart, forecastEnd, status, progress, blocked, blocker: blocked ? str(s.blocker) : str(s.blocker),
-      notes: notesOf(s.notes, label)
+      notes: notesOf(s.notes, label),
+      links: linksOf(s.links, label)
     };
   };
 
