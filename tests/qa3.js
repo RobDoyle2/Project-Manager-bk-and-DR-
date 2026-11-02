@@ -53,7 +53,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
  ok(rack&&rack.owner==='Ann'&&rack.startDate==='2026-12-01'&&rack.endDate==='2026-12-15'&&rack.priority==='High','columns, DD/MM/YYYY dates and objective name matched');
  ok(d.objectives.find(o=>o.id==='OBJ-001').tasks.some(t=>t.name==='Ship kit'),'objective matched by ID'); ok(d.objectives.find(o=>o.system).tasks.some(t=>t.name==='Orphan'),'unknown objective falls back to unassigned');
  console.log('== link unassigned task to an objective; export/import');
- await go('tasks'); await p.click('[data-action=task-edit][data-id=TSK-001].link-btn'); await p.selectOption('#modal [name=parent]','OBJ-001'); await sub();
+ await go('tasks'); await p.click('.icon-btn[data-action=task-edit][data-id=TSK-001]'); await p.selectOption('#modal [name=parent]','OBJ-001'); await sub();
  d=await data(); ok(d.objectives.find(o=>o.id==='OBJ-001').tasks.some(t=>t.id==='TSK-001')&&!d.objectives.find(o=>o.system).tasks.some(t=>t.id==='TSK-001'),'task moved from unassigned to objective');
  const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.topbar [data-action=export-json]')]); await dl.saveAs('/tmp/e3.json');
  const before=await p.evaluate(()=>window.BackupDR.getDerived().totals);

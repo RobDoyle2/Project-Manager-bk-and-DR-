@@ -27,7 +27,7 @@ ok((await p.$$eval('.t-row a.lnk',e=>e.length))===1,'link chip shown on the task
 await p.click('[data-action=sub-new]');await p.fill('#modal [name=name]','Sub A');await p.click('#modal [data-action=link-row-add]');await p.fill('#modal [name=lName]','Checklist');await p.fill('#modal [name=lUrl]','https://example.com/c');await save();
 d=await data();ok(d.objectives.flatMap(o=>o.tasks).flatMap(x=>x.subtasks)[0].links[0].name==='Checklist','subtask link stored');
 // remove a link and edit
-await p.click('[data-action=task-edit].link-btn >> nth=0');await p.click('#modal [data-action=link-row-del]');await save();d=await data();ok(d.objectives.flatMap(o=>o.tasks).find(x=>x.name==='Task A').links.length===0,'link removed');
+await p.click('.icon-btn[data-action=task-edit] >> nth=0');await p.click('#modal [data-action=link-row-del]');await save();d=await data();ok(d.objectives.flatMap(o=>o.tasks).find(x=>x.name==='Task A').links.length===0,'link removed');
 // export / import round trip + malicious import
 const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.topbar [data-action=export-json]')]);await dl.saveAs('/tmp/links.json');const ej=JSON.parse(fs.readFileSync('/tmp/links.json','utf8'));
 ok(ej.objectives[0].links.length===3,'links included in the exported JSON');

@@ -64,11 +64,11 @@ function viewDashboard() {
 /* ---------------- Objectives ---------------- */
 function objCard(o) {
   const i = D.obj.get(o.id), open = ui.objOpen.has(o.id);
-  const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-edit" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
+  const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-view" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
   const oc = objCol(o);
   return `<article class="obj-card st-${i.status}" style="border-top-color:${oc.c}">
     <div class="obj-top"><div class="obj-ids">${idChip(o.id)}${prioChip(o.priority)}</div>${pill(i.status)}</div>
-    <h3 class="obj-title">${esc(o.name)}</h3>
+    <h3 class="obj-title"><button class="link-btn obj-name" data-action="obj-view" data-id="${esc(o.id)}" data-tip="Open (read only)">${esc(o.name)}</button></h3>
     ${o.description ? `<p class="obj-desc">${esc(o.description)}</p>` : ''}
     <div class="obj-meta">${avatar(o.owner)}<span class="dates">${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>
     ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
@@ -80,6 +80,7 @@ function objCard(o) {
       ${btn(open ? 'Hide tasks' : `View tasks (${o.tasks.length})`, 'obj-toggle', `data-id="${esc(o.id)}"`, 'small ghost')}
       ${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small ghost', 'plus')}
       <span class="sp"></span>
+      <button class="icon-btn" data-action="obj-view" data-id="${esc(o.id)}" aria-label="View objective (read only)" data-tip="View (read only)">${icon('book', 17)}</button>
       <button class="icon-btn" data-action="obj-edit" data-id="${esc(o.id)}" aria-label="Edit objective" data-tip="Edit">${icon('edit', 17)}</button>
       <button class="icon-btn danger" data-action="obj-del" data-id="${esc(o.id)}" aria-label="Delete objective" data-tip="Delete">${icon('trash', 17)}</button>
     </div>
@@ -119,7 +120,7 @@ function taskRowHtml(kind, item, parentLabel) {
   const tc = objCol((isSub ? IDX.sub : IDX.task).get(item.id).obj);
   return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}" style="--ol:${tc.l}">
     <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
-      <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
+      <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-view' : 'task-view'}" data-id="${esc(item.id)}" data-tip="Open (read only)">${esc(item.name)}</button>
       <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}${linkChips(item)}</div></div></div>
     <div class="t-owner" data-label="Owner">${ownerCell(item.owner)}</div>
     <div class="t-dates" data-label="Dates"><span>${esc(rangeText(item.startDate, item.endDate))}</span>${forecastText(item) ? `<br>${forecastText(item)}` : ''}</div>
@@ -127,6 +128,7 @@ function taskRowHtml(kind, item, parentLabel) {
     <div class="t-stat" data-label="Status">${pill(info.status)}</div>
     <div class="t-prog" data-label="Progress">${prog}</div>
     <div class="t-act">${isSub ? '' : `<button class="icon-btn" data-action="sub-new" data-task="${esc(item.id)}" data-tip="Add subtask" aria-label="Add subtask">${icon('plus', 16)}</button>`}
+      <button class="icon-btn" data-action="${isSub ? 'sub-view' : 'task-view'}" data-id="${esc(item.id)}" data-tip="View (read only)" aria-label="View (read only)">${icon('book', 16)}</button>
       <button class="icon-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}" data-tip="Edit" aria-label="Edit">${icon('edit', 16)}</button>
       <button class="icon-btn danger" data-action="${isSub ? 'sub-del' : 'task-del'}" data-id="${esc(item.id)}" data-tip="Delete" aria-label="Delete">${icon('trash', 16)}</button></div>
   </div>`;
@@ -216,7 +218,7 @@ function viewRisks() {
     h += `<div class="r-table b-table"><div class="r-head"><div>Blocked item</div><div>Blocker</div><div>Owner</div><div>Parent / objective</div><div></div></div>
       ${D.blockedItems.map(b => `<div class="r-row blocked"><div class="r-main"><div>${idChip(b.id)} <span class="chip">${({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[b.kind]}</span></div><b>${esc(b.name)}</b></div>
         <div data-label="Blocker">${esc(b.blocker || '—')}</div><div data-label="Owner">${avatar(b.owner)}</div><div data-label="Parent">${esc(b.parent || b.objective)}</div>
-        <div class="t-act">${btn('Resolve', 'blocker-resolve', `data-id="${esc(b.id)}"`, 'small', 'check')}<button class="icon-btn" data-action="open-item" data-id="${esc(b.id)}" aria-label="Edit">${icon('edit', 16)}</button></div></div>`).join('')}</div>`;
+        <div class="t-act">${btn('Resolve', 'blocker-resolve', `data-id="${esc(b.id)}"`, 'small', 'check')}<button class="icon-btn" data-action="edit-item" data-id="${esc(b.id)}" aria-label="Edit">${icon('edit', 16)}</button></div></div>`).join('')}</div>`;
   }
   return h;
 }

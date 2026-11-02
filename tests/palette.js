@@ -46,7 +46,7 @@ const old=JSON.parse(fs.readFileSync('/tmp/rich.json','utf8'));fs.writeFileSync(
 await p.setInputFiles('#fileInput','/tmp/old.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
 d=await data();ok(d.objectives.filter(o=>!o.system).map(o=>o.colorIndex).join()==='0,1,2,3,4','existing project without colours is assigned 0..4 automatically');
 // task moved to another objective takes its colour
-await go('tasks');await p.click('[data-action=task-edit][data-id=TSK-012].link-btn');await p.selectOption('#modal [name=parent]','OBJ-001');await p.click('#modal [data-modal-save]');await p.waitForTimeout(150);
+await go('tasks');await p.click('.icon-btn[data-action=task-edit][data-id=TSK-012]');await p.selectOption('#modal [name=parent]','OBJ-001');await p.click('#modal [data-modal-save]');await p.waitForTimeout(150);
 const rowc=await p.evaluate(()=>getComputedStyle(document.querySelector('.t-row:has([data-id="TSK-012"])')).borderLeftColor);ok(rowc===rgb(P[0][1]),'moved task row now shows its new objective\'s lighter colour');
 await go('dashboard');await p.screenshot({path:'shots/pal-dash.png',fullPage:true});
 await go('tasks');await p.screenshot({path:'shots/pal-tasks.png'});

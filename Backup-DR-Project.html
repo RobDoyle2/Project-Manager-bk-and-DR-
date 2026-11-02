@@ -503,6 +503,32 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .obj-links{margin-top:-2px}
 @media (max-width:900px){.link-head{display:none}.link-row{grid-template-columns:1fr 32px}.link-row input[name=lUrl]{grid-column:1}}
 
+/* ---------- read-only objective view ---------- */
+.vw{display:flex;flex-direction:column;gap:14px}
+.vw-top{display:flex;gap:14px;align-items:stretch}
+.vw-stripe{width:6px;border-radius:6px;background:var(--oc);flex:none}
+.vw-ids{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.vw-title{font-size:1.35rem;letter-spacing:-.01em}
+.vw-prog{display:flex;gap:12px;align-items:center}.vw-prog b{min-width:42px}
+.vw-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;padding-top:12px;border-top:1px solid var(--line2)}
+.vw-l{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding-top:2px}
+.vw-v{min-width:0;display:flex;flex-direction:column;gap:6px}
+.vw-desc{white-space:pre-wrap;line-height:1.5}
+.vw-link{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px;align-items:baseline}
+.vw-a{display:inline-flex;gap:6px;align-items:center;font-weight:700;color:var(--brand-d);text-decoration:none;background:none;border:0;padding:0;cursor:pointer;font-size:inherit}
+.vw-a:hover{text-decoration:underline}
+.vw-lu{color:var(--ink2);font-size:.84rem;overflow-wrap:anywhere}.vw-lu a{color:var(--ink2)}
+.vw-tasks{display:flex;flex-direction:column;gap:4px}
+.vw-task{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;gap:10px;align-items:center;background:var(--bg);border-radius:10px;padding:7px 12px;font-size:.88rem}
+.vw-task b{text-align:right}.vw-tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+@media (max-width:640px){.vw-row{grid-template-columns:1fr;gap:4px}.vw-link{grid-template-columns:1fr;gap:2px}}
+
+.vw-dates{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.vw-dates>span:first-child{display:inline-flex;gap:6px;align-items:center}
+
+.vw-sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px}
+.obj-title .obj-name{font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-align:left;line-height:1.25}
+.vw-v .chip{max-width:none}
+
 </style>
 <style id="reportCss">
 /* Status report styles — also embedded in the downloadable HTML report */
@@ -1247,6 +1273,7 @@ const ICONS = {
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   shield: '<path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  book: '<path d="M12 6.5C10.4 5.2 8.3 4.5 6 4.5H3v13.5h3c2.3 0 4.4.7 6 2 1.6-1.3 3.7-2 6-2h3V4.5h-3c-2.3 0-4.4.7-6 2z"/><path d="M12 6.5v13.5"/>',
   refresh: '<path d="M20 5v5h-5M4 19v-5h5"/><path d="M5.5 9A7 7 0 0 1 19 10M18.5 15A7 7 0 0 1 5 14"/>'
 };
 const icon = (n, s = 18) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -1836,6 +1863,82 @@ function msEffective(m) {
 const MS_LABEL = { planned: 'Planned', 'at-risk': 'At risk', achieved: 'Achieved', missed: 'Overdue' };
 const MS_STATUS_CLASS = { planned: 'in-progress', 'at-risk': 'at-risk', achieved: 'completed', missed: 'blocked' };
 
+/* ---------------- Objective: read-only view ---------------- */
+function objectiveViewModal(id) {
+  const r = IDX.objective.get(id); if (!r) return;
+  const o = r.item, i = D.obj.get(id), c = objCol(o);
+  const deps = D.depsFrom.get(id) || [];
+  const row = (label, inner) => `<div class="vw-row"><span class="vw-l">${label}</span><div class="vw-v">${inner}</div></div>`;
+  const links = (o.links || []).length
+    ? (o.links || []).map(l => {
+        const h = linkHref(l.url);
+        return `<div class="vw-link"><span class="vw-ln">${h ? `<a class="vw-a" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${icon('link', 14)} ${esc(linkLabel(l))}</a>` : `<button type="button" class="vw-a plain" data-action="copy-link" data-url="${esc(l.url)}" data-tip="Not a web address — click to copy">${icon('link', 14)} ${esc(linkLabel(l))}</button>`}</span><span class="vw-lu">${h ? `<a href="${esc(h)}" target="_blank" rel="noopener noreferrer">${esc(l.url)}</a>` : esc(l.url)}</span></div>`;
+      }).join('')
+    : '<span class="muted">No links added.</span>';
+  const tasks = o.tasks.length
+    ? `<div class="vw-tasks">${o.tasks.map(t => { const ti = D.task.get(t.id); return `<div class="vw-task"><span class="vw-tn">${esc(t.name)}${t.subtasks.length ? ` <small class="muted">(${ti.subDone}/${ti.subCount} subtasks)</small>` : ''}</span>${pill(ti.status)}<b>${pct(ti.progress)}%</b></div>`; }).join('')}</div>`
+    : '<span class="muted">No tasks yet.</span>';
+  const notes = (o.notes || []).length ? `<ul class="notes">${o.notes.slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('')}</ul>` : '<span class="muted">No notes.</span>';
+  const html = `<div class="vw">
+    <div class="vw-top" style="--oc:${c.c}"><span class="vw-stripe"></span><div><div class="vw-ids">${idChip(o.id)} ${prioChip(o.priority)} ${pill(i.status)}</div><h2 class="vw-title">${esc(o.name)}</h2></div></div>
+    <div class="vw-prog">${pbarC(i.progress, c.c)}<b>${pct(i.progress)}%</b><span class="muted small">${i.taskDone}/${i.taskCount} tasks complete</span></div>
+    ${o.blocked ? `<div class="callout red">${icon('ban', 15)} <span><b>Blocked:</b> ${esc(o.blocker || 'No description')}</span></div>` : ''}
+    ${row('Description', o.description ? `<p class="vw-desc">${esc(o.description)}</p>` : '<span class="muted">No description.</span>')}
+    ${row('Owner', avatar(o.owner))}
+    ${row('Dates', `<div class="vw-dates"><span>${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span>${forecastText(o)}</div>`)}
+    ${row('Links', viewLinksHtml(o))}
+    ${row('Tasks', tasks)}
+    ${deps.length ? row('Depends on', deps.map(d => `<div>${esc(depTargetName(d))} <span class="ds ds-${d.status}">${cap(d.status)}</span></div>`).join('')) : ''}
+    ${row('Notes', viewNotesHtml(o))}
+  </div>`;
+  openModal({ title: `Objective · ${o.id}`, html, wide: true, hideSave: true, cancelLabel: 'Close' });
+  $('footer', $('#modal')).insertAdjacentHTML('afterbegin', `<button type="button" class="btn" data-action="obj-view-edit" data-id="${esc(id)}">${icon('edit', 15)} Edit</button>`);
+}
+
+function viewLinksHtml(it) {
+  const ls = it.links || [];
+  if (!ls.length) return '<span class="muted">No links added.</span>';
+  return ls.map(l => {
+    const h = linkHref(l.url);
+    return `<div class="vw-link"><span class="vw-ln">${h ? `<a class="vw-a" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${icon('link', 14)} ${esc(linkLabel(l))}</a>` : `<button type="button" class="vw-a plain" data-action="copy-link" data-url="${esc(l.url)}" data-tip="Not a web address — click to copy">${icon('link', 14)} ${esc(linkLabel(l))}</button>`}</span><span class="vw-lu">${h ? `<a href="${esc(h)}" target="_blank" rel="noopener noreferrer">${esc(l.url)}</a>` : esc(l.url)}</span></div>`;
+  }).join('');
+}
+function viewNotesHtml(it) {
+  return (it.notes || []).length ? `<ul class="notes">${it.notes.slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('')}</ul>` : '<span class="muted">No notes.</span>';
+}
+/* Read-only view of a task or subtask (the default when you click one) */
+function workItemViewModal(id) {
+  const n = D.node.get(id); if (!n || n.kind === 'obj') return;
+  const isTask = n.kind === 'task', it = n.item;
+  const r = isTask ? IDX.task.get(id) : IDX.sub.get(id), c = objCol(r.obj), deps = D.depsFrom.get(id) || [];
+  const row = (label, inner) => `<div class="vw-row"><span class="vw-l">${label}</span><div class="vw-v">${inner}</div></div>`;
+  const belongs = isTask
+    ? (r.obj.system ? '<span class="muted">Not linked to an objective yet</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`)
+    : `${esc(r.task.name)} <span class="muted">in</span> ${r.obj.system ? '<span class="muted">Unassigned tasks</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`}`;
+  const subs = isTask && it.subtasks.length
+    ? `<div class="vw-tasks">${it.subtasks.map(s => { const si = D.sub.get(s.id); return `<div class="vw-task"><span class="vw-tn">${esc(s.name)}${s.owner ? ` <small class="muted">· ${esc(s.owner)}</small>` : ''}</span>${pill(si.status)}<b>${pct(si.progress)}%</b></div>`; }).join('')}</div>` : '';
+  const html = `<div class="vw">
+    <div class="vw-top" style="--oc:${c.c}"><span class="vw-stripe"></span><div><div class="vw-ids">${idChip(it.id)} <span class="chip">${isTask ? 'Task' : 'Subtask'}</span> ${prioChip(it.priority)} ${pill(n.status)}</div><h2 class="vw-title">${esc(it.name)}</h2></div></div>
+    <div class="vw-prog">${pbarC(n.progress, c.c)}<b>${pct(n.progress)}%</b><span class="muted small">${isTask && n.subCount ? `${n.subDone}/${n.subCount} subtasks complete (automatic)` : 'updated manually'}</span></div>
+    ${it.blocked && !n.done ? `<div class="callout red">${icon('ban', 15)} <span><b>Blocked:</b> ${esc(it.blocker || 'No description')}</span></div>` : ''}
+    ${row('Description', it.description ? `<p class="vw-desc">${esc(it.description)}</p>` : '<span class="muted">No description.</span>')}
+    ${row('Owner', avatar(it.owner))}
+    ${row('Dates', `<div class="vw-dates"><span>${icon('clock', 14)} ${esc(rangeText(it.startDate, it.endDate))}</span>${forecastText(it)}</div>`)}
+    ${row(isTask ? 'Objective' : 'Belongs to', `<div>${belongs}</div>`)}
+    ${row('Links', viewLinksHtml(it))}
+    ${subs ? row('Subtasks', subs) : ''}
+    ${deps.length ? row('Depends on', deps.map(d => `<div>${esc(depTargetName(d))} <span class="ds ds-${d.status}">${cap(d.status)}</span></div>`).join('')) : ''}
+    ${row('Notes', viewNotesHtml(it))}
+  </div>`;
+  openModal({ title: `${isTask ? 'Task' : 'Subtask'} · ${it.id}`, html, wide: true, hideSave: true, cancelLabel: 'Close' });
+  $('footer', $('#modal')).insertAdjacentHTML('afterbegin', `<button type="button" class="btn" data-action="item-view-edit" data-id="${esc(id)}">${icon('edit', 15)} Edit</button>`);
+}
+/* default "open" behaviour for an objective / task / subtask is the read-only view */
+function viewItem(id) {
+  const n = D.node.get(id); if (!n) return;
+  if (n.kind === 'obj') objectiveViewModal(id); else workItemViewModal(id);
+}
+
 /* =====================================================================
    Add several tasks at once: pasted list (one per line) and/or CSV file
    ===================================================================== */
@@ -2029,11 +2132,11 @@ function viewDashboard() {
 /* ---------------- Objectives ---------------- */
 function objCard(o) {
   const i = D.obj.get(o.id), open = ui.objOpen.has(o.id);
-  const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-edit" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
+  const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-view" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
   const oc = objCol(o);
   return `<article class="obj-card st-${i.status}" style="border-top-color:${oc.c}">
     <div class="obj-top"><div class="obj-ids">${idChip(o.id)}${prioChip(o.priority)}</div>${pill(i.status)}</div>
-    <h3 class="obj-title">${esc(o.name)}</h3>
+    <h3 class="obj-title"><button class="link-btn obj-name" data-action="obj-view" data-id="${esc(o.id)}" data-tip="Open (read only)">${esc(o.name)}</button></h3>
     ${o.description ? `<p class="obj-desc">${esc(o.description)}</p>` : ''}
     <div class="obj-meta">${avatar(o.owner)}<span class="dates">${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>
     ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
@@ -2045,6 +2148,7 @@ function objCard(o) {
       ${btn(open ? 'Hide tasks' : `View tasks (${o.tasks.length})`, 'obj-toggle', `data-id="${esc(o.id)}"`, 'small ghost')}
       ${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small ghost', 'plus')}
       <span class="sp"></span>
+      <button class="icon-btn" data-action="obj-view" data-id="${esc(o.id)}" aria-label="View objective (read only)" data-tip="View (read only)">${icon('book', 17)}</button>
       <button class="icon-btn" data-action="obj-edit" data-id="${esc(o.id)}" aria-label="Edit objective" data-tip="Edit">${icon('edit', 17)}</button>
       <button class="icon-btn danger" data-action="obj-del" data-id="${esc(o.id)}" aria-label="Delete objective" data-tip="Delete">${icon('trash', 17)}</button>
     </div>
@@ -2084,7 +2188,7 @@ function taskRowHtml(kind, item, parentLabel) {
   const tc = objCol((isSub ? IDX.sub : IDX.task).get(item.id).obj);
   return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}" style="--ol:${tc.l}">
     <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
-      <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
+      <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-view' : 'task-view'}" data-id="${esc(item.id)}" data-tip="Open (read only)">${esc(item.name)}</button>
       <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}${linkChips(item)}</div></div></div>
     <div class="t-owner" data-label="Owner">${ownerCell(item.owner)}</div>
     <div class="t-dates" data-label="Dates"><span>${esc(rangeText(item.startDate, item.endDate))}</span>${forecastText(item) ? `<br>${forecastText(item)}` : ''}</div>
@@ -2092,6 +2196,7 @@ function taskRowHtml(kind, item, parentLabel) {
     <div class="t-stat" data-label="Status">${pill(info.status)}</div>
     <div class="t-prog" data-label="Progress">${prog}</div>
     <div class="t-act">${isSub ? '' : `<button class="icon-btn" data-action="sub-new" data-task="${esc(item.id)}" data-tip="Add subtask" aria-label="Add subtask">${icon('plus', 16)}</button>`}
+      <button class="icon-btn" data-action="${isSub ? 'sub-view' : 'task-view'}" data-id="${esc(item.id)}" data-tip="View (read only)" aria-label="View (read only)">${icon('book', 16)}</button>
       <button class="icon-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}" data-tip="Edit" aria-label="Edit">${icon('edit', 16)}</button>
       <button class="icon-btn danger" data-action="${isSub ? 'sub-del' : 'task-del'}" data-id="${esc(item.id)}" data-tip="Delete" aria-label="Delete">${icon('trash', 16)}</button></div>
   </div>`;
@@ -2181,7 +2286,7 @@ function viewRisks() {
     h += `<div class="r-table b-table"><div class="r-head"><div>Blocked item</div><div>Blocker</div><div>Owner</div><div>Parent / objective</div><div></div></div>
       ${D.blockedItems.map(b => `<div class="r-row blocked"><div class="r-main"><div>${idChip(b.id)} <span class="chip">${({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[b.kind]}</span></div><b>${esc(b.name)}</b></div>
         <div data-label="Blocker">${esc(b.blocker || '—')}</div><div data-label="Owner">${avatar(b.owner)}</div><div data-label="Parent">${esc(b.parent || b.objective)}</div>
-        <div class="t-act">${btn('Resolve', 'blocker-resolve', `data-id="${esc(b.id)}"`, 'small', 'check')}<button class="icon-btn" data-action="open-item" data-id="${esc(b.id)}" aria-label="Edit">${icon('edit', 16)}</button></div></div>`).join('')}</div>`;
+        <div class="t-act">${btn('Resolve', 'blocker-resolve', `data-id="${esc(b.id)}"`, 'small', 'check')}<button class="icon-btn" data-action="edit-item" data-id="${esc(b.id)}" aria-label="Edit">${icon('edit', 16)}</button></div></div>`).join('')}</div>`;
   }
   return h;
 }
@@ -2658,6 +2763,8 @@ const ACTIONS = {
   goto: ds => go(ds.view),
   'obj-new': () => objectiveModal(),
   'obj-edit': ds => objectiveModal(ds.id),
+  'obj-view': ds => objectiveViewModal(ds.id),
+  'obj-view-edit': ds => { closeModal(); objectiveModal(ds.id); },
   'obj-del': ds => deleteObjectiveFlow(ds.id),
   'obj-toggle': ds => { ui.objOpen.has(ds.id) ? ui.objOpen.delete(ds.id) : ui.objOpen.add(ds.id); render(); },
   'task-new': ds => {
@@ -2677,11 +2784,15 @@ const ACTIONS = {
   'save-settings': (ds, el) => SUBMITS['save-settings'](el.closest('form')),
   'download-csv-template': () => download('Backup-DR-Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
   'task-edit': ds => workItemModal('task', ds.id),
+  'task-view': ds => workItemViewModal(ds.id),
+  'sub-view': ds => workItemViewModal(ds.id),
   'task-del': ds => deleteTaskFlow(ds.id),
   'sub-new': ds => workItemModal('sub', null, { parentId: ds.task }),
   'sub-edit': ds => workItemModal('sub', ds.id),
   'sub-del': ds => deleteSubFlow(ds.id),
-  'open-item': ds => openItem(ds.id),
+  'open-item': ds => viewItem(ds.id),
+  'edit-item': ds => openItem(ds.id),
+  'item-view-edit': ds => { closeModal(); openItem(ds.id); },
   toggle: ds => { ui.collapsed.has(ds.id) ? ui.collapsed.delete(ds.id) : ui.collapsed.add(ds.id); render(); },
   'rm-toggle': ds => { ui.collapsed.has(ds.id) ? ui.collapsed.delete(ds.id) : ui.collapsed.add(ds.id); render(); },
   'rm-expand': () => { ui.collapsed.clear(); render(); },

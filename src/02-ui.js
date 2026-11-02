@@ -24,6 +24,7 @@ const ICONS = {
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   shield: '<path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  book: '<path d="M12 6.5C10.4 5.2 8.3 4.5 6 4.5H3v13.5h3c2.3 0 4.4.7 6 2 1.6-1.3 3.7-2 6-2h3V4.5h-3c-2.3 0-4.4.7-6 2z"/><path d="M12 6.5v13.5"/>',
   refresh: '<path d="M20 5v5h-5M4 19v-5h5"/><path d="M5.5 9A7 7 0 0 1 19 10M18.5 15A7 7 0 0 1 5 14"/>'
 };
 const icon = (n, s = 18) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;

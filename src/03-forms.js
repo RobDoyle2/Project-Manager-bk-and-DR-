@@ -330,3 +330,79 @@ function msEffective(m) {
 }
 const MS_LABEL = { planned: 'Planned', 'at-risk': 'At risk', achieved: 'Achieved', missed: 'Overdue' };
 const MS_STATUS_CLASS = { planned: 'in-progress', 'at-risk': 'at-risk', achieved: 'completed', missed: 'blocked' };
+
+/* ---------------- Objective: read-only view ---------------- */
+function objectiveViewModal(id) {
+  const r = IDX.objective.get(id); if (!r) return;
+  const o = r.item, i = D.obj.get(id), c = objCol(o);
+  const deps = D.depsFrom.get(id) || [];
+  const row = (label, inner) => `<div class="vw-row"><span class="vw-l">${label}</span><div class="vw-v">${inner}</div></div>`;
+  const links = (o.links || []).length
+    ? (o.links || []).map(l => {
+        const h = linkHref(l.url);
+        return `<div class="vw-link"><span class="vw-ln">${h ? `<a class="vw-a" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${icon('link', 14)} ${esc(linkLabel(l))}</a>` : `<button type="button" class="vw-a plain" data-action="copy-link" data-url="${esc(l.url)}" data-tip="Not a web address — click to copy">${icon('link', 14)} ${esc(linkLabel(l))}</button>`}</span><span class="vw-lu">${h ? `<a href="${esc(h)}" target="_blank" rel="noopener noreferrer">${esc(l.url)}</a>` : esc(l.url)}</span></div>`;
+      }).join('')
+    : '<span class="muted">No links added.</span>';
+  const tasks = o.tasks.length
+    ? `<div class="vw-tasks">${o.tasks.map(t => { const ti = D.task.get(t.id); return `<div class="vw-task"><span class="vw-tn">${esc(t.name)}${t.subtasks.length ? ` <small class="muted">(${ti.subDone}/${ti.subCount} subtasks)</small>` : ''}</span>${pill(ti.status)}<b>${pct(ti.progress)}%</b></div>`; }).join('')}</div>`
+    : '<span class="muted">No tasks yet.</span>';
+  const notes = (o.notes || []).length ? `<ul class="notes">${o.notes.slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('')}</ul>` : '<span class="muted">No notes.</span>';
+  const html = `<div class="vw">
+    <div class="vw-top" style="--oc:${c.c}"><span class="vw-stripe"></span><div><div class="vw-ids">${idChip(o.id)} ${prioChip(o.priority)} ${pill(i.status)}</div><h2 class="vw-title">${esc(o.name)}</h2></div></div>
+    <div class="vw-prog">${pbarC(i.progress, c.c)}<b>${pct(i.progress)}%</b><span class="muted small">${i.taskDone}/${i.taskCount} tasks complete</span></div>
+    ${o.blocked ? `<div class="callout red">${icon('ban', 15)} <span><b>Blocked:</b> ${esc(o.blocker || 'No description')}</span></div>` : ''}
+    ${row('Description', o.description ? `<p class="vw-desc">${esc(o.description)}</p>` : '<span class="muted">No description.</span>')}
+    ${row('Owner', avatar(o.owner))}
+    ${row('Dates', `<div class="vw-dates"><span>${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span>${forecastText(o)}</div>`)}
+    ${row('Links', viewLinksHtml(o))}
+    ${row('Tasks', tasks)}
+    ${deps.length ? row('Depends on', deps.map(d => `<div>${esc(depTargetName(d))} <span class="ds ds-${d.status}">${cap(d.status)}</span></div>`).join('')) : ''}
+    ${row('Notes', viewNotesHtml(o))}
+  </div>`;
+  openModal({ title: `Objective · ${o.id}`, html, wide: true, hideSave: true, cancelLabel: 'Close' });
+  $('footer', $('#modal')).insertAdjacentHTML('afterbegin', `<button type="button" class="btn" data-action="obj-view-edit" data-id="${esc(id)}">${icon('edit', 15)} Edit</button>`);
+}
+
+function viewLinksHtml(it) {
+  const ls = it.links || [];
+  if (!ls.length) return '<span class="muted">No links added.</span>';
+  return ls.map(l => {
+    const h = linkHref(l.url);
+    return `<div class="vw-link"><span class="vw-ln">${h ? `<a class="vw-a" href="${esc(h)}" target="_blank" rel="noopener noreferrer">${icon('link', 14)} ${esc(linkLabel(l))}</a>` : `<button type="button" class="vw-a plain" data-action="copy-link" data-url="${esc(l.url)}" data-tip="Not a web address — click to copy">${icon('link', 14)} ${esc(linkLabel(l))}</button>`}</span><span class="vw-lu">${h ? `<a href="${esc(h)}" target="_blank" rel="noopener noreferrer">${esc(l.url)}</a>` : esc(l.url)}</span></div>`;
+  }).join('');
+}
+function viewNotesHtml(it) {
+  return (it.notes || []).length ? `<ul class="notes">${it.notes.slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('')}</ul>` : '<span class="muted">No notes.</span>';
+}
+/* Read-only view of a task or subtask (the default when you click one) */
+function workItemViewModal(id) {
+  const n = D.node.get(id); if (!n || n.kind === 'obj') return;
+  const isTask = n.kind === 'task', it = n.item;
+  const r = isTask ? IDX.task.get(id) : IDX.sub.get(id), c = objCol(r.obj), deps = D.depsFrom.get(id) || [];
+  const row = (label, inner) => `<div class="vw-row"><span class="vw-l">${label}</span><div class="vw-v">${inner}</div></div>`;
+  const belongs = isTask
+    ? (r.obj.system ? '<span class="muted">Not linked to an objective yet</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`)
+    : `${esc(r.task.name)} <span class="muted">in</span> ${r.obj.system ? '<span class="muted">Unassigned tasks</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`}`;
+  const subs = isTask && it.subtasks.length
+    ? `<div class="vw-tasks">${it.subtasks.map(s => { const si = D.sub.get(s.id); return `<div class="vw-task"><span class="vw-tn">${esc(s.name)}${s.owner ? ` <small class="muted">· ${esc(s.owner)}</small>` : ''}</span>${pill(si.status)}<b>${pct(si.progress)}%</b></div>`; }).join('')}</div>` : '';
+  const html = `<div class="vw">
+    <div class="vw-top" style="--oc:${c.c}"><span class="vw-stripe"></span><div><div class="vw-ids">${idChip(it.id)} <span class="chip">${isTask ? 'Task' : 'Subtask'}</span> ${prioChip(it.priority)} ${pill(n.status)}</div><h2 class="vw-title">${esc(it.name)}</h2></div></div>
+    <div class="vw-prog">${pbarC(n.progress, c.c)}<b>${pct(n.progress)}%</b><span class="muted small">${isTask && n.subCount ? `${n.subDone}/${n.subCount} subtasks complete (automatic)` : 'updated manually'}</span></div>
+    ${it.blocked && !n.done ? `<div class="callout red">${icon('ban', 15)} <span><b>Blocked:</b> ${esc(it.blocker || 'No description')}</span></div>` : ''}
+    ${row('Description', it.description ? `<p class="vw-desc">${esc(it.description)}</p>` : '<span class="muted">No description.</span>')}
+    ${row('Owner', avatar(it.owner))}
+    ${row('Dates', `<div class="vw-dates"><span>${icon('clock', 14)} ${esc(rangeText(it.startDate, it.endDate))}</span>${forecastText(it)}</div>`)}
+    ${row(isTask ? 'Objective' : 'Belongs to', `<div>${belongs}</div>`)}
+    ${row('Links', viewLinksHtml(it))}
+    ${subs ? row('Subtasks', subs) : ''}
+    ${deps.length ? row('Depends on', deps.map(d => `<div>${esc(depTargetName(d))} <span class="ds ds-${d.status}">${cap(d.status)}</span></div>`).join('')) : ''}
+    ${row('Notes', viewNotesHtml(it))}
+  </div>`;
+  openModal({ title: `${isTask ? 'Task' : 'Subtask'} · ${it.id}`, html, wide: true, hideSave: true, cancelLabel: 'Close' });
+  $('footer', $('#modal')).insertAdjacentHTML('afterbegin', `<button type="button" class="btn" data-action="item-view-edit" data-id="${esc(id)}">${icon('edit', 15)} Edit</button>`);
+}
+/* default "open" behaviour for an objective / task / subtask is the read-only view */
+function viewItem(id) {
+  const n = D.node.get(id); if (!n) return;
+  if (n.kind === 'obj') objectiveViewModal(id); else workItemViewModal(id);
+}

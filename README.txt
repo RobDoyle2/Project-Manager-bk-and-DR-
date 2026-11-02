@@ -31,6 +31,11 @@ NAVIGATION
   Dashboard | Objectives | Tasks & Subtasks | Roadmap | Risks & Blockers | Dependencies | Milestones |
   Reports & Data Management
 
+READ-ONLY VIEW IS THE DEFAULT
+  Clicking the name of an objective, task or subtask (in lists, objective cards, the roadmap bars) opens a read-only
+  page with all its details and clickable links - nothing can be changed by accident. Use the pencil icon, or the
+  "Edit" button on the view page, to change something. The book icon beside the pencil also opens the view.
+
 LINKS
   Every objective, task and subtask has a "Links" area in its edit form: click "Add link", then enter a friendly name
   (e.g. "Design document") and the link, side by side. The name shows as a clickable chip on the objective card and

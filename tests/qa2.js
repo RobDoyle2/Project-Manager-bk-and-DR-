@@ -11,7 +11,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
   const der=()=>p.evaluate(()=>{const d=window.BackupDR.getDerived();return{t:d.totals,n:Object.fromEntries([...d.node].map(([k,v])=>[k,v.status]))}});
   const sub=async()=>{await p.click('#modal [data-modal-save]');await p.waitForTimeout(150)};
   console.log('== blockers');
-  await go('tasks'); await p.click('[data-action=task-edit][data-id=TSK-009].link-btn');
+  await go('tasks'); await p.click('.icon-btn[data-action=task-edit][data-id=TSK-009]');
   await p.check('#modal [name=blocked]'); await p.fill('#modal [name=blocker]','Waiting for facilitator'); await sub();
   let d=await der(); ok(d.n['TSK-009']==='blocked'&&d.n['OBJ-004']==='blocked','blocked flag -> task and objective Blocked'); ok(d.t.tasksBlocked===2,'dashboard blocked count = 2');
   await go('roadmap'); await p.click('[data-action=rm-mode][data-mode=technical]');
@@ -19,7 +19,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
   await go('risks'); await p.click('[data-action=tab][data-tab=blockers]'); ok((await p.$$('.b-table .r-row')).length===2,'blockers list shows 2 items');
   await p.click('[data-action=blocker-resolve][data-id=TSK-009]'); await p.waitForTimeout(150); d=await der(); ok(d.n['TSK-009']!=='blocked','resolve unblocks task');
   console.log('== dependency via task form, milestone, risk');
-  await go('tasks'); await p.click('[data-action=task-edit][data-id=TSK-011].link-btn'); await p.click('[data-action=dep-row-add]');
+  await go('tasks'); await p.click('.icon-btn[data-action=task-edit][data-id=TSK-011]'); await p.click('[data-action=dep-row-add]');
   await p.selectOption('#modal [name=dType]','asset'); await p.fill('#modal [name=dTo]','Test lab'); await sub();
   ok((await data()).dependencies.some(x=>x.fromId==='TSK-011'&&x.assetName==='Test lab'),'dependency added from task form');
   await go('dependencies'); await p.click('[data-action=tab][data-tab=matrix]'); ok((await p.$$('.mx-dot')).length>=7,'matrix renders dependency dots');
