@@ -106,7 +106,7 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
   const mg = await page.evaluate(() => ({ bars: document.querySelectorAll('.gantt-mgmt .bar').length, text: document.querySelector('.gantt-mgmt').innerText }));
   eq(mg.bars, 1, 'management view: exactly 1 bar (objective only)');
   ok(!/Deploy backup|Rack hardware|Define retention/.test(mg.text), 'management view shows no task or subtask names');
-  const chip1 = await page.$eval('.gantt-mgmt .bar[data-id="OBJ-001"] .chip-p', e => e.innerText);
+  const chip1 = await page.$eval('.gantt-mgmt .bar[data-id="OBJ-001"] .chip-p, .gantt-mgmt .bar[data-id="OBJ-001"] .bar-txt b', e => e.innerText);
   await page.click('[data-action=rm-mode][data-mode=technical]');
   await page.waitForSelector('.gantt-tech');
   const tech = await page.evaluate(() => ({ rows: document.querySelectorAll('.gantt-tech .t-r').length, lv: [0,1,2].map(l => document.querySelectorAll(`.gantt-tech .t-r.lvl-${l}`).length), text: document.querySelector('.gantt-tech').innerText }));
@@ -114,10 +114,10 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
   ok(/Deploy backup appliances/.test(tech.text) && /Rack hardware/.test(tech.text) && /Alice Murphy|Bob Keane/.test(tech.text), 'technical view shows names and owners');
   // dynamic: change progress in Tasks view, then look at both roadmap views without any manual refresh
   await go('tasks'); await setProg('TSK-002', 100); await go('roadmap');
-  const chipTech = await page.$eval('.gantt-tech .bar[data-id="TSK-002"] .chip-p', e => e.innerText);
+  const chipTech = await page.$eval('.gantt-tech .bar[data-id="TSK-002"] .bar-txt b', e => e.innerText);
   eq(chipTech, '100%', 'technical roadmap bar for TSK-002 updated to 100% automatically');
   await page.click('[data-action=rm-mode][data-mode=management]');
-  const chip2 = await page.$eval('.gantt-mgmt .bar[data-id="OBJ-001"] .chip-p', e => e.innerText);
+  const chip2 = await page.$eval('.gantt-mgmt .bar[data-id="OBJ-001"] .chip-p, .gantt-mgmt .bar[data-id="OBJ-001"] .bar-txt b', e => e.innerText);
   ok(chip2 !== chip1, `management objective bar updated automatically (${chip1} -> ${chip2})`);
   await page.screenshot({ path: 'shots/qa-roadmap-mgmt.png' });
 

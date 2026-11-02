@@ -31,7 +31,7 @@ const icon = (n, s = 18) => `<svg class="ic" width="${s}" height="${s}" viewBox=
 const pill = (st, label) => `<span class="pill st-${st}"><i></i>${esc(label || STATUS_LABEL[st] || st)}</span>`;
 const prioChip = p => `<span class="prio prio-${esc(String(p).toLowerCase())}">${esc(p)}</span>`;
 const idChip = id => `<span class="idchip">${esc(id)}</span>`;
-const AV_COLORS = ['#5b5bd6', '#0ea5a4', '#e5484d', '#f59e0b', '#8b5cf6', '#2563eb', '#db2777', '#16a34a'];
+const AV_COLORS = ['#004D44', '#32796E', '#A39161', '#C45B32', '#315DA8', '#65449A', '#963E60', '#526B82'];
 function avatar(name, withName = true) {
   if (!name || !name.trim()) return '<span class="muted small">Unassigned</span>';
   const parts = name.trim().split(/\s+/);
@@ -39,6 +39,7 @@ function avatar(name, withName = true) {
   let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return `<span class="avatar-wrap"><span class="avatar" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(ini)}</span>${withName ? `<span class="av-name">${esc(name)}</span>` : ''}</span>`;
 }
+const pbarC = (p, col) => `<div class="pbar" style="--c:${col}" role="progressbar" aria-valuenow="${pct(p)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct(p)}%"></i></div>`;
 const pbar = (p, st) => `<div class="pbar st-${st}" role="progressbar" aria-valuenow="${pct(p)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct(p)}%"></i></div>`;
 function forecastText(it) {
   if (!it.forecastStart && !it.forecastEnd) return '';

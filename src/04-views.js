@@ -45,10 +45,10 @@ function viewDashboard() {
     <div class="card"><div class="card-h"><h3>Objectives by status</h3></div>
       ${t.objectives ? `<div class="stack">${segs}</div>` : '<p class="muted">No objectives yet.</p>'}
       <div class="legend">${STATUS_ORDER.map(k => `<span class="lg ${t.byObjStatus[k] ? '' : 'dim'}"><i class="dot st-${k}"></i>${STATUS_LABEL[k]} <b>${t.byObjStatus[k]}</b></span>`).join('')}</div>
-      ${realObjs().length ? `<div class="obj-mini">${realObjs().slice(0, 6).map(o => { const i = D.obj.get(o.id); return `<div class="om"><span class="om-n" title="${esc(o.name)}">${esc(o.name)}</span>${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>`; }).join('')}${realObjs().length > 6 ? `<p class="muted small">+ ${realObjs().length - 6} more</p>` : ''}</div>` : ''}
+      ${realObjs().length ? `<div class="obj-mini">${realObjs().slice(0, 6).map(o => { const i = D.obj.get(o.id), c = objCol(o); return `<div class="om"><span class="om-n" title="${esc(o.name)} — ${esc(STATUS_LABEL[i.status])}"><i class="sw" style="background:${c.c}"></i> ${esc(o.name)}</span>${pbarC(i.progress, c.c)}<b>${pct(i.progress)}%</b></div>`; }).join('')}${realObjs().length > 6 ? `<p class="muted small">+ ${realObjs().length - 6} more</p>` : ''}</div>` : ''}
     </div>
     <div class="card"><div class="card-h"><h3>Upcoming milestones</h3>${btn('All', 'goto', 'data-view="milestones"', 'small ghost')}</div>
-      ${upcoming.length ? `<ul class="list">${upcoming.map(m => { const e = msEffective(m); return `<li><span class="ms-dot ms-${e}"></span><div class="li-main"><b>${esc(m.name)}</b><small>${esc(fmtDate(m.date))}${m.objectiveId ? ' · ' + esc(nameOf(m.objectiveId)) : ''}</small></div><span class="rel ${e === 'missed' ? 'bad' : ''}">${relDays(m.date)}</span></li>`; }).join('')}</ul>` : '<p class="muted">No upcoming milestones. Add delivery milestones to show them on the roadmap.</p>'}
+      ${upcoming.length ? `<ul class="list">${upcoming.map(m => { const e = msEffective(m); return `<li><span class="ms-dot ms-${e}" style="--mc:${msColour(m)}"></span><div class="li-main"><b>${esc(m.name)}</b><small>${esc(fmtDate(m.date))}${m.objectiveId ? ' · ' + esc(nameOf(m.objectiveId)) : ''}</small></div><span class="rel ${e === 'missed' ? 'bad' : ''}">${relDays(m.date)}</span></li>`; }).join('')}</ul>` : '<p class="muted">No upcoming milestones. Add delivery milestones to show them on the roadmap.</p>'}
     </div>
     <div class="card span2"><div class="card-h"><h3>Key risks &amp; blockers</h3>${btn('Open', 'goto', 'data-view="risks"', 'small ghost')}</div>
       <div class="cols-3">
@@ -65,13 +65,14 @@ function viewDashboard() {
 function objCard(o) {
   const i = D.obj.get(o.id), open = ui.objOpen.has(o.id);
   const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-edit" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
-  return `<article class="obj-card st-${i.status}">
+  const oc = objCol(o);
+  return `<article class="obj-card st-${i.status}" style="border-top-color:${oc.c}">
     <div class="obj-top"><div class="obj-ids">${idChip(o.id)}${prioChip(o.priority)}</div>${pill(i.status)}</div>
     <h3 class="obj-title">${esc(o.name)}</h3>
     ${o.description ? `<p class="obj-desc">${esc(o.description)}</p>` : ''}
     <div class="obj-meta">${avatar(o.owner)}<span class="dates">${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>
     ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
-    <div class="obj-prog">${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>
+    <div class="obj-prog">${pbarC(i.progress, oc.c)}<b>${pct(i.progress)}%</b></div>
     <div class="obj-stats"><span>${i.taskDone}/${i.taskCount} tasks complete</span>${i.subCount ? `<span>${i.subCount} subtasks</span>` : ''}${i.taskBlocked ? `<span class="t-red">${i.taskBlocked} blocked</span>` : ''}${!i.taskCount ? '<span class="muted">No tasks yet — progress 0%</span>' : ''}</div>
     ${o.blocked ? `<div class="callout red">${icon('ban', 15)} ${esc(o.blocker || 'Blocked')}</div>` : ''}
     <div class="obj-actions">
@@ -114,7 +115,8 @@ function taskRowHtml(kind, item, parentLabel) {
   const prog = info.leaf
     ? `<div class="prog-ctl"><input type="range" min="0" max="100" step="5" value="${pct(info.progress)}" data-progress data-id="${esc(item.id)}" aria-label="Progress for ${esc(item.name)}" class="st-${info.status}"><span class="ptxt">${pct(info.progress)}%</span></div>`
     : `<div class="prog-auto">${pbar(info.progress, info.status)}<span class="ptxt">${pct(info.progress)}%</span><small class="auto">auto</small></div>`;
-  return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}">
+  const tc = objCol((isSub ? IDX.sub : IDX.task).get(item.id).obj);
+  return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}" style="--ol:${tc.l}">
     <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
       <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
       <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}</div></div></div>
@@ -170,8 +172,8 @@ function viewTasks() {
     if (filtering && !body) return;
     const hdr = o.system
       ? `<div class="t-group-h st-not-started"><div class="tg-l"><span class="tg-bar"></span><div><h3>Unassigned tasks</h3><small><span class="muted">Not linked to an objective yet — open a task and choose an objective when you are ready.</span></small></div></div><div class="tg-r">${btn('Task', 'task-new', 'data-obj="unassigned"', 'small', 'plus')}</div></div>`
-      : `<div class="t-group-h st-${oi.status}"><div class="tg-l"><span class="tg-bar"></span><div><h3>${esc(o.name)}</h3><small>${idChip(o.id)} ${pill(oi.status)} <span class="muted">${esc(rangeText(o.startDate, o.endDate))}${o.owner ? ' · ' + esc(o.owner) : ''}</span></small></div></div>
-      <div class="tg-r"><div class="tg-prog">${pbar(oi.progress, oi.status)}<b>${pct(oi.progress)}%</b></div>${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small', 'plus')}</div></div>`;
+      : `<div class="t-group-h st-${oi.status}" style="--c:${objCol(o).c};--cs:${objCol(o).l}"><div class="tg-l"><span class="tg-bar"></span><div><h3>${esc(o.name)}</h3><small>${idChip(o.id)} ${pill(oi.status)} <span class="muted">${esc(rangeText(o.startDate, o.endDate))}${o.owner ? ' · ' + esc(o.owner) : ''}</span></small></div></div>
+      <div class="tg-r"><div class="tg-prog">${pbarC(oi.progress, objCol(o).c)}<b>${pct(oi.progress)}%</b></div>${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small', 'plus')}</div></div>`;
     rows += `<section class="t-group">${hdr}
       <div class="t-head"><div>Task / subtask</div><div>Owner</div><div>Dates</div><div>Priority</div><div>Status</div><div>Progress</div><div></div></div>
       ${body || '<p class="muted pad">No tasks yet. Use “Task” to add one.</p>'}</section>`;
@@ -269,7 +271,7 @@ function viewMilestones() {
   const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
   h += `<div class="ms-list">${list.map(m => {
     const e = msEffective(m);
-    return `<div class="card ms-card"><div class="ms-diamond ms-${e}">${icon('diamond', 22)}</div><div class="ms-body"><div class="ms-top">${idChip(m.id)}${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</div><h3>${esc(m.name)}</h3>
+    return `<div class="card ms-card"><div class="ms-diamond ms-${e}" style="--mc:${msColour(m)};background:${(m.objectiveId && objColById(m.objectiveId)) ? objColById(m.objectiveId).l : '#E5E7EB'}">${icon('diamond', 22)}</div><div class="ms-body"><div class="ms-top">${idChip(m.id)}${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</div><h3>${esc(m.name)}</h3>
       ${m.description ? `<p class="muted">${esc(m.description)}</p>` : ''}<div class="ms-meta"><span>${icon('clock', 14)} ${esc(fmtDate(m.date))} <small class="muted">(${relDays(m.date)})</small></span>${m.objectiveId ? `<span>${icon('target', 14)} ${esc(nameOf(m.objectiveId))}</span>` : '<span class="muted">Programme-level</span>'}</div></div>
       <div class="t-act"><button class="icon-btn" data-action="ms-edit" data-id="${esc(m.id)}" aria-label="Edit milestone">${icon('edit', 17)}</button><button class="icon-btn danger" data-action="ms-del" data-id="${esc(m.id)}" aria-label="Delete milestone">${icon('trash', 17)}</button></div></div>`;
   }).join('')}</div>`;
@@ -318,7 +320,7 @@ function reportBodyHtml() {
     <div class="rep-kpis"><div><b>${t.objectives}</b><span>Objectives</span></div><div><b>${t.tasks}</b><span>Tasks</span></div><div><b>${t.tasksDone}</b><span>Completed</span></div><div><b>${t.tasksStarted}</b><span>In progress</span></div><div class="r"><b>${t.tasksBlocked}</b><span>Blocked</span></div><div class="a"><b>${t.tasksOverdue}</b><span>Overdue</span></div></div>
     <h2>Objectives</h2>
     ${realObjs().length ? `<table><thead><tr><th>ID</th><th>Objective</th><th>Owner</th><th>Baseline</th><th>Forecast</th><th>Tasks</th><th>Progress</th><th>Status</th></tr></thead><tbody>
-    ${realObjs().map(o => { const i = D.obj.get(o.id); return `<tr><td>${esc(o.id)}</td><td><b>${esc(o.name)}</b></td><td>${esc(o.owner || '—')}</td><td>${esc(rangeText(o.startDate, o.endDate))}</td><td>${o.forecastStart || o.forecastEnd ? esc(rangeText(o.forecastStart || o.startDate, o.forecastEnd || o.endDate)) : '—'}</td><td>${i.taskDone}/${i.taskCount}</td><td><span class="rbar"><i class="st-${i.status}" style="width:${pct(i.progress)}%"></i></span> ${pct(i.progress)}%</td><td>${pill(i.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No objectives defined.</p>'}
+    ${realObjs().map(o => { const i = D.obj.get(o.id); return `<tr><td>${esc(o.id)}</td><td><i class="rdot" style="background:${objCol(o).c}"></i><b>${esc(o.name)}</b></td><td>${esc(o.owner || '—')}</td><td>${esc(rangeText(o.startDate, o.endDate))}</td><td>${o.forecastStart || o.forecastEnd ? esc(rangeText(o.forecastStart || o.startDate, o.forecastEnd || o.endDate)) : '—'}</td><td>${i.taskDone}/${i.taskCount}</td><td><span class="rbar"><i style="width:${pct(i.progress)}%;background:${objCol(o).c}"></i></span> ${pct(i.progress)}%</td><td>${pill(i.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No objectives defined.</p>'}
     <h2>Blocked work (${D.blockedItems.length})</h2>
     ${D.blockedItems.length ? `<table><thead><tr><th>Item</th><th>Blocker</th><th>Owner</th><th>Objective</th></tr></thead><tbody>${D.blockedItems.map(b => `<tr><td><b>${esc(b.name)}</b></td><td>${esc(b.blocker || '—')}</td><td>${esc(b.owner || '—')}</td><td>${esc(b.objective)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Nothing is currently blocked.</p>'}
     <h2>Overdue &amp; at-risk tasks (${D.overdueItems.length + atRisk.filter(x => !x.overdue).length})</h2>

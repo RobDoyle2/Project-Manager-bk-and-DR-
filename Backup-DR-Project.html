@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Backup &amp; DR Programme Manager</title>
 <meta name="description" content="Standalone project management application for a Backup &amp; Disaster Recovery programme.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%235b5bd6'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.5-8 10-4.6-1.500-8-5-8-10V9z' fill='none' stroke='white' stroke-width='2.200' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23004D44'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.5-8 10-4.6-1.500-8-5-8-10V9z' fill='none' stroke='white' stroke-width='2.200' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{
-  --bg:#f4f5fb;--card:#fff;--ink:#22243a;--ink2:#575c78;--ink3:#8a8fa8;--line:#e5e7f2;--line2:#eff0f8;
-  --brand:#5b5bd6;--brand-d:#4343b8;--brand-soft:#ececfd;--accent:#0d9488;
-  --radius:16px;--shadow:0 1px 2px rgba(34,36,58,.05),0 8px 24px rgba(34,36,58,.06);
+  --bg:#F8F8F5;--card:#fff;--ink:#252b29;--ink2:#626d68;--ink3:#6f7a74;--line:#e1e6e3;--line2:#eef1ef;
+  --brand:#004d44;--brand-d:#003b34;--brand-soft:#e4f0ec;--accent:#8c7a4b;--gold:#A39161;
+  --radius:16px;--shadow:0 1px 2px rgba(37,43,41,.05),0 8px 24px rgba(37,43,41,.06);
   --red:#e5484d;--amber:#f5a524;--green:#22b573;--blue:#3b82f6;
 }
 *{box-sizing:border-box}
@@ -28,11 +28,11 @@ h3{font-size:1.02rem}
 .app{display:grid;grid-template-columns:256px minmax(0,1fr);min-height:100vh}
 .sidebar{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow:auto;z-index:60}
 .brand{display:flex;align-items:center;gap:11px;padding:4px 10px 18px}
-.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6a6af2,#a35cf0 60%,#ff6ba8);display:grid;place-items:center;color:#fff;box-shadow:0 6px 14px rgba(110,90,240,.35)}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#32796E,#004D44 70%);display:grid;place-items:center;color:#fff;box-shadow:0 6px 14px rgba(0,77,68,.35)}
 .brand b{display:block;font-size:1.05rem;letter-spacing:-.01em}.brand small{color:var(--ink3);font-size:.76rem}
 .nav{display:flex;flex-direction:column;gap:3px}
 .nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:.95rem;transition:background .15s,color .15s}
-.nav a:hover{background:#f2f3fb;color:var(--ink)}
+.nav a:hover{background:#f1f3f2;color:var(--ink)}
 .nav a.active{background:var(--brand-soft);color:var(--brand-d)}
 .nav-badge{margin-left:auto;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:99px;display:grid;place-items:center;padding:0 6px}
 .nav-badge.red{background:var(--red);color:#fff}
@@ -43,7 +43,7 @@ h3{font-size:1.02rem}
 .side-ok{display:flex;gap:8px;align-items:flex-start;color:var(--ink3);font-size:.78rem;padding:6px 10px}
 .scrim{display:none}
 .main{min-width:0;display:flex;flex-direction:column}
-.topbar{position:sticky;top:0;z-index:40;background:rgba(244,245,251,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;gap:12px;padding:12px 28px;border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(248,248,245,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;gap:12px;padding:12px 28px;border-bottom:1px solid var(--line)}
 .topbar .hamb{display:none}
 .topbar h2{font-size:1rem;font-weight:700;color:var(--ink2)}
 .topbar .sp{flex:1}
@@ -60,18 +60,18 @@ h3{font-size:1.02rem}
 
 /* ---------- buttons ---------- */
 .btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 14px;cursor:pointer;font-weight:650;font-size:.9rem;display:inline-flex;gap:7px;align-items:center;justify-content:center;transition:transform .08s,box-shadow .15s,background .15s;white-space:nowrap}
-.btn:hover{background:#f7f8fd;box-shadow:0 2px 8px rgba(34,36,58,.08)}
+.btn:hover{background:#f1f3f2;box-shadow:0 2px 8px rgba(37,43,41,.08)}
 .btn:active{transform:translateY(1px)}
-.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(91,91,214,.3)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(0,77,68,.3)}
 .btn.primary:hover{background:var(--brand-d)}
 .btn.ghost{background:transparent}
 .btn.small{padding:5px 10px;font-size:.8rem;border-radius:9px}
 .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
 .btn.danger:hover{background:#c93338}
 .btn.danger-t{color:#b3262b}
-.btn:focus-visible,.icon-btn:focus-visible,.nav a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.bar:focus-visible{outline:3px solid rgba(91,91,214,.35);outline-offset:1px}
+.btn:focus-visible,.icon-btn:focus-visible,.nav a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.bar:focus-visible{outline:3px solid rgba(0,77,68,.35);outline-offset:1px}
 .icon-btn{border:0;background:transparent;border-radius:9px;width:32px;height:32px;display:inline-grid;place-items:center;cursor:pointer;color:var(--ink2)}
-.icon-btn:hover{background:#eef0fa;color:var(--ink)}
+.icon-btn:hover{background:#eef1ef;color:var(--ink)}
 .icon-btn.danger:hover{background:#fdeaea;color:var(--red)}
 .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn-col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .chip-btn{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:.78rem;cursor:pointer;font-weight:600}
@@ -89,7 +89,7 @@ h3{font-size:1.02rem}
 .overall{display:flex;flex-direction:column;align-items:center;gap:8px}
 .overall h3{align-self:flex-start}
 .ring{width:170px;height:170px}
-.ring-bg{fill:none;stroke:#e9ebf6;stroke-width:13}
+.ring-bg{fill:none;stroke:#e6ebe8;stroke-width:13}
 .ring-fg{fill:none;stroke:var(--brand);stroke-width:13;stroke-linecap:round;transition:stroke-dashoffset .6s}
 .ring-t{font-size:30px;font-weight:800;fill:var(--ink)}.ring-s{font-size:12px;fill:var(--ink3);font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
@@ -99,7 +99,7 @@ h3{font-size:1.02rem}
 .kpi-n{font-size:2.1rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .kpi-l{font-weight:700;font-size:.95rem}.kpi-s{color:var(--ink3);font-size:.78rem}
 .k-brand{--kc:var(--brand)}.k-done{--kc:var(--green)}.k-prog{--kc:var(--blue)}.k-block{--kc:var(--red)}.k-late{--kc:var(--amber)}
-.stack{display:flex;height:18px;border-radius:99px;overflow:hidden;background:#eceef6;gap:2px}
+.stack{display:flex;height:18px;border-radius:99px;overflow:hidden;background:#eef1ef;gap:2px}
 .sg{background:var(--c)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:.82rem;color:var(--ink2)}
 .legend.mt{margin-top:16px}
@@ -116,7 +116,7 @@ h3{font-size:1.02rem}
 .ms-planned{--mc:#3b82f6}.ms-at-risk{--mc:#f5a524}.ms-achieved{--mc:#22b573}.ms-missed{--mc:#e5484d}
 .sec-t{display:flex;align-items:center;gap:7px;font-size:.88rem;margin-bottom:12px}.sec-t.mt{margin-top:20px}
 .t-red{color:#c0282d}.t-amber{color:#a76a00}.t-brand{color:var(--brand-d)}
-.onboard{display:flex;gap:20px;align-items:flex-start;margin-bottom:18px;background:linear-gradient(135deg,#f3f1ff,#fff 55%);border-color:#dcd8fb}
+.onboard{display:flex;gap:20px;align-items:flex-start;margin-bottom:18px;background:linear-gradient(135deg,#f1f7f5,#fff 55%);border-color:#cfe3dc}
 .onb-ic{width:58px;height:58px;border-radius:18px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
 .onboard h2{font-size:1.25rem;margin-bottom:6px}.onboard p{color:var(--ink2);max-width:75ch}
 .onb-steps{margin:12px 0 16px;padding-left:20px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
@@ -126,27 +126,27 @@ h3{font-size:1.02rem}
 .empty h3{font-size:1.15rem;margin-bottom:6px;color:var(--ink)}.empty p{max-width:55ch;margin:0 auto 16px}
 
 /* ---------- status vocabulary ---------- */
-.st-not-started{--c:#a3a9c2;--cs:#eceef5;--cd:#555b75}
+.st-not-started{--c:#9aa39f;--cs:#eef1ef;--cd:#4f5a55}
 .st-in-progress{--c:#3b82f6;--cs:#dbe9ff;--cd:#1d4ed8}
 .st-completed{--c:#22b573;--cs:#d6f5e6;--cd:#13734a}
 .st-at-risk{--c:#f5a524;--cs:#fdecc8;--cd:#8a5a00}
 .st-blocked,.st-delayed{--c:#e5484d;--cs:#fbdadb;--cd:#a3191e}
-.st-on-hold{--c:#9a8cc7;--cs:#ebe7f6;--cd:#5b4d94}
+.st-on-hold{--c:#a39161;--cs:#f0ebdd;--cd:#6b5b30}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.74rem;font-weight:700;background:var(--cs);color:var(--cd);white-space:nowrap}
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--c)}
-.prio{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:7px;background:#eef0f8;color:var(--ink2)}
+.prio{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:7px;background:#eef1ef;color:var(--ink2)}
 .prio-high{background:#ffe9d6;color:#9a4300}.prio-critical{background:#fde0e1;color:#a3191e}.prio-low{background:#e8f4ee;color:#25704c}
-.idchip{font-size:.7rem;font-weight:700;letter-spacing:.03em;color:var(--ink3);background:#f0f1f9;padding:2px 7px;border-radius:7px;white-space:nowrap}
+.idchip{font-size:.7rem;font-weight:700;letter-spacing:.03em;color:var(--ink3);background:#eef1ef;padding:2px 7px;border-radius:7px;white-space:nowrap}
 .avatar-wrap{display:inline-flex;align-items:center;gap:8px;min-width:0}
 .avatar{width:26px;height:26px;border-radius:50%;color:#fff;font-size:.68rem;font-weight:700;display:inline-grid;place-items:center;flex:none}
 .av-name{font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pbar{height:9px;border-radius:99px;background:#e9ebf5;overflow:hidden;flex:1;min-width:40px}
+.pbar{height:9px;border-radius:99px;background:#e6ebe8;overflow:hidden;flex:1;min-width:40px}
 .pbar>i{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .35s}
 .slip{font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:6px}.slip.bad{background:#fde0e1;color:#a3191e}.slip.good{background:#d6f5e6;color:#13734a}
 .fc{font-size:.76rem;color:#8a5a00;background:#fff4d6;padding:2px 8px;border-radius:7px;display:inline-block}
 .callout{display:flex;gap:9px;align-items:flex-start;padding:10px 14px;border-radius:12px;font-size:.88rem;margin:10px 0}
 .callout.red{background:#fdeaea;color:#8f1d22;border:1px solid #f6c4c6}.callout.amber{background:#fff6e0;color:#7a5200;border:1px solid #f6d995}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:7px;background:#eef0f8;color:var(--ink2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:7px;background:#eef1ef;color:var(--ink2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
 .chip.red{background:#fde0e1;color:#a3191e}.chip.amber{background:#fff0cc;color:#8a5a00}
 
 /* ---------- toolbars ---------- */
@@ -155,13 +155,13 @@ h3{font-size:1.02rem}
 .search{min-width:240px;flex:1;max-width:380px}
 .chk{display:inline-flex;gap:7px;align-items:center;font-size:.88rem;color:var(--ink2);cursor:pointer;user-select:none}
 .chk input{width:16px;height:16px;accent-color:var(--brand)}
-.toolbar .seg,.seg[role=tablist]{background:#e9ebf6;border-radius:12px;padding:4px;gap:2px;display:inline-flex}
+.toolbar .seg,.seg[role=tablist]{background:#e6ebe8;border-radius:12px;padding:4px;gap:2px;display:inline-flex}
 .seg[role=tablist] button{border:0;background:transparent;padding:7px 16px;border-radius:9px;font-weight:650;cursor:pointer;color:var(--ink2)}
-.seg[role=tablist] button.on{background:#fff;color:var(--brand-d);box-shadow:0 2px 6px rgba(34,36,58,.12)}
+.seg[role=tablist] button.on{background:#fff;color:var(--brand-d);box-shadow:0 2px 6px rgba(37,43,41,.12)}
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px}
 .tabs button{border:0;background:none;padding:10px 14px;font-weight:650;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs button.on{color:var(--brand-d);border-bottom-color:var(--brand)}
-.count{font-size:.72rem;background:#eceef7;border-radius:99px;padding:1px 8px;margin-left:4px}.count.red{background:var(--red);color:#fff}
+.count{font-size:.72rem;background:#eef1ef;border-radius:99px;padding:1px 8px;margin-left:4px}.count.red{background:var(--red);color:#fff}
 
 /* ---------- objectives ---------- */
 .obj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
@@ -176,7 +176,7 @@ h3{font-size:1.02rem}
 .obj-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--ink2)}
 .obj-actions{display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap}.sp{flex:1}
 .obj-tasks{border-top:1px solid var(--line2);padding-top:10px;display:flex;flex-direction:column;gap:4px}
-.mini-task{display:grid;grid-template-columns:minmax(0,1fr) auto 40px;gap:10px;align-items:center;border:0;background:#f7f8fd;border-radius:10px;padding:8px 12px;cursor:pointer;text-align:left}
+.mini-task{display:grid;grid-template-columns:minmax(0,1fr) auto 40px;gap:10px;align-items:center;border:0;background:#f1f3f2;border-radius:10px;padding:8px 12px;cursor:pointer;text-align:left}
 .mini-task:hover{background:var(--brand-soft)}.mt-n{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mt-p{text-align:right;font-weight:700;font-size:.82rem}
 
 /* ---------- tasks table ---------- */
@@ -189,15 +189,15 @@ h3{font-size:1.02rem}
 .t-head{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;padding-top:10px;padding-bottom:8px;border-bottom:1px solid var(--line2);border-top:1px solid var(--line2)}
 .t-row{padding-top:10px;padding-bottom:10px;border-bottom:1px solid var(--line2);font-size:.88rem}
 .t-row:last-child{border-bottom:0}
-.t-row:hover{background:#fafaff}
-.t-row.lvl-2{background:#fbfbfe}
+.t-row:hover{background:#fafbfa}
+.t-row.lvl-2{background:#fafbfa}
 .t-row.lvl-2 .t-name{padding-left:34px}
 .t-row.is-blocked{box-shadow:inset 4px 0 0 var(--red);background:#fff8f8}
 .t-name{display:flex;gap:8px;align-items:flex-start;min-width:0}
 .t-name-txt{min-width:0;display:flex;flex-direction:column;gap:3px}
 .sub{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 .blocker-txt{font-size:.76rem;color:#a3191e}
-.chev{border:0;background:#eef0f8;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink2);transition:transform .15s}
+.chev{border:0;background:#eef1ef;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink2);transition:transform .15s}
 .chev.open{transform:rotate(90deg)}.chev-sp{width:24px;flex:none}
 .prog-ctl{display:flex;align-items:center;gap:8px}
 .prog-ctl input[type=range]{flex:1;accent-color:var(--c);min-width:70px}
@@ -222,7 +222,7 @@ h3{font-size:1.02rem}
 .r-row,.d-row{border-bottom:1px solid var(--line2);font-size:.88rem}.r-row:last-child,.d-row:last-child{border-bottom:0}
 .r-row.closed{opacity:.55}.r-row.blocked{box-shadow:inset 4px 0 0 var(--red)}
 .r-main{display:flex;flex-direction:column;gap:3px;min-width:0}.r-main small{color:var(--ink2)}
-.rs{font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;background:#eceef6}.rs-open{background:#fde0e1;color:#a3191e}.rs-mitigating{background:#fff0cc;color:#8a5a00}.rs-accepted{background:#e3e8fb;color:#2f3f9f}.rs-closed{background:#d6f5e6;color:#13734a}
+.rs{font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:99px;background:#eef1ef}.rs-open{background:#fde0e1;color:#a3191e}.rs-mitigating{background:#fff0cc;color:#8a5a00}.rs-accepted{background:#e7ecea;color:#4f5a55}.rs-closed{background:#d6f5e6;color:#13734a}
 
 /* ---------- dependencies ---------- */
 .d-head,.d-row{display:grid;grid-template-columns:200px minmax(160px,1.5fr) 30px minmax(160px,1.5fr) 100px minmax(120px,1fr) 76px;gap:12px;align-items:center;padding:12px 18px}
@@ -232,11 +232,11 @@ h3{font-size:1.02rem}
 .matrix-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;overflow:auto}
 .matrix{border-collapse:collapse;min-width:100%}
 .matrix th,.matrix td{border:1px solid var(--line2);padding:0}
-.matrix .corner{padding:10px;font-size:.78rem;text-align:left;vertical-align:bottom;background:#fafbff;min-width:200px}
-.matrix th.col{height:150px;width:46px;background:#fafbff;vertical-align:bottom}
+.matrix .corner{padding:10px;font-size:.78rem;text-align:left;vertical-align:bottom;background:#fafbfa;min-width:200px}
+.matrix th.col{height:150px;width:46px;background:#fafbfa;vertical-align:bottom}
 .matrix th.col span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;padding:8px 4px;font-size:.78rem;font-weight:600;max-height:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .matrix th.col small{color:var(--ink3);font-weight:500}
-.matrix th.row{text-align:left;font-size:.82rem;padding:8px 10px;font-weight:600;background:#fafbff}.matrix th.row small{display:block;color:var(--ink3);font-weight:500}
+.matrix th.row{text-align:left;font-size:.82rem;padding:8px 10px;font-weight:600;background:#fafbfa}.matrix th.row small{display:block;color:var(--ink3);font-weight:500}
 .matrix td{height:40px;text-align:center}
 .mx-dot{width:20px;height:20px;border-radius:50%;border:0;cursor:pointer;background:var(--blue)}
 .mx-dot.ds-at-risk{background:var(--amber)}.mx-dot.ds-satisfied{background:var(--green)}.mx-dot.ds-open{background:var(--blue)}
@@ -246,7 +246,7 @@ h3{font-size:1.02rem}
 /* ---------- milestones ---------- */
 .ms-list{display:flex;flex-direction:column;gap:14px}
 .ms-card{display:flex;gap:18px;align-items:center}
-.ms-diamond{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;color:var(--mc);background:#f2f3fb;flex:none}
+.ms-diamond{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;color:var(--mc);background:#f1f3f2;flex:none}
 .ms-diamond.ms-planned{background:#e4efff}.ms-diamond.ms-at-risk{background:#fff0cc}.ms-diamond.ms-achieved{background:#d6f5e6}.ms-diamond.ms-missed{background:#fde0e1}
 .ms-body{flex:1;min-width:0}.ms-top{display:flex;gap:8px;align-items:center;margin-bottom:4px}.ms-body h3{margin-bottom:2px}
 .ms-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:.86rem;color:var(--ink2);margin-top:6px}.ms-meta span{display:inline-flex;gap:6px;align-items:center}
@@ -259,27 +259,27 @@ h3{font-size:1.02rem}
 
 /* ---------- modal / forms ---------- */
 dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;color:var(--ink)}
-dialog::backdrop{background:rgba(25,27,50,.5);backdrop-filter:blur(3px)}
+dialog::backdrop{background:rgba(37,43,41,.5);backdrop-filter:blur(3px)}
 dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 @keyframes pop{from{transform:translateY(8px) scale(.985);opacity:0}to{transform:none;opacity:1}}
-.modal-card{background:#fff;border-radius:20px;width:min(640px,94vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(20,22,50,.4);overflow:hidden;margin:0}
+.modal-card{background:#fff;border-radius:20px;width:min(640px,94vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(37,43,41,.4);overflow:hidden;margin:0}
 .modal-card.wide{width:min(840px,95vw)}.modal-card.small{width:min(520px,94vw)}
 .modal-card header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
 .modal-card header h3{font-size:1.15rem}
 .modal-body{padding:20px 22px;overflow:auto;flex:1}
-.modal-card footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fafbff}
+.modal-card footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fafbfa}
 .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0}.fld.full,.full{grid-column:1/-1}
 .fl{font-size:.8rem;font-weight:700;color:var(--ink2)}
 .fld textarea{resize:vertical;min-height:60px}
-.fld input:focus,.fld select:focus,.fld textarea:focus,.search:focus,.toolbar select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,91,214,.18)}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.search:focus,.toolbar select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,77,68,.18)}
 .hint{color:var(--ink3);font-size:.76rem;font-weight:400}.hint.inline{font-weight:500}
 .form-error{background:#fdeaea;color:#8f1d22;border:1px solid #f6c4c6;border-radius:10px;padding:9px 12px;margin-top:14px;font-size:.88rem;font-weight:600}
 .form-error.inline{display:inline-block;margin:0 0 0 10px}
-.calc-box{background:#f5f6fd;border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem}
+.calc-box{background:#f1f3f2;border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem}
 .warn-note{background:#fff6e0;color:#7a5200;border-radius:10px;padding:8px 12px;font-size:.84rem}
 .notes{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:6px;max-height:140px;overflow:auto}
-.notes li{background:#f7f8fd;border-radius:9px;padding:6px 10px;font-size:.85rem}.nd{display:block;font-size:.7rem;font-weight:700;color:var(--ink3)}
+.notes li{background:#f1f3f2;border-radius:9px;padding:6px 10px;font-size:.85rem}.nd{display:block;font-size:.7rem;font-weight:700;color:var(--ink3)}
 .fc-details{border:1px dashed var(--line);border-radius:12px;padding:10px 14px}.fc-details summary{cursor:pointer;font-weight:650;font-size:.88rem}.fc-details .fgrid{margin-top:12px}
 .blockbox{border:1px solid #f3d3d4;border-radius:12px;padding:12px;background:#fffafa}
 .auto-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px}
@@ -288,7 +288,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .dep-row{display:grid;grid-template-columns:150px minmax(0,1.5fr) 100px minmax(0,1fr) 32px;gap:8px;align-items:center}
 .dep-row .dep-target select,.dep-row .dep-target input{width:100%}
 .cmp{display:flex;gap:14px;align-items:stretch;margin:14px 0;flex-wrap:wrap}
-.cmp>div:not(.cmp-arrow){flex:1;min-width:190px;background:#f5f6fd;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:.84rem}.cmp small{color:var(--ink3);text-transform:uppercase;font-weight:700;font-size:.68rem}
+.cmp>div:not(.cmp-arrow){flex:1;min-width:190px;background:#f1f3f2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:.84rem}.cmp small{color:var(--ink3);text-transform:uppercase;font-weight:700;font-size:.68rem}
 .cmp-arrow{align-self:center;font-size:1.4rem;color:var(--ink3)}
 .issues{margin:8px 0;padding:10px 12px 10px 28px;border-radius:10px;font-size:.84rem;max-height:200px;overflow:auto}
 .issues.err{background:#fdeaea;color:#8f1d22}.issues.warn{background:#fff6e0;color:#7a5200}
@@ -296,18 +296,18 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 
 /* ---------- toast / tooltip ---------- */
 #toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:#22243a;color:#fff;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:.9rem;font-weight:600;transform:translateY(12px);opacity:0;transition:all .25s;max-width:min(420px,90vw)}
+.toast{background:#252b29;color:#fff;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:.9rem;font-weight:600;transform:translateY(12px);opacity:0;transition:all .25s;max-width:min(420px,90vw)}
 .toast.in{transform:none;opacity:1}.toast.warn{background:#8a5a00}.toast.error{background:#b3262b}
-#tip{position:fixed;z-index:300;pointer-events:none;background:#22243a;color:#fff;font-size:.78rem;line-height:1.4;padding:8px 11px;border-radius:9px;max-width:320px;white-space:pre-line;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#tip{position:fixed;z-index:300;pointer-events:none;background:#252b29;color:#fff;font-size:.78rem;line-height:1.4;padding:8px 11px;border-radius:9px;max-width:320px;white-space:pre-line;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 
 /* ---------- GANTT ---------- */
 .rm-card{padding:14px}
 .gantt{--labelw:330px;border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
 .gantt-scroll{overflow-x:auto}
 .gantt-inner{min-width:calc(var(--labelw) + 720px);position:relative}
-.g-head{display:flex;border-bottom:1px solid var(--line);background:#fafbff}
+.g-head{display:flex;border-bottom:1px solid var(--line);background:#fafbfa}
 .g-lab{flex:0 0 var(--labelw);width:var(--labelw);position:sticky;left:0;z-index:6;background:#fff;border-right:1px solid var(--line);min-width:0}
-.g-lab-head{background:#fafbff;display:flex;align-items:flex-end;padding:10px 16px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
+.g-lab-head{background:#fafbfa;display:flex;align-items:flex-end;padding:10px 16px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
 .g-lab-head .tl-h{width:100%}
 .g-months{flex:1;display:flex;min-width:0}
 .g-month{border-left:1px solid var(--line);padding:9px 4px 8px;text-align:center;display:flex;flex-direction:column;min-width:0;line-height:1.2}
@@ -322,7 +322,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .g-row:last-child{border-bottom:0}
 .g-track{flex:1;position:relative;z-index:2;min-width:0}
 .g-empty{padding:34px 24px;text-align:center;color:var(--ink3)}
-.g-ms-row{background:linear-gradient(#fcfcff,#fff)}
+.g-ms-row{background:linear-gradient(#fafbfa,#fff)}
 .m-lab{padding:8px 16px;display:flex;flex-direction:column;justify-content:center;gap:2px}
 .ml-name{display:flex;gap:7px;align-items:center;min-width:0}.ml-name b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
 .ml-sub{font-size:.76rem;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -337,7 +337,6 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .bar-note.nn{margin-left:58px}
 .bar .chip-p{position:absolute;left:6px;top:50%;transform:translateY(-50%);background:#fff;color:var(--cd);font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:99px;box-shadow:0 1px 3px rgba(0,0,0,.18);white-space:nowrap}
 /* work-level colours: objective = deep pink, tasks and subtasks = one lighter pink */
-.bar.bl0{--c:#be185d;--cs:#f6c1da;--cd:#9d174d}.bar.bl1,.bar.bl2{--c:#f472b6;--cs:#fde1ef;--cd:#be185d}
 .bar.is-blocked{box-shadow:0 0 0 2px var(--red)}
 .bar.is-late{outline:2px dashed var(--red);outline-offset:1px}
 .fbar{position:absolute;border-radius:5px;border:1.5px dashed var(--amber);background:repeating-linear-gradient(135deg,rgba(245,165,36,.35) 0 4px,rgba(245,165,36,.08) 4px 8px);z-index:2}
@@ -354,7 +353,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .fb-lg{width:20px;height:8px;border:1.5px dashed var(--amber);border-radius:4px;display:inline-block;background:repeating-linear-gradient(135deg,rgba(245,165,36,.35) 0 3px,transparent 3px 6px)}
 .td-lg{width:3px;height:14px;background:var(--accent);display:inline-block;border-radius:2px}
 .bl-lg{width:18px;height:10px;border-radius:4px;box-shadow:0 0 0 2px var(--red);display:inline-block;background:#fff}
-.dot.lv0{background:#be185d}.dot.lv1{background:#f472b6}
+
 .rm-note{margin-top:10px;font-size:.8rem;color:#8a5a00;background:#fff6e0;padding:6px 12px;border-radius:9px}
 .gantt.compact .gantt-inner{min-width:calc(var(--labelw) + 640px)}.gantt.compact .g-month b{font-size:.74rem}
 .gantt.compact .m-lab{padding:4px 12px}
@@ -369,9 +368,9 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .tl-owner{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
 .tl-pct{font-weight:800;font-size:.8rem;text-align:right}
 .tl-stat .pill{font-size:.66rem;padding:2px 8px}
-.g-row.t-r.lvl-0 .g-lab{background:#f6f6fe}.g-row.t-r.lvl-0 .tl-txt b{font-size:.92rem}
-.g-row.t-r.lvl-2 .g-lab{background:#fcfcff}
-.g-row.t-r.lvl-0{background:#fbfbff}
+.g-row.t-r.lvl-0 .g-lab{background:#f1f3f2}.g-row.t-r.lvl-0 .tl-txt b{font-size:.92rem}
+.g-row.t-r.lvl-2 .g-lab{background:#fafbfa}
+.g-row.t-r.lvl-0{background:#fafbfa}
 .g-row.t-r .chev{width:20px;height:20px;border-radius:6px}
 
 /* ---------- print ---------- */
@@ -415,7 +414,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
   .app{grid-template-columns:1fr}
   .sidebar{position:fixed;left:0;top:0;bottom:0;width:272px;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.2)}
   .sidebar.open{transform:none}
-  .scrim.on{display:block;position:fixed;inset:0;background:rgba(20,22,50,.45);z-index:55}
+  .scrim.on{display:block;position:fixed;inset:0;background:rgba(37,43,41,.45);z-index:55}
   .topbar{padding:10px 14px}.topbar .hamb{display:inline-grid}
   #view{padding:18px 14px 60px}
   h1{font-size:1.4rem}
@@ -445,41 +444,78 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 /* ---------- additions: modal error bar, bulk add ---------- */
 .modal-err{margin:0;border-radius:0;border-left:0;border-right:0;border-bottom:0;padding:10px 22px}
 .fld input.invalid,.fld select.invalid,.fld textarea.invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(229,72,77,.2)!important}
-.csv-box{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;background:#fafbff}
+.csv-box{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;background:#fafbfa}
 .csv-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .csv-info{font-size:.84rem;color:#13734a;background:#e6f8ef;border-radius:8px;padding:6px 10px;margin-top:4px}
 
 .tb-btn svg{margin-right:5px}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
-.json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbff;resize:vertical}
+.json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfa;resize:vertical}
 .mt{margin-top:12px}
+
+/* ---------- objective colour system ---------- */
+.sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;flex:none}
+.t-row{border-left:5px solid var(--ol,transparent)}
+.g-gl{border-left-color:#E5E7EB}.g-month{border-left-color:#E5E7EB}
+.gantt-inner,.g-body{background:#fff}
+.bar.oc{border-radius:8px;box-shadow:none}
+.bar.oc-o{background:var(--oc);color:#fff}
+.bar.oc-t{background:var(--ol);color:#1F2937;box-shadow:inset 0 0 0 1px rgba(31,41,55,.08)}
+.bar.oc .bar-in{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
+.bar.oc .strip{position:absolute;left:0;bottom:0;height:4px}
+.bar.oc-o .strip{background:rgba(255,255,255,.92)}.bar.oc-t .strip{background:rgba(31,41,55,.55)}
+.bar-txt{position:absolute;left:8px;right:6px;top:0;bottom:4px;display:flex;align-items:center;gap:5px;font-size:.72rem;white-space:nowrap;overflow:hidden;pointer-events:none}
+.bar-txt b{font-weight:800}.bar-txt .bn{overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.bar.oc-o .bar-txt{color:#fff}.bar.oc-t .bar-txt{color:#1F2937}
+.bar.oc.narrow .bar-txt{left:calc(100% + 6px);right:auto;color:#1F2937;overflow:visible}
+.bar.oc.is-blocked{box-shadow:0 0 0 2px #E5484D}
+.bar.oc.is-late{outline:2px dashed #E5484D;outline-offset:2px}
+/* objective label cells stay plain (as on the Objectives tab); the objective colour is a stripe on the left */
+.m-lab .ml-sub{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;overflow:hidden}
+.m-lab .ml-dates{display:inline-flex;gap:4px;align-items:center;color:var(--ink2);white-space:nowrap}
+.m-lab .avatar-wrap .av-name{max-width:140px}
+.m-lab .ml-name b{font-size:1.02rem;color:var(--ink)}
+/* milestones: objective colour, status as a glyph (never colour alone) */
+.ms-pt .dia{background:var(--mc)}
+.ms-pt .dia::after{content:attr(data-g);position:absolute;inset:0;display:grid;place-items:center;transform:rotate(-45deg);color:#fff;font-size:10px;font-weight:900;line-height:1}
+.ms-vline{border-left-color:var(--mc)}
+.ms-diamond{color:var(--mc)}
+.legend .lg .sw{margin-right:2px}
+.gantt.compact .m-lab .ml-name b{font-size:.84rem}
+
+/* Christmas break band (24 Dec - 2 Jan): light grey, behind the bars */
+.g-xmas{position:absolute;top:0;bottom:0;background:rgba(148,158,152,.20);border-left:1px solid rgba(120,130,125,.25);border-right:1px solid rgba(120,130,125,.25)}
+.g-xmas span{position:absolute;left:50%;bottom:8px;transform:translateX(-50%) rotate(180deg);writing-mode:vertical-rl;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7b857f;white-space:nowrap}
+.gantt.compact .g-xmas span{font-size:.56rem;letter-spacing:.04em}
+.xm-lg{width:14px;height:12px;background:rgba(148,158,152,.35);border:1px solid rgba(120,130,125,.4);display:inline-block;border-radius:3px}
 
 </style>
 <style id="reportCss">
 /* Status report styles — also embedded in the downloadable HTML report */
-.rep{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:#22243a;max-width:1000px;margin:0 auto;padding:6px;font-size:12px;line-height:1.45}
+.rep{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:#252b29;max-width:1000px;margin:0 auto;padding:6px;font-size:12px;line-height:1.45}
 .report-page{background:#fff;padding:28px}
-.rep h1{font-size:24px;margin:0 0 4px}.rep h2{font-size:15px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid #ececfd;color:#3a3aa8}
-.rep p{margin:2px 0}.rep .muted{color:#8a8fa8}
-.rep-head{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:4px solid #5b5bd6;padding-bottom:12px}
-.rep-sub{color:#575c78}
+.rep h1{font-size:24px;margin:0 0 4px}.rep h2{font-size:15px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid #e4f0ec;color:#003b34}
+.rep p{margin:2px 0}.rep .muted{color:#6f7a74}
+.rep-head{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:4px solid #004d44;padding-bottom:12px}
+.rep-sub{color:#626d68}
 .rep-ring .ring{width:120px;height:120px}
-.ring-bg{fill:none;stroke:#e9ebf6;stroke-width:13}.ring-fg{fill:none;stroke:#5b5bd6;stroke-width:13;stroke-linecap:round}
-.ring-t{font-size:30px;font-weight:800;fill:#22243a}.ring-s{font-size:12px;fill:#8a8fa8;font-weight:600}
+.ring-bg{fill:none;stroke:#e6ebe8;stroke-width:13}.ring-fg{fill:none;stroke:#004d44;stroke-width:13;stroke-linecap:round}
+.ring-t{font-size:30px;font-weight:800;fill:#252b29}.ring-s{font-size:12px;fill:#6f7a74;font-weight:600}
 .rep-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}
-.rep-kpis div{border:1px solid #e5e7f2;border-radius:10px;padding:8px 10px;border-left:4px solid #5b5bd6}
+.rep-kpis div{border:1px solid #e1e6e3;border-radius:10px;padding:8px 10px;border-left:4px solid #004d44}
 .rep-kpis div.r{border-left-color:#e5484d}.rep-kpis div.a{border-left-color:#f5a524}
-.rep-kpis b{display:block;font-size:20px}.rep-kpis span{color:#575c78;font-size:11px}
+.rep-kpis b{display:block;font-size:20px}.rep-kpis span{color:#626d68;font-size:11px}
 .rep table{width:100%;border-collapse:collapse;margin:4px 0}
-.rep th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8a8fa8;padding:5px 7px;border-bottom:1px solid #d9dcec}
-.rep td{padding:6px 7px;border-bottom:1px solid #eff0f8;vertical-align:top}
+.rep th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6f7a74;padding:5px 7px;border-bottom:1px solid #d5dbd8}
+.rep td{padding:6px 7px;border-bottom:1px solid #eef1ef;vertical-align:top}
 .rep tr{break-inside:avoid;page-break-inside:avoid}
-.rbar{display:inline-block;width:70px;height:7px;border-radius:9px;background:#e9ebf5;vertical-align:middle;overflow:hidden}
+.rbar{display:inline-block;width:70px;height:7px;border-radius:9px;background:#e6ebe8;vertical-align:middle;overflow:hidden}
 .rbar i{display:block;height:100%;background:var(--c)}
-.rep-foot{margin-top:24px;color:#8a8fa8;font-size:10px;text-align:center}
-.st-not-started{--c:#a3a9c2;--cs:#eceef5;--cd:#555b75}.st-in-progress{--c:#3b82f6;--cs:#dbe9ff;--cd:#1d4ed8}.st-completed{--c:#22b573;--cs:#d6f5e6;--cd:#13734a}
-.st-at-risk{--c:#f5a524;--cs:#fdecc8;--cd:#8a5a00}.st-blocked,.st-delayed{--c:#e5484d;--cs:#fbdadb;--cd:#a3191e}.st-on-hold{--c:#9a8cc7;--cs:#ebe7f6;--cd:#5b4d94}
+.rdot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.rep-foot{margin-top:24px;color:#6f7a74;font-size:10px;text-align:center}
+.st-not-started{--c:#9aa39f;--cs:#eef1ef;--cd:#4f5a55}.st-in-progress{--c:#3b82f6;--cs:#dbe9ff;--cd:#1d4ed8}.st-completed{--c:#22b573;--cs:#d6f5e6;--cd:#13734a}
+.st-at-risk{--c:#f5a524;--cs:#fdecc8;--cd:#8a5a00}.st-blocked,.st-delayed{--c:#e5484d;--cs:#fbdadb;--cd:#a3191e}.st-on-hold{--c:#a39161;--cs:#f0ebdd;--cd:#6b5b30}
 .rep .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:var(--cs);color:var(--cd);white-space:nowrap}
 .rep .pill i{width:6px;height:6px;border-radius:50%;background:var(--c)}
 .rep .band{font-size:10px;font-weight:800;padding:1px 7px;border-radius:6px;display:inline-block;white-space:nowrap}
@@ -524,7 +560,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -546,6 +582,50 @@ const DEP_STATUS = ['open', 'at-risk', 'satisfied'];
 const IMPACT = ['Very low', 'Low', 'Medium', 'High', 'Very high'];
 const LIKELIHOOD = ['Rare', 'Unlikely', 'Possible', 'Likely', 'Almost certain'];
 const DAY = 86400000;
+
+/* Objective colour identity: one strong colour per objective, one lighter shade for ALL its tasks/subtasks. */
+const PALETTE = [
+  { n: 'Emerald Green', c: '#006B5B', l: '#C0DDD6' }, { n: 'Royal Blue', c: '#315DA8', l: '#C6D3E9' },
+  { n: 'Deep Purple', c: '#65449A', l: '#D3C7E5' }, { n: 'Burnt Orange', c: '#C45B32', l: '#EED0C1' },
+  { n: 'Teal', c: '#147E91', l: '#C0DDE1' }, { n: 'Ochre Gold', c: '#A17A20', l: '#E8DDBB' },
+  { n: 'Slate Blue', c: '#526B82', l: '#C9D4DC' }, { n: 'Berry', c: '#963E60', l: '#E6C6D2' },
+  // extension for programmes with more than eight objectives
+  { n: 'Forest Olive', c: '#5A7D2A', l: '#D6E2BE' }, { n: 'Plum', c: '#8B2F86', l: '#E6C9E4' },
+  { n: 'Coffee Brown', c: '#7A5230', l: '#E2D3C5' }, { n: 'Crimson', c: '#B1333F', l: '#F0CDD1' },
+  { n: 'Sage Green', c: '#5F8A63', l: '#D1E1D3' }, { n: 'Charcoal', c: '#4B5563', l: '#D1D5DB' }
+];
+const SYS_COL = { n: 'Unassigned', c: '#64748B', l: '#E2E8F0' };
+function hexHSL(h) {
+  const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let hue = 0;
+  if (d) hue = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: (hue * 60 + 360) % 360, l, s: d ? d / (1 - Math.abs(2 * l - 1)) : 0 };
+}
+function similarCol(a, b) {
+  const x = hexHSL(a.c), y = hexHSL(b.c);
+  const dh = Math.min(Math.abs(x.h - y.h), 360 - Math.abs(x.h - y.h));
+  return dh < 26 && Math.abs(x.l - y.l) < 0.18 && x.s > 0.15 && y.s > 0.15;
+}
+const validCI = v => Number.isInteger(v) && v >= 0;
+function objCol(o) { return (!o || o.system) ? SYS_COL : PALETTE[(validCI(o.colorIndex) ? o.colorIndex : 0) % PALETTE.length]; }
+/* Give every objective that has no colour the next unused palette slot (avoiding a look-alike of its neighbour).
+   Existing assignments are never changed, so deleting or reordering objectives cannot recolour the rest. */
+function assignColours(d = data) {
+  const real = d.objectives.filter(o => !o.system);
+  const used = new Set(real.filter(o => validCI(o.colorIndex)).map(o => o.colorIndex));
+  let prev = null;
+  real.forEach(o => {
+    if (!validCI(o.colorIndex)) {
+      const cand = [];
+      for (let i = 0; cand.length < PALETTE.length; i++) if (!used.has(i)) cand.push(i);
+      const pick = cand.find(i => !prev || !similarCol(PALETTE[i % PALETTE.length], prev));
+      o.colorIndex = pick !== undefined ? pick : cand[0];
+      used.add(o.colorIndex);
+    }
+    prev = PALETTE[o.colorIndex % PALETTE.length];
+  });
+}
 
 /* ---------- date helpers (ISO strings only; no local-time parsing) ---------- */
 const pad2 = n => String(n).padStart(2, '0');
@@ -635,6 +715,7 @@ function syncLeaf(x) {
   else if (x.status === 'not-started' && x.progress > 0) x.status = 'in-progress';
 }
 function syncStored(d = data) {
+  assignColours(d);
   d.objectives.forEach(o => {
     o.tasks.forEach(t => {
       t.subtasks.forEach(syncLeaf);
@@ -756,7 +837,7 @@ function parseProject(raw) {
     if (o && Array.isArray(o.tasks) === false && o.tasks !== undefined) E(`${lab}: "tasks" must be an array.`);
     const base = common(o, lab, true);
     if (!base) return;
-    const obj = { id: idOf(o.id, 'objective'), ...(o.system === true ? { system: true } : {}), ...base, tasks: [] };
+    const obj = { id: idOf(o.id, 'objective'), ...(o.system === true ? { system: true } : (validCI(o.colorIndex) ? { colorIndex: o.colorIndex } : {})), ...base, tasks: [] };
     (Array.isArray(o.tasks) ? o.tasks : []).forEach((t, j) => {
       const tl = `${lab} › Task #${j + 1}${t && t.name ? ` "${t.name}"` : ''}`;
       if (t && t.subtasks !== undefined && !Array.isArray(t.subtasks)) E(`${tl}: "subtasks" must be an array.`);
@@ -967,6 +1048,14 @@ function nameOf(id) {
   const n = D && D.node.get(id);
   return n ? n.item.name : id;
 }
+function objColById(id) {
+  if (!id || !IDX) return null;
+  if (IDX.objective.has(id)) return objCol(IDX.objective.get(id).item);
+  if (IDX.task.has(id)) return objCol(IDX.task.get(id).obj);
+  if (IDX.sub.has(id)) return objCol(IDX.sub.get(id).obj);
+  return null;
+}
+function msColour(m) { const c = m.objectiveId && objColById(m.objectiveId); return c ? c.c : '#374151'; }
 function kindLabel(id) {
   const n = D && D.node.get(id);
   return n ? ({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[n.kind] : '';
@@ -1007,7 +1096,7 @@ function setLeafProgress(item, v) {
    Persistence: autosave, backups, export / import
    ===================================================================== */
 const ui = {
-  view: 'dashboard', rmMode: 'management', rmColor: 'level', rmObj: 'all', rmMilestones: true, rmForecast: true,
+  view: 'dashboard', rmMode: 'management', rmColor: 'level', rmMgmtColor: 'objective', rmObj: 'all', rmMilestones: true, rmForecast: true,
   collapsed: new Set(), objOpen: new Set(),
   objFilter: { q: '', status: 'all' },
   taskFilter: { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false },
@@ -1126,7 +1215,7 @@ const icon = (n, s = 18) => `<svg class="ic" width="${s}" height="${s}" viewBox=
 const pill = (st, label) => `<span class="pill st-${st}"><i></i>${esc(label || STATUS_LABEL[st] || st)}</span>`;
 const prioChip = p => `<span class="prio prio-${esc(String(p).toLowerCase())}">${esc(p)}</span>`;
 const idChip = id => `<span class="idchip">${esc(id)}</span>`;
-const AV_COLORS = ['#5b5bd6', '#0ea5a4', '#e5484d', '#f59e0b', '#8b5cf6', '#2563eb', '#db2777', '#16a34a'];
+const AV_COLORS = ['#004D44', '#32796E', '#A39161', '#C45B32', '#315DA8', '#65449A', '#963E60', '#526B82'];
 function avatar(name, withName = true) {
   if (!name || !name.trim()) return '<span class="muted small">Unassigned</span>';
   const parts = name.trim().split(/\s+/);
@@ -1134,6 +1223,7 @@ function avatar(name, withName = true) {
   let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return `<span class="avatar-wrap"><span class="avatar" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(ini)}</span>${withName ? `<span class="av-name">${esc(name)}</span>` : ''}</span>`;
 }
+const pbarC = (p, col) => `<div class="pbar" style="--c:${col}" role="progressbar" aria-valuenow="${pct(p)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct(p)}%"></i></div>`;
 const pbar = (p, st) => `<div class="pbar st-${st}" role="progressbar" aria-valuenow="${pct(p)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct(p)}%"></i></div>`;
 function forecastText(it) {
   if (!it.forecastStart && !it.forecastEnd) return '';
@@ -1845,10 +1935,10 @@ function viewDashboard() {
     <div class="card"><div class="card-h"><h3>Objectives by status</h3></div>
       ${t.objectives ? `<div class="stack">${segs}</div>` : '<p class="muted">No objectives yet.</p>'}
       <div class="legend">${STATUS_ORDER.map(k => `<span class="lg ${t.byObjStatus[k] ? '' : 'dim'}"><i class="dot st-${k}"></i>${STATUS_LABEL[k]} <b>${t.byObjStatus[k]}</b></span>`).join('')}</div>
-      ${realObjs().length ? `<div class="obj-mini">${realObjs().slice(0, 6).map(o => { const i = D.obj.get(o.id); return `<div class="om"><span class="om-n" title="${esc(o.name)}">${esc(o.name)}</span>${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>`; }).join('')}${realObjs().length > 6 ? `<p class="muted small">+ ${realObjs().length - 6} more</p>` : ''}</div>` : ''}
+      ${realObjs().length ? `<div class="obj-mini">${realObjs().slice(0, 6).map(o => { const i = D.obj.get(o.id), c = objCol(o); return `<div class="om"><span class="om-n" title="${esc(o.name)} — ${esc(STATUS_LABEL[i.status])}"><i class="sw" style="background:${c.c}"></i> ${esc(o.name)}</span>${pbarC(i.progress, c.c)}<b>${pct(i.progress)}%</b></div>`; }).join('')}${realObjs().length > 6 ? `<p class="muted small">+ ${realObjs().length - 6} more</p>` : ''}</div>` : ''}
     </div>
     <div class="card"><div class="card-h"><h3>Upcoming milestones</h3>${btn('All', 'goto', 'data-view="milestones"', 'small ghost')}</div>
-      ${upcoming.length ? `<ul class="list">${upcoming.map(m => { const e = msEffective(m); return `<li><span class="ms-dot ms-${e}"></span><div class="li-main"><b>${esc(m.name)}</b><small>${esc(fmtDate(m.date))}${m.objectiveId ? ' · ' + esc(nameOf(m.objectiveId)) : ''}</small></div><span class="rel ${e === 'missed' ? 'bad' : ''}">${relDays(m.date)}</span></li>`; }).join('')}</ul>` : '<p class="muted">No upcoming milestones. Add delivery milestones to show them on the roadmap.</p>'}
+      ${upcoming.length ? `<ul class="list">${upcoming.map(m => { const e = msEffective(m); return `<li><span class="ms-dot ms-${e}" style="--mc:${msColour(m)}"></span><div class="li-main"><b>${esc(m.name)}</b><small>${esc(fmtDate(m.date))}${m.objectiveId ? ' · ' + esc(nameOf(m.objectiveId)) : ''}</small></div><span class="rel ${e === 'missed' ? 'bad' : ''}">${relDays(m.date)}</span></li>`; }).join('')}</ul>` : '<p class="muted">No upcoming milestones. Add delivery milestones to show them on the roadmap.</p>'}
     </div>
     <div class="card span2"><div class="card-h"><h3>Key risks &amp; blockers</h3>${btn('Open', 'goto', 'data-view="risks"', 'small ghost')}</div>
       <div class="cols-3">
@@ -1865,13 +1955,14 @@ function viewDashboard() {
 function objCard(o) {
   const i = D.obj.get(o.id), open = ui.objOpen.has(o.id);
   const tasks = o.tasks.map(t => { const ti = D.task.get(t.id); return `<button class="mini-task" data-action="task-edit" data-id="${esc(t.id)}"><span class="mt-n">${esc(t.name)}</span>${pill(ti.status)}<span class="mt-p">${pct(ti.progress)}%</span></button>`; }).join('');
-  return `<article class="obj-card st-${i.status}">
+  const oc = objCol(o);
+  return `<article class="obj-card st-${i.status}" style="border-top-color:${oc.c}">
     <div class="obj-top"><div class="obj-ids">${idChip(o.id)}${prioChip(o.priority)}</div>${pill(i.status)}</div>
     <h3 class="obj-title">${esc(o.name)}</h3>
     ${o.description ? `<p class="obj-desc">${esc(o.description)}</p>` : ''}
     <div class="obj-meta">${avatar(o.owner)}<span class="dates">${icon('clock', 14)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>
     ${forecastText(o) ? `<div class="obj-meta">${forecastText(o)}</div>` : ''}
-    <div class="obj-prog">${pbar(i.progress, i.status)}<b>${pct(i.progress)}%</b></div>
+    <div class="obj-prog">${pbarC(i.progress, oc.c)}<b>${pct(i.progress)}%</b></div>
     <div class="obj-stats"><span>${i.taskDone}/${i.taskCount} tasks complete</span>${i.subCount ? `<span>${i.subCount} subtasks</span>` : ''}${i.taskBlocked ? `<span class="t-red">${i.taskBlocked} blocked</span>` : ''}${!i.taskCount ? '<span class="muted">No tasks yet — progress 0%</span>' : ''}</div>
     ${o.blocked ? `<div class="callout red">${icon('ban', 15)} ${esc(o.blocker || 'Blocked')}</div>` : ''}
     <div class="obj-actions">
@@ -1914,7 +2005,8 @@ function taskRowHtml(kind, item, parentLabel) {
   const prog = info.leaf
     ? `<div class="prog-ctl"><input type="range" min="0" max="100" step="5" value="${pct(info.progress)}" data-progress data-id="${esc(item.id)}" aria-label="Progress for ${esc(item.name)}" class="st-${info.status}"><span class="ptxt">${pct(info.progress)}%</span></div>`
     : `<div class="prog-auto">${pbar(info.progress, info.status)}<span class="ptxt">${pct(info.progress)}%</span><small class="auto">auto</small></div>`;
-  return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}">
+  const tc = objCol((isSub ? IDX.sub : IDX.task).get(item.id).obj);
+  return `<div class="t-row ${isSub ? 'lvl-2' : 'lvl-1'} ${info.blocked ? 'is-blocked' : ''}" style="--ol:${tc.l}">
     <div class="t-name" data-label="">${hasSubs ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="toggle" data-id="${esc(item.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'} subtasks">${icon('chevron', 15)}</button>` : '<span class="chev-sp"></span>'}
       <div class="t-name-txt"><button class="link-btn" data-action="${isSub ? 'sub-edit' : 'task-edit'}" data-id="${esc(item.id)}">${esc(item.name)}</button>
       <div class="sub">${idChip(item.id)}${hasSubs ? `<span class="muted small">${info.subDone}/${info.subCount} subtasks</span>` : ''}${chips.join('')}</div></div></div>
@@ -1970,8 +2062,8 @@ function viewTasks() {
     if (filtering && !body) return;
     const hdr = o.system
       ? `<div class="t-group-h st-not-started"><div class="tg-l"><span class="tg-bar"></span><div><h3>Unassigned tasks</h3><small><span class="muted">Not linked to an objective yet — open a task and choose an objective when you are ready.</span></small></div></div><div class="tg-r">${btn('Task', 'task-new', 'data-obj="unassigned"', 'small', 'plus')}</div></div>`
-      : `<div class="t-group-h st-${oi.status}"><div class="tg-l"><span class="tg-bar"></span><div><h3>${esc(o.name)}</h3><small>${idChip(o.id)} ${pill(oi.status)} <span class="muted">${esc(rangeText(o.startDate, o.endDate))}${o.owner ? ' · ' + esc(o.owner) : ''}</span></small></div></div>
-      <div class="tg-r"><div class="tg-prog">${pbar(oi.progress, oi.status)}<b>${pct(oi.progress)}%</b></div>${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small', 'plus')}</div></div>`;
+      : `<div class="t-group-h st-${oi.status}" style="--c:${objCol(o).c};--cs:${objCol(o).l}"><div class="tg-l"><span class="tg-bar"></span><div><h3>${esc(o.name)}</h3><small>${idChip(o.id)} ${pill(oi.status)} <span class="muted">${esc(rangeText(o.startDate, o.endDate))}${o.owner ? ' · ' + esc(o.owner) : ''}</span></small></div></div>
+      <div class="tg-r"><div class="tg-prog">${pbarC(oi.progress, objCol(o).c)}<b>${pct(oi.progress)}%</b></div>${btn('Task', 'task-new', `data-obj="${esc(o.id)}"`, 'small', 'plus')}</div></div>`;
     rows += `<section class="t-group">${hdr}
       <div class="t-head"><div>Task / subtask</div><div>Owner</div><div>Dates</div><div>Priority</div><div>Status</div><div>Progress</div><div></div></div>
       ${body || '<p class="muted pad">No tasks yet. Use “Task” to add one.</p>'}</section>`;
@@ -2069,7 +2161,7 @@ function viewMilestones() {
   const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
   h += `<div class="ms-list">${list.map(m => {
     const e = msEffective(m);
-    return `<div class="card ms-card"><div class="ms-diamond ms-${e}">${icon('diamond', 22)}</div><div class="ms-body"><div class="ms-top">${idChip(m.id)}${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</div><h3>${esc(m.name)}</h3>
+    return `<div class="card ms-card"><div class="ms-diamond ms-${e}" style="--mc:${msColour(m)};background:${(m.objectiveId && objColById(m.objectiveId)) ? objColById(m.objectiveId).l : '#E5E7EB'}">${icon('diamond', 22)}</div><div class="ms-body"><div class="ms-top">${idChip(m.id)}${pill(MS_STATUS_CLASS[e], MS_LABEL[e])}</div><h3>${esc(m.name)}</h3>
       ${m.description ? `<p class="muted">${esc(m.description)}</p>` : ''}<div class="ms-meta"><span>${icon('clock', 14)} ${esc(fmtDate(m.date))} <small class="muted">(${relDays(m.date)})</small></span>${m.objectiveId ? `<span>${icon('target', 14)} ${esc(nameOf(m.objectiveId))}</span>` : '<span class="muted">Programme-level</span>'}</div></div>
       <div class="t-act"><button class="icon-btn" data-action="ms-edit" data-id="${esc(m.id)}" aria-label="Edit milestone">${icon('edit', 17)}</button><button class="icon-btn danger" data-action="ms-del" data-id="${esc(m.id)}" aria-label="Delete milestone">${icon('trash', 17)}</button></div></div>`;
   }).join('')}</div>`;
@@ -2118,7 +2210,7 @@ function reportBodyHtml() {
     <div class="rep-kpis"><div><b>${t.objectives}</b><span>Objectives</span></div><div><b>${t.tasks}</b><span>Tasks</span></div><div><b>${t.tasksDone}</b><span>Completed</span></div><div><b>${t.tasksStarted}</b><span>In progress</span></div><div class="r"><b>${t.tasksBlocked}</b><span>Blocked</span></div><div class="a"><b>${t.tasksOverdue}</b><span>Overdue</span></div></div>
     <h2>Objectives</h2>
     ${realObjs().length ? `<table><thead><tr><th>ID</th><th>Objective</th><th>Owner</th><th>Baseline</th><th>Forecast</th><th>Tasks</th><th>Progress</th><th>Status</th></tr></thead><tbody>
-    ${realObjs().map(o => { const i = D.obj.get(o.id); return `<tr><td>${esc(o.id)}</td><td><b>${esc(o.name)}</b></td><td>${esc(o.owner || '—')}</td><td>${esc(rangeText(o.startDate, o.endDate))}</td><td>${o.forecastStart || o.forecastEnd ? esc(rangeText(o.forecastStart || o.startDate, o.forecastEnd || o.endDate)) : '—'}</td><td>${i.taskDone}/${i.taskCount}</td><td><span class="rbar"><i class="st-${i.status}" style="width:${pct(i.progress)}%"></i></span> ${pct(i.progress)}%</td><td>${pill(i.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No objectives defined.</p>'}
+    ${realObjs().map(o => { const i = D.obj.get(o.id); return `<tr><td>${esc(o.id)}</td><td><i class="rdot" style="background:${objCol(o).c}"></i><b>${esc(o.name)}</b></td><td>${esc(o.owner || '—')}</td><td>${esc(rangeText(o.startDate, o.endDate))}</td><td>${o.forecastStart || o.forecastEnd ? esc(rangeText(o.forecastStart || o.startDate, o.forecastEnd || o.endDate)) : '—'}</td><td>${i.taskDone}/${i.taskCount}</td><td><span class="rbar"><i style="width:${pct(i.progress)}%;background:${objCol(o).c}"></i></span> ${pct(i.progress)}%</td><td>${pill(i.status)}</td></tr>`; }).join('')}</tbody></table>` : '<p class="muted">No objectives defined.</p>'}
     <h2>Blocked work (${D.blockedItems.length})</h2>
     ${D.blockedItems.length ? `<table><thead><tr><th>Item</th><th>Blocker</th><th>Owner</th><th>Objective</th></tr></thead><tbody>${D.blockedItems.map(b => `<tr><td><b>${esc(b.name)}</b></td><td>${esc(b.blocker || '—')}</td><td>${esc(b.owner || '—')}</td><td>${esc(b.objective)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Nothing is currently blocked.</p>'}
     <h2>Overdue &amp; at-risk tasks (${D.overdueItems.length + atRisk.filter(x => !x.overdue).length})</h2>
@@ -2176,7 +2268,16 @@ function ganttHead(R, labelInner) {
 function ganttGrid(R) {
   const T = D.T;
   const today = (T >= R.start && T <= R.end) ? `<div class="g-today" style="left:${((T - R.start + 0.5) / R.total * 100).toFixed(3)}%"><span>Today</span></div>` : '';
-  return `<div class="g-grid">${R.months.map(m => `<div class="g-gl" style="flex:${m.days} 1 0"></div>`).join('')}<div class="g-today-wrap">${today}</div></div>`;
+  // Christmas break: 24 Dec – 2 Jan inclusive, every year the timeline covers
+  const sy = new Date(R.start * DAY).getUTCFullYear(), ey = new Date(R.end * DAY).getUTCFullYear();
+  let xmas = '';
+  for (let y = sy - 1; y <= ey; y++) {
+    const a = dayNum(`${y}-12-24`), b = dayNum(`${y + 1}-01-02`);
+    const s = Math.max(a, R.start), e = Math.min(b, R.end);
+    if (s > e) continue;
+    xmas += `<div class="g-xmas" style="left:${((s - R.start) / R.total * 100).toFixed(3)}%;width:${((e - s + 1) / R.total * 100).toFixed(3)}%" data-xmas="${y}-12-24..${y + 1}-01-02"><span>Christmas break</span></div>`;
+  }
+  return `<div class="g-grid">${xmas}${R.months.map(m => `<div class="g-gl" style="flex:${m.days} 1 0"></div>`).join('')}<div class="g-today-wrap">${today}</div></div>`;
 }
 function itemTip(it, info, extra = '') {
   const lines = [`${it.name}  (${it.id})`];
@@ -2191,14 +2292,17 @@ function itemTip(it, info, extra = '') {
   return lines.join('\n');
 }
 function barHtml(o) {
-  // o: {pos, progress, cls, tip, id, chip, top, h, label, note}
-  const narrow = o.pos.w < 6.5;
-  let h = `<div class="bar ${o.cls}${narrow ? ' narrow' : ''}" style="left:${o.pos.l.toFixed(3)}%;width:${o.pos.w.toFixed(3)}%;${o.top != null ? `top:${o.top}px;` : ''}${o.h ? `height:${o.h}px;` : ''}" data-tip="${esc(o.tip)}" data-action="open-item" data-id="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(o.label || '')}">
-    <span class="bar-in"><i class="fill" style="width:${pct(o.progress)}%"></i></span><span class="chip-p">${o.chip}</span></div>`;
+  // o: {pos, progress, cls, tip, id, chip, top, h, label, note, oc:{kind:'o'|'t', c, l}}
+  const narrow = o.pos.w < 6.5, oc = o.oc;
+  const style = `left:${o.pos.l.toFixed(3)}%;width:${o.pos.w.toFixed(3)}%;${o.top != null ? `top:${o.top}px;` : ''}${o.h ? `height:${o.h}px;` : ''}${oc ? `--oc:${oc.c};--ol:${oc.l};` : ''}`;
+  const inner = oc
+    ? `<span class="bar-in"><i class="strip" style="width:${pct(o.progress)}%"></i></span><span class="bar-txt"><b>${o.chip}</b>${narrow ? '' : ` <span class="bn">${esc(o.label || '')}</span>`}</span>`
+    : `<span class="bar-in"><i class="fill" style="width:${pct(o.progress)}%"></i></span><span class="chip-p">${o.chip}</span>`;
+  let h = `<div class="bar ${o.cls}${narrow ? ' narrow' : ''}${oc ? ' oc oc-' + oc.kind : ''}" style="${style}" data-tip="${esc(o.tip)}" data-action="open-item" data-id="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(o.label || '')}">${inner}</div>`;
   if (o.note) {
     const end = o.pos.l + o.pos.w, left = end < 62;
     const t = o.top != null ? o.top : 8;
-    h += `<span class="bar-note ${narrow && left ? 'nn' : ''}" style="top:${t + 2}px;${left ? `left:${end.toFixed(3)}%` : `right:${(100 - o.pos.l).toFixed(3)}%`}" data-tip="${esc(o.note)}">${left ? '' : ''}⛔ ${esc(o.note.length > 46 ? o.note.slice(0, 45) + '…' : o.note)}</span>`;
+    h += `<span class="bar-note ${narrow && left ? 'nn' : ''}" style="top:${t + 2}px;${left ? `left:${end.toFixed(3)}%` : `right:${(100 - o.pos.l).toFixed(3)}%`}" data-tip="${esc(o.note)}">⛔ ${esc(o.note.length > 46 ? o.note.slice(0, 45) + '…' : o.note)}</span>`;
   }
   return h;
 }
@@ -2208,6 +2312,7 @@ function fbarHtml(it, P, top, h) {
   const slip = dayNum(it.forecastEnd || it.endDate) - dayNum(it.endDate);
   return `<div class="fbar ${slip > 0 ? 'late' : ''}" style="left:${p.l.toFixed(3)}%;width:${p.w.toFixed(3)}%;top:${top}px;height:${h}px" data-tip="${esc('Revised forecast: ' + rangeText(it.forecastStart || it.startDate, it.forecastEnd || it.endDate) + (slip ? `\n${slip > 0 ? 'Slips' : 'Ahead by'} ${Math.abs(slip)} day${Math.abs(slip) === 1 ? '' : 's'} vs baseline` : ''))}"></div>`;
 }
+const MS_GLYPH = { planned: '', 'at-risk': '!', achieved: '✓', missed: '✕' };
 function milestoneMarkers(R, P, opts) {
   const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
   const levelEnd = [];
@@ -2224,8 +2329,8 @@ function milestoneMarkers(R, P, opts) {
   });
   const html = pts.map(p => {
     const e = msEffective(p.m);
-    return `<div class="ms-pt ms-${e}" style="left:${p.l.toFixed(3)}%" data-tip="${esc(`${p.m.name}\n${fmtDate(p.m.date)} · ${MS_LABEL[e]}${p.m.objectiveId ? '\nObjective: ' + nameOf(p.m.objectiveId) : ''}${p.m.description ? '\n' + p.m.description : ''}`)}" data-action="ms-edit" data-id="${esc(p.m.id)}" role="button" tabindex="0">
-      <span class="dia"></span><span class="ms-lab ${p.right ? 'r' : ''}" style="top:${22 + p.lv * 15}px">${esc(p.nm)}</span></div>`;
+    return `<div class="ms-pt ms-${e}" style="left:${p.l.toFixed(3)}%;--mc:${msColour(p.m)}" data-tip="${esc(`${p.m.name}\n${fmtDate(p.m.date)} · ${MS_LABEL[e]}${p.m.objectiveId ? '\nObjective: ' + nameOf(p.m.objectiveId) : ''}${p.m.description ? '\n' + p.m.description : ''}`)}" data-action="ms-edit" data-id="${esc(p.m.id)}" role="button" tabindex="0">
+      <span class="dia" data-g="${MS_GLYPH[e]}"></span><span class="ms-lab ${p.right ? 'r' : ''}" style="top:${22 + p.lv * 15}px">${esc(p.nm)}</span></div>`;
   }).join('');
   return { html, height: 28 + (maxLevel + 1) * 15 + 6, count: list.length };
 }
@@ -2236,7 +2341,7 @@ function rmWrap(R, headLabel, bodyHtml, cls, labelW) {
 /* ---------------- Management view: objectives + milestones only ---------------- */
 function mgmtRoadmapHtml(opts = {}) {
   const R = roadmapRange(), P = mkPos(R), compact = !!opts.compact;
-  const rowH = compact ? 46 : 86, labelW = compact ? 200 : 300;
+  const rowH = compact ? 46 : 86, labelW = compact ? 200 : 330;
   let body = '';
   if (ui.rmMilestones && data.milestones.length) {
     const ms = milestoneMarkers(R, P, opts);
@@ -2247,14 +2352,15 @@ function mgmtRoadmapHtml(opts = {}) {
     const i = D.obj.get(o.id), pos = P(o.startDate, o.endDate);
     const linked = ui.rmMilestones ? data.milestones.filter(m => m.objectiveId === o.id).map(m => {
       const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100;
-      return `<div class="ms-pt small ms-${e}" style="left:${l.toFixed(3)}%;top:${compact ? 1 : 3}px" data-tip="${esc(m.name + '\n' + fmtDate(m.date) + ' · ' + MS_LABEL[e])}" data-action="ms-edit" data-id="${esc(m.id)}"><span class="dia"></span></div>`;
+      return `<div class="ms-pt small ms-${e}" style="left:${l.toFixed(3)}%;top:${compact ? 1 : 3}px;--mc:${msColour(m)}" data-tip="${esc(m.name + '\n' + fmtDate(m.date) + ' · ' + MS_LABEL[e])}" data-action="ms-edit" data-id="${esc(m.id)}"><span class="dia"></span></div>`;
     }).join('') : '';
     const barTop = compact ? 10 : 16, barH = compact ? 24 : 30;
-    body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab">
+    const col = objCol(o), byObj = ui.rmMgmtColor !== 'status';
+    body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab"${byObj ? ` style="box-shadow:inset 6px 0 0 ${col.c}"` : ''}>
         <div class="ml-name"><b title="${esc(o.name)}">${esc(o.name)}</b></div>
-        ${compact ? '' : `<div class="ml-sub">${o.owner ? esc(o.owner) + ' · ' : ''}${esc(rangeText(o.startDate, o.endDate))}</div>`}
+        ${compact ? '' : `<div class="ml-sub">${avatar(o.owner)}<span class="ml-dates">${icon('clock', 13)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>`}
         <div class="ml-pill">${pill(i.status)}${compact ? '' : `<span class="ml-pct">${pct(i.progress)}%</span>`}</div></div>
-      <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}`, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}${i.overdue ? ' is-late' : ''}`, oc: byObj ? { kind: 'o', c: col.c, l: col.l } : null, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
         ${compact ? '' : fbarHtml(o, P, barTop + barH + 6, 8)}${linked}</div></div>`;
   });
   const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline (${esc(rangeText(data.project.startDate, data.project.endDate))}).</p>` : '';
@@ -2267,8 +2373,9 @@ function techRoadmapHtml(opts = {}) {
   const byStatus = ui.rmColor === 'status';
   let body = '';
   if (!data.objectives.some(o => o.tasks.length || !o.system)) body += `<div class="g-empty">No objectives or tasks yet — add some and they will appear here automatically.</div>`;
+  let curObj = null;
   const row = (it, lvl, kind, hasKids) => {
-    const i = D.node.get(it.id), pos = P(it.startDate, it.endDate), collapsed = ui.collapsed.has(it.id);
+    const col = objCol(curObj), i = D.node.get(it.id), pos = P(it.startDate, it.endDate), collapsed = ui.collapsed.has(it.id);
     const deps = D.depsFrom.get(it.id) || [];
     const chips = [];
     if (i.ownBlocked) chips.push(`<span class="chip red" data-tip="${esc(it.blocker || 'Blocked')}">${icon('ban', 11)} Blocked</span>`);
@@ -2277,12 +2384,14 @@ function techRoadmapHtml(opts = {}) {
     if (deps.length) chips.push(`<span class="chip" data-tip="${esc(deps.map(d => '• ' + depTargetName(d)).join('\n'))}">${icon('link', 11)} ${deps.length}</span>`);
     const owner = it.owner ? esc(it.owner) : '<span class="muted">—</span>';
     const barTop = lvl === 0 ? 9 : 11, barH = lvl === 0 ? 24 : 20;
-    const cls = `${byStatus ? 'st-' + i.status : 'bl' + lvl + ' st-' + i.status}${i.ownBlocked ? ' is-blocked' : ''}${i.overdue ? ' is-late' : ''}`;
-    return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl">
+    const cls = `st-${i.status}${i.ownBlocked ? ' is-blocked' : ''}${i.overdue ? ' is-late' : ''}`;
+    const oc = byStatus ? null : { kind: lvl === 0 ? 'o' : 't', c: col.c, l: col.l };
+    const labAttr = byStatus ? '' : ` style="box-shadow:inset ${lvl === 0 ? 6 : 5}px 0 0 ${col.c}"`;
+    return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl"${labAttr}>
         <div class="tl-name" style="padding-left:${6 + lvl * 20}px">${hasKids ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(it.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'}">${icon('chevron', 14)}</button>` : '<span class="chev-sp"></span>'}
           <div class="tl-txt"><b title="${esc(it.name)}">${esc(it.name)}</b><small>${esc(rangeText(it.startDate, it.endDate))}${chips.join('')}</small></div></div>
         <div class="tl-owner" title="${esc(it.owner || '')}">${owner}</div><div class="tl-pct">${pct(i.progress)}%</div><div class="tl-stat">${pill(i.status)}</div></div>
-      <div class="g-track">${barHtml({ pos, progress: i.progress, cls, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls, oc, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
   };
   data.objectives.forEach(o => {
     if (ui.rmObj !== 'all' && ui.rmObj !== o.id) return;
@@ -2291,7 +2400,7 @@ function techRoadmapHtml(opts = {}) {
       const col = ui.collapsed.has(o.id);
       body += `<div class="g-row t-r lvl-0" style="height:40px"><div class="g-lab tl"><div class="tl-name" style="padding-left:6px"><button class="chev ${col ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(o.id)}" aria-label="Toggle">${icon('chevron', 14)}</button><div class="tl-txt"><b>Unassigned tasks</b><small>Not linked to an objective yet</small></div></div></div><div class="g-track"></div></div>`;
       if (col) return;
-    } else body += row(o, 0, 'obj', o.tasks.length > 0);
+    } else { curObj = o; body += row(o, 0, 'obj', o.tasks.length > 0); }
     if (ui.collapsed.has(o.id)) return;
     o.tasks.forEach(t => {
       body += row(t, 1, 'task', t.subtasks.length > 0);
@@ -2302,7 +2411,7 @@ function techRoadmapHtml(opts = {}) {
   const head = `<div class="tl tl-h"><div>Work item</div><div class="tl-owner">Owner</div><div class="tl-pct">%</div><div class="tl-stat">Status</div></div>`;
   let msOverlay = '';
   if (ui.rmMilestones && data.milestones.length) {
-    msOverlay = `<div class="g-ms-line">${data.milestones.map(m => { const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100; return `<i class="ms-vline ms-${e}" style="left:${l.toFixed(3)}%" data-tip="${esc('◆ ' + m.name + '\n' + fmtDate(m.date))}"></i>`; }).join('')}</div>`;
+    msOverlay = `<div class="g-ms-line">${data.milestones.map(m => { const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100; return `<i class="ms-vline ms-${e}" style="left:${l.toFixed(3)}%;--mc:${msColour(m)}" data-tip="${esc('◆ ' + m.name + '\n' + fmtDate(m.date))}"></i>`; }).join('')}</div>`;
   }
   const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline.</p>` : '';
   const html = `<div class="gantt gantt-tech" style="--labelw:${labelW}px"><div class="gantt-scroll"><div class="gantt-inner">${ganttHead(R, head)}<div class="g-body">${ganttGrid(R)}${msOverlay}${body}</div></div></div></div>`;
@@ -2311,20 +2420,23 @@ function techRoadmapHtml(opts = {}) {
 
 /* ---------------- Roadmap page ---------------- */
 function roadmapLegend(mode) {
-  const items = mode === 'management' || ui.rmColor === 'status'
-    ? ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'on-hold'].map(k => `<span class="lg"><i class="dot st-${k}"></i>${k === 'blocked' ? 'Blocked / Delayed' : STATUS_LABEL[k]}</span>`).join('')
-    : `<span class="lg"><i class="dot lv0"></i>Objective</span><span class="lg"><i class="dot lv1"></i>Task / subtask</span>`;
-  return `<div class="legend rm-legend">${items}<span class="lg"><i class="dia-lg"></i>Milestone</span><span class="lg"><i class="fb-lg"></i>Revised forecast</span><span class="lg"><i class="td-lg"></i>Today</span>${mode === 'technical' ? '<span class="lg"><i class="bl-lg"></i>Blocked</span>' : ''}</div>`;
+  const byObj = mode === 'management' ? ui.rmMgmtColor !== 'status' : ui.rmColor !== 'status';
+  const items = byObj
+    ? realObjs().map(o => { const c = objCol(o); return `<span class="lg" data-tip="${esc(o.name)} — strong = objective${mode === 'technical' ? ', lighter = all its tasks and subtasks' : ''}"><i class="sw" style="background:${c.c}"></i>${mode === 'technical' ? `<i class="sw" style="background:${c.l};margin-left:-5px"></i>` : ''}${esc(o.name.length > 30 ? o.name.slice(0, 29) + '…' : o.name)}</span>`; }).join('')
+    : ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'on-hold'].map(k => `<span class="lg"><i class="dot st-${k}"></i>${k === 'blocked' ? 'Blocked / Delayed' : STATUS_LABEL[k]}</span>`).join('');
+  const status = '<span class="lg" data-tip="Status is always shown as text (In progress, At risk, Blocked …) in the label column; blocked items also have a red outline and ⛔, overdue items a dashed outline.">Status: text labels, ⛔ blocked, dashed = overdue</span>';
+  return `<div class="legend rm-legend">${items}<span class="lg"><i class="dia-lg"></i>Milestone in objective colour (✓ achieved, ! at risk, ✕ overdue)</span><span class="lg"><i class="xm-lg"></i>Christmas break (24 Dec – 2 Jan)</span><span class="lg"><i class="fb-lg"></i>Revised forecast</span><span class="lg"><i class="td-lg"></i>Today</span>${byObj ? status : ''}</div>`;
 }
 function viewRoadmap() {
   const mode = ui.rmMode;
   let h = pageHead('Roadmap', 'Generated live from your objectives, tasks and subtasks — it updates whenever anything changes.',
     btn('Print / PDF', 'print-roadmap', `data-mode="${mode}"`, '', 'print'));
   h += `<div class="toolbar wrap"><div class="seg" role="tablist"><button class="${mode === 'management' ? 'on' : ''}" data-action="rm-mode" data-mode="management" role="tab">Management view</button><button class="${mode === 'technical' ? 'on' : ''}" data-action="rm-mode" data-mode="technical" role="tab">Technical view</button></div>
+    ${mode === 'management' ? `<select data-f="rmMgmtColor" aria-label="Colour bars by"><option value="objective" ${ui.rmMgmtColor !== 'status' ? 'selected' : ''}>Colour by objective</option><option value="status" ${ui.rmMgmtColor === 'status' ? 'selected' : ''}>Colour by status</option></select>` : ''}
     <label class="chk"><input type="checkbox" data-f="rmMilestones" ${ui.rmMilestones ? 'checked' : ''}> Milestones</label>
     <label class="chk"><input type="checkbox" data-f="rmForecast" ${ui.rmForecast ? 'checked' : ''}> Revised forecast</label>
     ${mode === 'technical' ? `<select data-f="rmObj" aria-label="Objective filter"><option value="all">All objectives</option>${data.objectives.map(o => `<option value="${esc(o.id)}" ${ui.rmObj === o.id ? 'selected' : ''}>${o.system ? 'Unassigned tasks' : esc(o.name)}</option>`).join('')}</select>
-    <select data-f="rmColor" aria-label="Colour bars by"><option value="level" ${ui.rmColor === 'level' ? 'selected' : ''}>Colour by work level</option><option value="status" ${ui.rmColor === 'status' ? 'selected' : ''}>Colour by status</option></select>
+    <select data-f="rmColor" aria-label="Colour bars by"><option value="level" ${ui.rmColor === 'level' ? 'selected' : ''}>Colour by objective</option><option value="status" ${ui.rmColor === 'status' ? 'selected' : ''}>Colour by status</option></select>
     ${btn('Expand all', 'rm-expand', '', 'small ghost')}${btn('Collapse all', 'rm-collapse', '', 'small ghost')}` : ''}</div>`;
   h += `<div class="card rm-card">${mode === 'management' ? mgmtRoadmapHtml() : techRoadmapHtml()}${roadmapLegend(mode)}</div>`;
   if (mode === 'management') h += `<p class="muted small">Management view shows objectives and milestones only. Switch to the Technical view for tasks, subtasks, owners, dependencies and blockers.</p>`;
@@ -2413,7 +2525,7 @@ function go(view) {
   try { if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view); } catch (e) { /* embedded viewer: ignore */ }
   render(); window.scrollTo(0, 0);
 }
-function saveUiPrefs() { try { localStorage.setItem(LS_UI, JSON.stringify({ rmMode: ui.rmMode, rmColor: ui.rmColor, rmMilestones: ui.rmMilestones, rmForecast: ui.rmForecast })); } catch (e) { /* ignore */ } }
+function saveUiPrefs() { try { localStorage.setItem(LS_UI, JSON.stringify({ rmMode: ui.rmMode, rmColor: ui.rmColor, rmMgmtColor: ui.rmMgmtColor, rmMilestones: ui.rmMilestones, rmForecast: ui.rmForecast })); } catch (e) { /* ignore */ } }
 
 /* ---------------- import / export / reset ---------------- */
 function readFileText(file) {
@@ -2593,7 +2705,7 @@ function setFilter(el) {
   const path = el.dataset.f.split('.');
   const v = el.type === 'checkbox' ? el.checked : el.value;
   if (path.length === 1) ui[path[0]] = v; else ui[path[0]][path[1]] = v;
-  if (['rmMode', 'rmColor', 'rmMilestones', 'rmForecast'].includes(path[0])) saveUiPrefs();
+  if (['rmMode', 'rmColor', 'rmMgmtColor', 'rmMilestones', 'rmForecast'].includes(path[0])) saveUiPrefs();
   render();
 }
 document.addEventListener('input', e => {
@@ -2622,7 +2734,7 @@ window.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.file
 /* ---------------- init ---------------- */
 function init() {
   initTooltip();
-  try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
+  try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor', 'rmMgmtColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
   const res = loadLocal();
   syncStored(); D = derive();
   const h = location.hash.slice(1); if (NAV.some(n => n.id === h)) ui.view = h;

@@ -42,7 +42,16 @@ function ganttHead(R, labelInner) {
 function ganttGrid(R) {
   const T = D.T;
   const today = (T >= R.start && T <= R.end) ? `<div class="g-today" style="left:${((T - R.start + 0.5) / R.total * 100).toFixed(3)}%"><span>Today</span></div>` : '';
-  return `<div class="g-grid">${R.months.map(m => `<div class="g-gl" style="flex:${m.days} 1 0"></div>`).join('')}<div class="g-today-wrap">${today}</div></div>`;
+  // Christmas break: 24 Dec – 2 Jan inclusive, every year the timeline covers
+  const sy = new Date(R.start * DAY).getUTCFullYear(), ey = new Date(R.end * DAY).getUTCFullYear();
+  let xmas = '';
+  for (let y = sy - 1; y <= ey; y++) {
+    const a = dayNum(`${y}-12-24`), b = dayNum(`${y + 1}-01-02`);
+    const s = Math.max(a, R.start), e = Math.min(b, R.end);
+    if (s > e) continue;
+    xmas += `<div class="g-xmas" style="left:${((s - R.start) / R.total * 100).toFixed(3)}%;width:${((e - s + 1) / R.total * 100).toFixed(3)}%" data-xmas="${y}-12-24..${y + 1}-01-02"><span>Christmas break</span></div>`;
+  }
+  return `<div class="g-grid">${xmas}${R.months.map(m => `<div class="g-gl" style="flex:${m.days} 1 0"></div>`).join('')}<div class="g-today-wrap">${today}</div></div>`;
 }
 function itemTip(it, info, extra = '') {
   const lines = [`${it.name}  (${it.id})`];
@@ -57,14 +66,17 @@ function itemTip(it, info, extra = '') {
   return lines.join('\n');
 }
 function barHtml(o) {
-  // o: {pos, progress, cls, tip, id, chip, top, h, label, note}
-  const narrow = o.pos.w < 6.5;
-  let h = `<div class="bar ${o.cls}${narrow ? ' narrow' : ''}" style="left:${o.pos.l.toFixed(3)}%;width:${o.pos.w.toFixed(3)}%;${o.top != null ? `top:${o.top}px;` : ''}${o.h ? `height:${o.h}px;` : ''}" data-tip="${esc(o.tip)}" data-action="open-item" data-id="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(o.label || '')}">
-    <span class="bar-in"><i class="fill" style="width:${pct(o.progress)}%"></i></span><span class="chip-p">${o.chip}</span></div>`;
+  // o: {pos, progress, cls, tip, id, chip, top, h, label, note, oc:{kind:'o'|'t', c, l}}
+  const narrow = o.pos.w < 6.5, oc = o.oc;
+  const style = `left:${o.pos.l.toFixed(3)}%;width:${o.pos.w.toFixed(3)}%;${o.top != null ? `top:${o.top}px;` : ''}${o.h ? `height:${o.h}px;` : ''}${oc ? `--oc:${oc.c};--ol:${oc.l};` : ''}`;
+  const inner = oc
+    ? `<span class="bar-in"><i class="strip" style="width:${pct(o.progress)}%"></i></span><span class="bar-txt"><b>${o.chip}</b>${narrow ? '' : ` <span class="bn">${esc(o.label || '')}</span>`}</span>`
+    : `<span class="bar-in"><i class="fill" style="width:${pct(o.progress)}%"></i></span><span class="chip-p">${o.chip}</span>`;
+  let h = `<div class="bar ${o.cls}${narrow ? ' narrow' : ''}${oc ? ' oc oc-' + oc.kind : ''}" style="${style}" data-tip="${esc(o.tip)}" data-action="open-item" data-id="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(o.label || '')}">${inner}</div>`;
   if (o.note) {
     const end = o.pos.l + o.pos.w, left = end < 62;
     const t = o.top != null ? o.top : 8;
-    h += `<span class="bar-note ${narrow && left ? 'nn' : ''}" style="top:${t + 2}px;${left ? `left:${end.toFixed(3)}%` : `right:${(100 - o.pos.l).toFixed(3)}%`}" data-tip="${esc(o.note)}">${left ? '' : ''}⛔ ${esc(o.note.length > 46 ? o.note.slice(0, 45) + '…' : o.note)}</span>`;
+    h += `<span class="bar-note ${narrow && left ? 'nn' : ''}" style="top:${t + 2}px;${left ? `left:${end.toFixed(3)}%` : `right:${(100 - o.pos.l).toFixed(3)}%`}" data-tip="${esc(o.note)}">⛔ ${esc(o.note.length > 46 ? o.note.slice(0, 45) + '…' : o.note)}</span>`;
   }
   return h;
 }
@@ -74,6 +86,7 @@ function fbarHtml(it, P, top, h) {
   const slip = dayNum(it.forecastEnd || it.endDate) - dayNum(it.endDate);
   return `<div class="fbar ${slip > 0 ? 'late' : ''}" style="left:${p.l.toFixed(3)}%;width:${p.w.toFixed(3)}%;top:${top}px;height:${h}px" data-tip="${esc('Revised forecast: ' + rangeText(it.forecastStart || it.startDate, it.forecastEnd || it.endDate) + (slip ? `\n${slip > 0 ? 'Slips' : 'Ahead by'} ${Math.abs(slip)} day${Math.abs(slip) === 1 ? '' : 's'} vs baseline` : ''))}"></div>`;
 }
+const MS_GLYPH = { planned: '', 'at-risk': '!', achieved: '✓', missed: '✕' };
 function milestoneMarkers(R, P, opts) {
   const list = data.milestones.slice().sort((a, b) => dayNum(a.date) - dayNum(b.date));
   const levelEnd = [];
@@ -90,8 +103,8 @@ function milestoneMarkers(R, P, opts) {
   });
   const html = pts.map(p => {
     const e = msEffective(p.m);
-    return `<div class="ms-pt ms-${e}" style="left:${p.l.toFixed(3)}%" data-tip="${esc(`${p.m.name}\n${fmtDate(p.m.date)} · ${MS_LABEL[e]}${p.m.objectiveId ? '\nObjective: ' + nameOf(p.m.objectiveId) : ''}${p.m.description ? '\n' + p.m.description : ''}`)}" data-action="ms-edit" data-id="${esc(p.m.id)}" role="button" tabindex="0">
-      <span class="dia"></span><span class="ms-lab ${p.right ? 'r' : ''}" style="top:${22 + p.lv * 15}px">${esc(p.nm)}</span></div>`;
+    return `<div class="ms-pt ms-${e}" style="left:${p.l.toFixed(3)}%;--mc:${msColour(p.m)}" data-tip="${esc(`${p.m.name}\n${fmtDate(p.m.date)} · ${MS_LABEL[e]}${p.m.objectiveId ? '\nObjective: ' + nameOf(p.m.objectiveId) : ''}${p.m.description ? '\n' + p.m.description : ''}`)}" data-action="ms-edit" data-id="${esc(p.m.id)}" role="button" tabindex="0">
+      <span class="dia" data-g="${MS_GLYPH[e]}"></span><span class="ms-lab ${p.right ? 'r' : ''}" style="top:${22 + p.lv * 15}px">${esc(p.nm)}</span></div>`;
   }).join('');
   return { html, height: 28 + (maxLevel + 1) * 15 + 6, count: list.length };
 }
@@ -102,7 +115,7 @@ function rmWrap(R, headLabel, bodyHtml, cls, labelW) {
 /* ---------------- Management view: objectives + milestones only ---------------- */
 function mgmtRoadmapHtml(opts = {}) {
   const R = roadmapRange(), P = mkPos(R), compact = !!opts.compact;
-  const rowH = compact ? 46 : 86, labelW = compact ? 200 : 300;
+  const rowH = compact ? 46 : 86, labelW = compact ? 200 : 330;
   let body = '';
   if (ui.rmMilestones && data.milestones.length) {
     const ms = milestoneMarkers(R, P, opts);
@@ -113,14 +126,15 @@ function mgmtRoadmapHtml(opts = {}) {
     const i = D.obj.get(o.id), pos = P(o.startDate, o.endDate);
     const linked = ui.rmMilestones ? data.milestones.filter(m => m.objectiveId === o.id).map(m => {
       const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100;
-      return `<div class="ms-pt small ms-${e}" style="left:${l.toFixed(3)}%;top:${compact ? 1 : 3}px" data-tip="${esc(m.name + '\n' + fmtDate(m.date) + ' · ' + MS_LABEL[e])}" data-action="ms-edit" data-id="${esc(m.id)}"><span class="dia"></span></div>`;
+      return `<div class="ms-pt small ms-${e}" style="left:${l.toFixed(3)}%;top:${compact ? 1 : 3}px;--mc:${msColour(m)}" data-tip="${esc(m.name + '\n' + fmtDate(m.date) + ' · ' + MS_LABEL[e])}" data-action="ms-edit" data-id="${esc(m.id)}"><span class="dia"></span></div>`;
     }).join('') : '';
     const barTop = compact ? 10 : 16, barH = compact ? 24 : 30;
-    body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab">
+    const col = objCol(o), byObj = ui.rmMgmtColor !== 'status';
+    body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab"${byObj ? ` style="box-shadow:inset 6px 0 0 ${col.c}"` : ''}>
         <div class="ml-name"><b title="${esc(o.name)}">${esc(o.name)}</b></div>
-        ${compact ? '' : `<div class="ml-sub">${o.owner ? esc(o.owner) + ' · ' : ''}${esc(rangeText(o.startDate, o.endDate))}</div>`}
+        ${compact ? '' : `<div class="ml-sub">${avatar(o.owner)}<span class="ml-dates">${icon('clock', 13)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>`}
         <div class="ml-pill">${pill(i.status)}${compact ? '' : `<span class="ml-pct">${pct(i.progress)}%</span>`}</div></div>
-      <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}`, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}${i.overdue ? ' is-late' : ''}`, oc: byObj ? { kind: 'o', c: col.c, l: col.l } : null, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
         ${compact ? '' : fbarHtml(o, P, barTop + barH + 6, 8)}${linked}</div></div>`;
   });
   const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline (${esc(rangeText(data.project.startDate, data.project.endDate))}).</p>` : '';
@@ -133,8 +147,9 @@ function techRoadmapHtml(opts = {}) {
   const byStatus = ui.rmColor === 'status';
   let body = '';
   if (!data.objectives.some(o => o.tasks.length || !o.system)) body += `<div class="g-empty">No objectives or tasks yet — add some and they will appear here automatically.</div>`;
+  let curObj = null;
   const row = (it, lvl, kind, hasKids) => {
-    const i = D.node.get(it.id), pos = P(it.startDate, it.endDate), collapsed = ui.collapsed.has(it.id);
+    const col = objCol(curObj), i = D.node.get(it.id), pos = P(it.startDate, it.endDate), collapsed = ui.collapsed.has(it.id);
     const deps = D.depsFrom.get(it.id) || [];
     const chips = [];
     if (i.ownBlocked) chips.push(`<span class="chip red" data-tip="${esc(it.blocker || 'Blocked')}">${icon('ban', 11)} Blocked</span>`);
@@ -143,12 +158,14 @@ function techRoadmapHtml(opts = {}) {
     if (deps.length) chips.push(`<span class="chip" data-tip="${esc(deps.map(d => '• ' + depTargetName(d)).join('\n'))}">${icon('link', 11)} ${deps.length}</span>`);
     const owner = it.owner ? esc(it.owner) : '<span class="muted">—</span>';
     const barTop = lvl === 0 ? 9 : 11, barH = lvl === 0 ? 24 : 20;
-    const cls = `${byStatus ? 'st-' + i.status : 'bl' + lvl + ' st-' + i.status}${i.ownBlocked ? ' is-blocked' : ''}${i.overdue ? ' is-late' : ''}`;
-    return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl">
+    const cls = `st-${i.status}${i.ownBlocked ? ' is-blocked' : ''}${i.overdue ? ' is-late' : ''}`;
+    const oc = byStatus ? null : { kind: lvl === 0 ? 'o' : 't', c: col.c, l: col.l };
+    const labAttr = byStatus ? '' : ` style="box-shadow:inset ${lvl === 0 ? 6 : 5}px 0 0 ${col.c}"`;
+    return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl"${labAttr}>
         <div class="tl-name" style="padding-left:${6 + lvl * 20}px">${hasKids ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(it.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'}">${icon('chevron', 14)}</button>` : '<span class="chev-sp"></span>'}
           <div class="tl-txt"><b title="${esc(it.name)}">${esc(it.name)}</b><small>${esc(rangeText(it.startDate, it.endDate))}${chips.join('')}</small></div></div>
         <div class="tl-owner" title="${esc(it.owner || '')}">${owner}</div><div class="tl-pct">${pct(i.progress)}%</div><div class="tl-stat">${pill(i.status)}</div></div>
-      <div class="g-track">${barHtml({ pos, progress: i.progress, cls, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
+      <div class="g-track">${barHtml({ pos, progress: i.progress, cls, oc, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
   };
   data.objectives.forEach(o => {
     if (ui.rmObj !== 'all' && ui.rmObj !== o.id) return;
@@ -157,7 +174,7 @@ function techRoadmapHtml(opts = {}) {
       const col = ui.collapsed.has(o.id);
       body += `<div class="g-row t-r lvl-0" style="height:40px"><div class="g-lab tl"><div class="tl-name" style="padding-left:6px"><button class="chev ${col ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(o.id)}" aria-label="Toggle">${icon('chevron', 14)}</button><div class="tl-txt"><b>Unassigned tasks</b><small>Not linked to an objective yet</small></div></div></div><div class="g-track"></div></div>`;
       if (col) return;
-    } else body += row(o, 0, 'obj', o.tasks.length > 0);
+    } else { curObj = o; body += row(o, 0, 'obj', o.tasks.length > 0); }
     if (ui.collapsed.has(o.id)) return;
     o.tasks.forEach(t => {
       body += row(t, 1, 'task', t.subtasks.length > 0);
@@ -168,7 +185,7 @@ function techRoadmapHtml(opts = {}) {
   const head = `<div class="tl tl-h"><div>Work item</div><div class="tl-owner">Owner</div><div class="tl-pct">%</div><div class="tl-stat">Status</div></div>`;
   let msOverlay = '';
   if (ui.rmMilestones && data.milestones.length) {
-    msOverlay = `<div class="g-ms-line">${data.milestones.map(m => { const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100; return `<i class="ms-vline ms-${e}" style="left:${l.toFixed(3)}%" data-tip="${esc('◆ ' + m.name + '\n' + fmtDate(m.date))}"></i>`; }).join('')}</div>`;
+    msOverlay = `<div class="g-ms-line">${data.milestones.map(m => { const e = msEffective(m), l = (dayNum(m.date) - R.start + 0.5) / R.total * 100; return `<i class="ms-vline ms-${e}" style="left:${l.toFixed(3)}%;--mc:${msColour(m)}" data-tip="${esc('◆ ' + m.name + '\n' + fmtDate(m.date))}"></i>`; }).join('')}</div>`;
   }
   const note = R.extended ? `<p class="rm-note">The timeline was widened automatically because some items fall outside the project timeline.</p>` : '';
   const html = `<div class="gantt gantt-tech" style="--labelw:${labelW}px"><div class="gantt-scroll"><div class="gantt-inner">${ganttHead(R, head)}<div class="g-body">${ganttGrid(R)}${msOverlay}${body}</div></div></div></div>`;
@@ -177,20 +194,23 @@ function techRoadmapHtml(opts = {}) {
 
 /* ---------------- Roadmap page ---------------- */
 function roadmapLegend(mode) {
-  const items = mode === 'management' || ui.rmColor === 'status'
-    ? ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'on-hold'].map(k => `<span class="lg"><i class="dot st-${k}"></i>${k === 'blocked' ? 'Blocked / Delayed' : STATUS_LABEL[k]}</span>`).join('')
-    : `<span class="lg"><i class="dot lv0"></i>Objective</span><span class="lg"><i class="dot lv1"></i>Task / subtask</span>`;
-  return `<div class="legend rm-legend">${items}<span class="lg"><i class="dia-lg"></i>Milestone</span><span class="lg"><i class="fb-lg"></i>Revised forecast</span><span class="lg"><i class="td-lg"></i>Today</span>${mode === 'technical' ? '<span class="lg"><i class="bl-lg"></i>Blocked</span>' : ''}</div>`;
+  const byObj = mode === 'management' ? ui.rmMgmtColor !== 'status' : ui.rmColor !== 'status';
+  const items = byObj
+    ? realObjs().map(o => { const c = objCol(o); return `<span class="lg" data-tip="${esc(o.name)} — strong = objective${mode === 'technical' ? ', lighter = all its tasks and subtasks' : ''}"><i class="sw" style="background:${c.c}"></i>${mode === 'technical' ? `<i class="sw" style="background:${c.l};margin-left:-5px"></i>` : ''}${esc(o.name.length > 30 ? o.name.slice(0, 29) + '…' : o.name)}</span>`; }).join('')
+    : ['not-started', 'in-progress', 'completed', 'at-risk', 'blocked', 'on-hold'].map(k => `<span class="lg"><i class="dot st-${k}"></i>${k === 'blocked' ? 'Blocked / Delayed' : STATUS_LABEL[k]}</span>`).join('');
+  const status = '<span class="lg" data-tip="Status is always shown as text (In progress, At risk, Blocked …) in the label column; blocked items also have a red outline and ⛔, overdue items a dashed outline.">Status: text labels, ⛔ blocked, dashed = overdue</span>';
+  return `<div class="legend rm-legend">${items}<span class="lg"><i class="dia-lg"></i>Milestone in objective colour (✓ achieved, ! at risk, ✕ overdue)</span><span class="lg"><i class="xm-lg"></i>Christmas break (24 Dec – 2 Jan)</span><span class="lg"><i class="fb-lg"></i>Revised forecast</span><span class="lg"><i class="td-lg"></i>Today</span>${byObj ? status : ''}</div>`;
 }
 function viewRoadmap() {
   const mode = ui.rmMode;
   let h = pageHead('Roadmap', 'Generated live from your objectives, tasks and subtasks — it updates whenever anything changes.',
     btn('Print / PDF', 'print-roadmap', `data-mode="${mode}"`, '', 'print'));
   h += `<div class="toolbar wrap"><div class="seg" role="tablist"><button class="${mode === 'management' ? 'on' : ''}" data-action="rm-mode" data-mode="management" role="tab">Management view</button><button class="${mode === 'technical' ? 'on' : ''}" data-action="rm-mode" data-mode="technical" role="tab">Technical view</button></div>
+    ${mode === 'management' ? `<select data-f="rmMgmtColor" aria-label="Colour bars by"><option value="objective" ${ui.rmMgmtColor !== 'status' ? 'selected' : ''}>Colour by objective</option><option value="status" ${ui.rmMgmtColor === 'status' ? 'selected' : ''}>Colour by status</option></select>` : ''}
     <label class="chk"><input type="checkbox" data-f="rmMilestones" ${ui.rmMilestones ? 'checked' : ''}> Milestones</label>
     <label class="chk"><input type="checkbox" data-f="rmForecast" ${ui.rmForecast ? 'checked' : ''}> Revised forecast</label>
     ${mode === 'technical' ? `<select data-f="rmObj" aria-label="Objective filter"><option value="all">All objectives</option>${data.objectives.map(o => `<option value="${esc(o.id)}" ${ui.rmObj === o.id ? 'selected' : ''}>${o.system ? 'Unassigned tasks' : esc(o.name)}</option>`).join('')}</select>
-    <select data-f="rmColor" aria-label="Colour bars by"><option value="level" ${ui.rmColor === 'level' ? 'selected' : ''}>Colour by work level</option><option value="status" ${ui.rmColor === 'status' ? 'selected' : ''}>Colour by status</option></select>
+    <select data-f="rmColor" aria-label="Colour bars by"><option value="level" ${ui.rmColor === 'level' ? 'selected' : ''}>Colour by objective</option><option value="status" ${ui.rmColor === 'status' ? 'selected' : ''}>Colour by status</option></select>
     ${btn('Expand all', 'rm-expand', '', 'small ghost')}${btn('Collapse all', 'rm-collapse', '', 'small ghost')}` : ''}</div>`;
   h += `<div class="card rm-card">${mode === 'management' ? mgmtRoadmapHtml() : techRoadmapHtml()}${roadmapLegend(mode)}</div>`;
   if (mode === 'management') h += `<p class="muted small">Management view shows objectives and milestones only. Switch to the Technical view for tasks, subtasks, owners, dependencies and blockers.</p>`;

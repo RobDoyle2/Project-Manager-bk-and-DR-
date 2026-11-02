@@ -1,4 +1,4 @@
-BACKUP & DR PROGRAMME MANAGER  -  v1.1.0
+BACKUP & DR PROGRAMME MANAGER  -  v1.2.0
 =========================================
 
 FILES
@@ -41,6 +41,22 @@ TASKS WITHOUT AN OBJECTIVE / ADDING MANY TASKS  (added in v1.1)
   - CSV: a plain list of names in the first column is enough. Optional header row with any of:
     Task, Owner, Start, End (YYYY-MM-DD or DD/MM/YYYY), Priority, Objective (name or ID).
     Comma, semicolon and tab separators are detected. "Download CSV template" gives an example.
+
+OBJECTIVE COLOURS  (roadmap and throughout the app)
+  Each objective has one strong colour; ALL its tasks and subtasks use one lighter shade of it. The first eight are
+  fixed: 01 Emerald #006B5B/#C0DDD6, 02 Royal Blue #315DA8/#C6D3E9, 03 Deep Purple #65449A/#D3C7E5,
+  04 Burnt Orange #C45B32/#EED0C1, 05 Teal #147E91/#C0DDE1, 06 Ochre Gold #A17A20/#E8DDBB,
+  07 Slate Blue #526B82/#C9D4DC, 08 Berry #963E60/#E6C6D2. Objectives 9-14 use an extended palette (Forest Olive, Plum,
+  Coffee Brown, Crimson, Sage Green, Charcoal); after 14 the palette repeats.
+  - A new objective takes the next unused colour (avoiding a look-alike of the objective above it).
+  - Deleting or reordering objectives never recolours the others. The choice is stored in the JSON ("colorIndex").
+    Older files without it are assigned automatically in order, then kept.
+  - Tasks moved to another objective take that objective's colour automatically.
+  - Shown in: roadmap bars and labels (white bold text on objective labels, charcoal on task/subtask bars), milestone
+    diamonds, objective cards, task-list group headers and row markers, dashboard progress list, reports.
+  - Status is never colour only: status labels, a red outline plus a stop sign for blocked, a dashed outline for overdue,
+    and a tick / ! / cross inside milestone diamonds. Progress shows as a % and a thin bar along the bottom of each bar.
+  - Prefer the old status colours (grey/blue/green/amber/red)? Roadmap toolbar -> "Colour by status".
 
 HOW PROGRESS WORKS  (all automatic - never edit a roadmap by hand)
   Subtask   : you set 0-100%.
@@ -86,8 +102,3 @@ DATA FORMAT  (schemaVersion 1)
 BROWSER NOTES
   - Use a current Edge or Chrome. Private/InPrivate windows do not keep autosave - export instead.
   - Opening from a network share or email attachment may show a security prompt; save the file locally first.
-
-DEVELOPMENT (optional - not needed to use the app)
-  src/        Source: shell.html, style.css, report.css and numbered JS modules.
-  build.py    python3 build.py  ->  regenerates Backup-DR-Project.html from src/.
-  tests/      Playwright QA scripts (node qa.js, qa2.js, qa3.js ...) used to verify the app.

@@ -4,7 +4,7 @@
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -26,6 +26,50 @@ const DEP_STATUS = ['open', 'at-risk', 'satisfied'];
 const IMPACT = ['Very low', 'Low', 'Medium', 'High', 'Very high'];
 const LIKELIHOOD = ['Rare', 'Unlikely', 'Possible', 'Likely', 'Almost certain'];
 const DAY = 86400000;
+
+/* Objective colour identity: one strong colour per objective, one lighter shade for ALL its tasks/subtasks. */
+const PALETTE = [
+  { n: 'Emerald Green', c: '#006B5B', l: '#C0DDD6' }, { n: 'Royal Blue', c: '#315DA8', l: '#C6D3E9' },
+  { n: 'Deep Purple', c: '#65449A', l: '#D3C7E5' }, { n: 'Burnt Orange', c: '#C45B32', l: '#EED0C1' },
+  { n: 'Teal', c: '#147E91', l: '#C0DDE1' }, { n: 'Ochre Gold', c: '#A17A20', l: '#E8DDBB' },
+  { n: 'Slate Blue', c: '#526B82', l: '#C9D4DC' }, { n: 'Berry', c: '#963E60', l: '#E6C6D2' },
+  // extension for programmes with more than eight objectives
+  { n: 'Forest Olive', c: '#5A7D2A', l: '#D6E2BE' }, { n: 'Plum', c: '#8B2F86', l: '#E6C9E4' },
+  { n: 'Coffee Brown', c: '#7A5230', l: '#E2D3C5' }, { n: 'Crimson', c: '#B1333F', l: '#F0CDD1' },
+  { n: 'Sage Green', c: '#5F8A63', l: '#D1E1D3' }, { n: 'Charcoal', c: '#4B5563', l: '#D1D5DB' }
+];
+const SYS_COL = { n: 'Unassigned', c: '#64748B', l: '#E2E8F0' };
+function hexHSL(h) {
+  const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  let hue = 0;
+  if (d) hue = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: (hue * 60 + 360) % 360, l, s: d ? d / (1 - Math.abs(2 * l - 1)) : 0 };
+}
+function similarCol(a, b) {
+  const x = hexHSL(a.c), y = hexHSL(b.c);
+  const dh = Math.min(Math.abs(x.h - y.h), 360 - Math.abs(x.h - y.h));
+  return dh < 26 && Math.abs(x.l - y.l) < 0.18 && x.s > 0.15 && y.s > 0.15;
+}
+const validCI = v => Number.isInteger(v) && v >= 0;
+function objCol(o) { return (!o || o.system) ? SYS_COL : PALETTE[(validCI(o.colorIndex) ? o.colorIndex : 0) % PALETTE.length]; }
+/* Give every objective that has no colour the next unused palette slot (avoiding a look-alike of its neighbour).
+   Existing assignments are never changed, so deleting or reordering objectives cannot recolour the rest. */
+function assignColours(d = data) {
+  const real = d.objectives.filter(o => !o.system);
+  const used = new Set(real.filter(o => validCI(o.colorIndex)).map(o => o.colorIndex));
+  let prev = null;
+  real.forEach(o => {
+    if (!validCI(o.colorIndex)) {
+      const cand = [];
+      for (let i = 0; cand.length < PALETTE.length; i++) if (!used.has(i)) cand.push(i);
+      const pick = cand.find(i => !prev || !similarCol(PALETTE[i % PALETTE.length], prev));
+      o.colorIndex = pick !== undefined ? pick : cand[0];
+      used.add(o.colorIndex);
+    }
+    prev = PALETTE[o.colorIndex % PALETTE.length];
+  });
+}
 
 /* ---------- date helpers (ISO strings only; no local-time parsing) ---------- */
 const pad2 = n => String(n).padStart(2, '0');
@@ -115,6 +159,7 @@ function syncLeaf(x) {
   else if (x.status === 'not-started' && x.progress > 0) x.status = 'in-progress';
 }
 function syncStored(d = data) {
+  assignColours(d);
   d.objectives.forEach(o => {
     o.tasks.forEach(t => {
       t.subtasks.forEach(syncLeaf);
@@ -236,7 +281,7 @@ function parseProject(raw) {
     if (o && Array.isArray(o.tasks) === false && o.tasks !== undefined) E(`${lab}: "tasks" must be an array.`);
     const base = common(o, lab, true);
     if (!base) return;
-    const obj = { id: idOf(o.id, 'objective'), ...(o.system === true ? { system: true } : {}), ...base, tasks: [] };
+    const obj = { id: idOf(o.id, 'objective'), ...(o.system === true ? { system: true } : (validCI(o.colorIndex) ? { colorIndex: o.colorIndex } : {})), ...base, tasks: [] };
     (Array.isArray(o.tasks) ? o.tasks : []).forEach((t, j) => {
       const tl = `${lab} › Task #${j + 1}${t && t.name ? ` "${t.name}"` : ''}`;
       if (t && t.subtasks !== undefined && !Array.isArray(t.subtasks)) E(`${tl}: "subtasks" must be an array.`);
@@ -447,6 +492,14 @@ function nameOf(id) {
   const n = D && D.node.get(id);
   return n ? n.item.name : id;
 }
+function objColById(id) {
+  if (!id || !IDX) return null;
+  if (IDX.objective.has(id)) return objCol(IDX.objective.get(id).item);
+  if (IDX.task.has(id)) return objCol(IDX.task.get(id).obj);
+  if (IDX.sub.has(id)) return objCol(IDX.sub.get(id).obj);
+  return null;
+}
+function msColour(m) { const c = m.objectiveId && objColById(m.objectiveId); return c ? c.c : '#374151'; }
 function kindLabel(id) {
   const n = D && D.node.get(id);
   return n ? ({ obj: 'Objective', task: 'Task', sub: 'Subtask' })[n.kind] : '';
@@ -487,7 +540,7 @@ function setLeafProgress(item, v) {
    Persistence: autosave, backups, export / import
    ===================================================================== */
 const ui = {
-  view: 'dashboard', rmMode: 'management', rmColor: 'level', rmObj: 'all', rmMilestones: true, rmForecast: true,
+  view: 'dashboard', rmMode: 'management', rmColor: 'level', rmMgmtColor: 'objective', rmObj: 'all', rmMilestones: true, rmForecast: true,
   collapsed: new Set(), objOpen: new Set(),
   objFilter: { q: '', status: 'all' },
   taskFilter: { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false },

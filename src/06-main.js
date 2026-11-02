@@ -53,7 +53,7 @@ function go(view) {
   try { if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view); } catch (e) { /* embedded viewer: ignore */ }
   render(); window.scrollTo(0, 0);
 }
-function saveUiPrefs() { try { localStorage.setItem(LS_UI, JSON.stringify({ rmMode: ui.rmMode, rmColor: ui.rmColor, rmMilestones: ui.rmMilestones, rmForecast: ui.rmForecast })); } catch (e) { /* ignore */ } }
+function saveUiPrefs() { try { localStorage.setItem(LS_UI, JSON.stringify({ rmMode: ui.rmMode, rmColor: ui.rmColor, rmMgmtColor: ui.rmMgmtColor, rmMilestones: ui.rmMilestones, rmForecast: ui.rmForecast })); } catch (e) { /* ignore */ } }
 
 /* ---------------- import / export / reset ---------------- */
 function readFileText(file) {
@@ -233,7 +233,7 @@ function setFilter(el) {
   const path = el.dataset.f.split('.');
   const v = el.type === 'checkbox' ? el.checked : el.value;
   if (path.length === 1) ui[path[0]] = v; else ui[path[0]][path[1]] = v;
-  if (['rmMode', 'rmColor', 'rmMilestones', 'rmForecast'].includes(path[0])) saveUiPrefs();
+  if (['rmMode', 'rmColor', 'rmMgmtColor', 'rmMilestones', 'rmForecast'].includes(path[0])) saveUiPrefs();
   render();
 }
 document.addEventListener('input', e => {
@@ -262,7 +262,7 @@ window.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.file
 /* ---------------- init ---------------- */
 function init() {
   initTooltip();
-  try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
+  try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor', 'rmMgmtColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
   const res = loadLocal();
   syncStored(); D = derive();
   const h = location.hash.slice(1); if (NAV.some(n => n.id === h)) ui.view = h;
