@@ -131,7 +131,7 @@ function mgmtRoadmapHtml(opts = {}) {
     const barTop = compact ? 10 : 16, barH = compact ? 24 : 30;
     const col = objCol(o), byObj = ui.rmMgmtColor !== 'status';
     body += `<div class="g-row" style="height:${rowH}px"><div class="g-lab m-lab"${byObj ? ` style="box-shadow:inset 6px 0 0 ${col.c}"` : ''}>
-        <div class="ml-name"><b title="${esc(o.name)}">${esc(o.name)}</b></div>
+        <div class="ml-name"><b class="rm-name" role="button" tabindex="0" data-action="open-item" data-id="${esc(o.id)}" title="${esc(o.name)} — click to open (read only)">${esc(o.name)}</b></div>
         ${compact ? '' : `<div class="ml-sub">${avatar(o.owner)}<span class="ml-dates">${icon('clock', 13)} ${esc(rangeText(o.startDate, o.endDate))}</span></div>`}
         <div class="ml-pill">${pill(i.status)}${compact ? '' : `<span class="ml-pct">${pct(i.progress)}%</span>`}</div></div>
       <div class="g-track">${barHtml({ pos, progress: i.progress, cls: `st-${i.status} ${i.blocked ? 'is-blocked' : ''}${i.overdue ? ' is-late' : ''}`, oc: byObj ? { kind: 'o', c: col.c, l: col.l } : null, tip: itemTip(o, i, `${i.taskDone}/${i.taskCount} tasks complete`), id: o.id, chip: `${i.blocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: o.name })}
@@ -163,7 +163,7 @@ function techRoadmapHtml(opts = {}) {
     const labAttr = byStatus ? '' : ` style="box-shadow:inset ${lvl === 0 ? 6 : 5}px 0 0 ${col.c}"`;
     return `<div class="g-row t-r lvl-${lvl}" style="height:48px"><div class="g-lab tl"${labAttr}>
         <div class="tl-name" style="padding-left:${6 + lvl * 20}px">${hasKids ? `<button class="chev ${collapsed ? '' : 'open'}" data-action="rm-toggle" data-id="${esc(it.id)}" aria-label="${collapsed ? 'Expand' : 'Collapse'}">${icon('chevron', 14)}</button>` : '<span class="chev-sp"></span>'}
-          <div class="tl-txt"><b title="${esc(it.name)}">${esc(it.name)}</b><small>${esc(rangeText(it.startDate, it.endDate))}${chips.join('')}</small></div></div>
+          <div class="tl-txt"><b class="rm-name" role="button" tabindex="0" data-action="open-item" data-id="${esc(it.id)}" title="${esc(it.name)} — click to open (read only)">${esc(it.name)}</b><small>${esc(rangeText(it.startDate, it.endDate))}${chips.join('')}</small></div></div>
         <div class="tl-owner" title="${esc(it.owner || '')}">${owner}</div><div class="tl-pct">${pct(i.progress)}%</div><div class="tl-stat">${pill(i.status)}</div></div>
       <div class="g-track">${barHtml({ pos, progress: i.progress, cls, oc, tip: itemTip(it, i), id: it.id, chip: `${i.ownBlocked ? '⛔ ' : ''}${pct(i.progress)}%`, top: barTop, h: barH, label: it.name, note: i.ownBlocked ? (it.blocker || 'Blocked') : '' })}${fbarHtml(it, P, barTop + barH + 3, 5)}</div></div>`;
   };

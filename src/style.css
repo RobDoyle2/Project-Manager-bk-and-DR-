@@ -519,3 +519,6 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .vw-sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px}
 .obj-title .obj-name{font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-align:left;line-height:1.25}
 .vw-v .chip{max-width:none}
+
+.rm-name{cursor:pointer}.rm-name:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;color:var(--brand-d)}
+.rm-name:focus-visible{outline:3px solid rgba(0,77,68,.35);outline-offset:2px;border-radius:4px}

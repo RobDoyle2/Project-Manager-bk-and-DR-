@@ -235,7 +235,7 @@ document.addEventListener('click', e => {
   if (el.dataset.nav !== undefined || el.closest('#sidebar')) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
 });
 document.addEventListener('keydown', e => {
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.bar[data-action],.ms-pt[data-action]')) { e.preventDefault(); e.target.click(); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.bar[data-action],.ms-pt[data-action],.rm-name[data-action]')) { e.preventDefault(); e.target.click(); }
 });
 document.addEventListener('submit', e => {
   const f = e.target.closest('form[data-submit]');
