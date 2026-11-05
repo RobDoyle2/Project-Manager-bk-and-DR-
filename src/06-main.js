@@ -27,11 +27,18 @@ function renderNav() {
 function updateSaveChip() {
   const el = $('#saveChip'); if (!el) return;
   const s = ui.saveState;
+  if (s !== 'error' && typeof linked !== 'undefined' && linked) {          // a project file has been chosen: the chip updates it
+    const dirty = fileDirty();
+    el.className = 'save-chip ' + (dirty ? 'file-dirty' : 'file-ok');
+    el.innerHTML = dirty ? `${icon('save', 14)}<span class="chip-t">Update ${esc(linked.name)}</span>` : `${icon('check', 14)}<span class="chip-t">${esc(linked.name)} · saved ${linked.savedAt ? esc(fmtStamp(new Date(linked.savedAt))) : ''}</span>`;
+    el.title = dirty ? `Click to write the latest changes to “${linked.name}”.` : `“${linked.name}” is up to date. Click to write it again.`;
+    return;
+  }
   el.className = 'save-chip ' + s;
   el.innerHTML = s === 'pending' ? `${icon('refresh', 14)} Saving…`
     : s === 'saved' ? `${icon('check', 14)} Autosaved ${ui.lastSaved ? fmtStamp(ui.lastSaved) : ''}`
     : s === 'error' ? `${icon('risk', 14)} Autosave unavailable — export JSON` : `${icon('save', 14)} Ready`;
-  el.title = s === 'error' ? 'Browser storage is unavailable or full. Use Export JSON to keep your data.' : 'Changes are saved automatically in this browser. Export JSON for a portable copy.';
+  el.title = s === 'error' ? 'Browser storage is unavailable or full. Use Export JSON to keep your data.' : 'Changes are saved automatically in this browser. Click to choose a file on your computer to save to.';
 }
 function render() {
   D = derive();
@@ -90,6 +97,7 @@ async function handleImportText(text, fileName) {
   ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
   syncStored(); D = derive(); saveLocal(); go('dashboard'); render();
   toast(`Imported ${inc.objectives} objectives and ${inc.tasks} tasks.`);
+  return true;
 }
 async function resetProject() {
   const ok = await confirmDialog({ title: 'Reset project?', danger: true, okLabel: 'Delete everything and start blank', message: 'This removes <b>all</b> objectives, tasks, subtasks, risks, dependencies and milestones from the application. A backup is saved in this browser first, but you should export a JSON copy if you may need this data again.' });
@@ -103,6 +111,12 @@ async function restoreBackup(i) {
   const ok = await confirmDialog({ title: 'Restore this backup?', danger: true, okLabel: 'Restore backup', message: `Replace the current project data with the backup from <b>${esc(fmtDateTime(b.at))}</b> (${esc(b.reason)})? The current data is backed up first.` });
   if (!ok) return;
   snapshot('Before restore'); data = r.data; ui.collapsed.clear(); afterChange(); toast('Backup restored.');
+}
+
+function downloadExport() {
+  exportJSON(); render();
+  const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
 }
 
 /* ---------------- actions ---------------- */
@@ -166,18 +180,13 @@ const ACTIONS = {
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, () => toast(t, 'warn', 9000)); else toast(t, 'warn', 9000);
   },
   'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
-  'export-json': () => {
-    exportJSON(); render();
-    const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
-    toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
-  },
+  'export-json': () => { if (FSA.save) exportToChosenFile(); else downloadExport(); },
   'share-json': async () => {
     const r = await shareJSON(); render();
     if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
     else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
   },
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
-  'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
   'show-json': () => {
     computedFields();
@@ -277,6 +286,7 @@ function init() {
   try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor', 'rmMgmtColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
   const res = loadLocal();
   syncStored(); D = derive();
+  loadLink();
   const h = location.hash.slice(1); if (NAV.some(n => n.id === h)) ui.view = h;
   render();
   if (res.status === 'unavailable') { ui.saveState = 'error'; updateSaveChip(); toast('Browser storage is unavailable — export JSON regularly to keep your work.', 'warn', 6000); }

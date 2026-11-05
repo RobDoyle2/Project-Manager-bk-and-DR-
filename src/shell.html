@@ -27,9 +27,9 @@
       <button class="icon-btn hamb" data-action="nav-toggle" aria-label="Open menu"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <h2 id="pageTitle">Dashboard</h2>
       <span class="sp"></span>
-      <span id="saveChip" class="save-chip" role="status" aria-live="polite">Ready</span>
+      <button type="button" id="saveChip" class="save-chip" data-action="file-chip" aria-live="polite" title="Click to choose a file on your computer to save to">Ready</button>
       <button class="btn small tb-btn" data-action="import-json" title="Load a project from a JSON file (replaces current data after confirmation)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg><span>Import JSON</span></button>
-      <button class="btn small tb-btn" data-action="export-json" title="Download the full project as a JSON file"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
+      <button class="btn small tb-btn" data-action="export-json" title="Export the full project as a JSON file (you choose the folder and name where the browser allows it)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
     </header>
     <main id="view" tabindex="-1"></main>
   </div>

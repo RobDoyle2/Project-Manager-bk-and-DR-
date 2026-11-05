@@ -8,6 +8,7 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  await ctx.addInitScript(()=>{delete window.showSaveFilePicker;delete window.showOpenFilePicker;});
   const page = await ctx.newPage();
   const errs = [];
   page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
@@ -137,6 +138,7 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
 
   console.log('\n== QA 12/13: fresh browser -> import -> everything retained');
   const ctx2 = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  await ctx2.addInitScript(()=>{delete window.showSaveFilePicker;delete window.showOpenFilePicker;});
   const p2 = await ctx2.newPage();
   const errs2 = []; p2.on('pageerror', e => errs2.push(e.message));
   await p2.goto(URL); await p2.waitForSelector('#view .page-head');

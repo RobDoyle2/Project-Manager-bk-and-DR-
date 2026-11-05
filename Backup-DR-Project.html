@@ -449,6 +449,21 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .csv-info{font-size:.84rem;color:#13734a;background:#e6f8ef;border-radius:8px;padding:6px 10px;margin-top:4px}
 
 .tb-btn svg{margin-right:5px}
+button.save-chip{font-family:inherit;line-height:1.2;cursor:pointer;max-width:min(48vw,340px);white-space:nowrap}
+button.save-chip:hover{border-color:var(--brand)}
+.save-chip .chip-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.save-chip.file-ok{color:#13734a;background:#e6f8ef;border-color:#c7ecd9}
+.save-chip.file-dirty{color:#fff;background:var(--brand);border-color:var(--brand)}
+.save-chip.file-dirty:hover{background:var(--brand-d)}
+.fl-opts{display:grid;gap:10px;margin-top:14px}
+.fl-opt{display:flex;gap:14px;align-items:flex-start;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font:inherit;color:var(--ink)}
+.fl-opt:hover,.fl-opt:focus-visible{border-color:var(--brand);background:var(--brand-soft)}
+.fl-opt .ic{flex:none;color:var(--brand);margin-top:2px}
+.fl-opt b{display:block;margin-bottom:2px}
+.fl-opt small{color:var(--ink2);font-size:.82rem;line-height:1.35}
+.fl-cur{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:var(--brand-soft)}
+.fl-cur small{display:block;color:var(--ink2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.fl-cur b{display:block}.fl-cur span{color:var(--ink2);font-size:.85rem}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
 .json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfa;resize:vertical}
@@ -580,9 +595,9 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
       <button class="icon-btn hamb" data-action="nav-toggle" aria-label="Open menu"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <h2 id="pageTitle">Dashboard</h2>
       <span class="sp"></span>
-      <span id="saveChip" class="save-chip" role="status" aria-live="polite">Ready</span>
+      <button type="button" id="saveChip" class="save-chip" data-action="file-chip" aria-live="polite" title="Click to choose a file on your computer to save to">Ready</button>
       <button class="btn small tb-btn" data-action="import-json" title="Load a project from a JSON file (replaces current data after confirmation)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg><span>Import JSON</span></button>
-      <button class="btn small tb-btn" data-action="export-json" title="Download the full project as a JSON file"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
+      <button class="btn small tb-btn" data-action="export-json" title="Export the full project as a JSON file (you choose the folder and name where the browser allows it)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
     </header>
     <main id="view" tabindex="-1"></main>
   </div>
@@ -602,7 +617,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -2367,7 +2382,7 @@ function viewReports() {
     <div class="card span2"><h3>${icon('save', 18)} Project data (JSON)</h3>
       <div class="data-stat"><span><b>${c.objectives}</b> objectives</span><span><b>${c.tasks}</b> tasks</span><span><b>${c.subtasks}</b> subtasks</span><span><b>${c.milestones}</b> milestones</span><span><b>${c.risks}</b> risks</span><span><b>${c.dependencies}</b> dependencies</span><span>Schema v${SCHEMA_VERSION}</span></div>
       <p class="${unexported && (c.objectives || c.risks || c.milestones) ? 'callout amber' : 'muted'}">${unexported && (c.objectives || c.risks || c.milestones) ? icon('risk', 15) : ''}<span>${unexported && (c.objectives || c.risks || c.milestones) ? 'You have changes that have not been exported. ' : ''}Last JSON export: <b>${esc(fmtDateTime(data.meta.lastExportedAt))}</b>. Browser autosave is a convenience — <b>export regularly</b> and keep the JSON file safe; it is your master copy.</span></p>
-      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${canShareFiles() ? btn('Share / save to…', 'share-json', '', '', 'upload') : ''}${btn('Import JSON…', 'import-json', '', '', 'upload')}${btn('Paste JSON…', 'paste-json', '', 'ghost', 'upload')}${btn('Show / copy JSON', 'show-json', '', 'ghost', 'report')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
+      <div class="btn-row">${btn('Export JSON', 'export-json', '', 'primary', 'download')}${canShareFiles() ? btn('Share / save to…', 'share-json', '', '', 'upload') : ''}${btn('Import JSON…', 'import-json', '', '', 'upload')}${(typeof FSA !== 'undefined' && (FSA.open || FSA.save)) ? btn(linked ? 'Linked file…' : 'Save to a file…', 'file-dialog', '', '', 'save') : ''}${btn('Paste JSON…', 'paste-json', '', 'ghost', 'upload')}${btn('Show / copy JSON', 'show-json', '', 'ghost', 'report')}${btn('Save &amp; back up now', 'save-now', '', '', 'save')}${btn('Download blank template', 'download-template', '', 'ghost', 'download')}${btn('Reset project…', 'reset-project', '', 'ghost danger-t', 'trash')}</div>
       <h4 class="sec-t mt">Browser backups <small class="muted">(stored in this browser only — last ${8})</small></h4>
       ${backups.length ? `<div class="bk-list">${backups.map((b, i) => `<div class="bk"><div><b>${esc(fmtDateTime(b.at))}</b><small>${esc(b.reason)} · ${b.counts.objectives} obj, ${b.counts.tasks} tasks, ${b.counts.subtasks} subtasks</small></div><div class="btn-row">${btn('Restore', 'restore-backup', `data-i="${i}"`, 'small')}${btn('Download', 'download-backup', `data-i="${i}"`, 'small ghost')}<button class="icon-btn danger" data-action="delete-backup" data-i="${i}" aria-label="Delete backup">${icon('trash', 15)}</button></div></div>`).join('')}</div>` : '<p class="muted small">No backups yet. One is created automatically before any import, reset or restore, and when you press “Save &amp; back up now”.</p>'}
     </div>
@@ -2683,11 +2698,18 @@ function renderNav() {
 function updateSaveChip() {
   const el = $('#saveChip'); if (!el) return;
   const s = ui.saveState;
+  if (s !== 'error' && typeof linked !== 'undefined' && linked) {          // a project file has been chosen: the chip updates it
+    const dirty = fileDirty();
+    el.className = 'save-chip ' + (dirty ? 'file-dirty' : 'file-ok');
+    el.innerHTML = dirty ? `${icon('save', 14)}<span class="chip-t">Update ${esc(linked.name)}</span>` : `${icon('check', 14)}<span class="chip-t">${esc(linked.name)} · saved ${linked.savedAt ? esc(fmtStamp(new Date(linked.savedAt))) : ''}</span>`;
+    el.title = dirty ? `Click to write the latest changes to “${linked.name}”.` : `“${linked.name}” is up to date. Click to write it again.`;
+    return;
+  }
   el.className = 'save-chip ' + s;
   el.innerHTML = s === 'pending' ? `${icon('refresh', 14)} Saving…`
     : s === 'saved' ? `${icon('check', 14)} Autosaved ${ui.lastSaved ? fmtStamp(ui.lastSaved) : ''}`
     : s === 'error' ? `${icon('risk', 14)} Autosave unavailable — export JSON` : `${icon('save', 14)} Ready`;
-  el.title = s === 'error' ? 'Browser storage is unavailable or full. Use Export JSON to keep your data.' : 'Changes are saved automatically in this browser. Export JSON for a portable copy.';
+  el.title = s === 'error' ? 'Browser storage is unavailable or full. Use Export JSON to keep your data.' : 'Changes are saved automatically in this browser. Click to choose a file on your computer to save to.';
 }
 function render() {
   D = derive();
@@ -2746,6 +2768,7 @@ async function handleImportText(text, fileName) {
   ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
   syncStored(); D = derive(); saveLocal(); go('dashboard'); render();
   toast(`Imported ${inc.objectives} objectives and ${inc.tasks} tasks.`);
+  return true;
 }
 async function resetProject() {
   const ok = await confirmDialog({ title: 'Reset project?', danger: true, okLabel: 'Delete everything and start blank', message: 'This removes <b>all</b> objectives, tasks, subtasks, risks, dependencies and milestones from the application. A backup is saved in this browser first, but you should export a JSON copy if you may need this data again.' });
@@ -2759,6 +2782,12 @@ async function restoreBackup(i) {
   const ok = await confirmDialog({ title: 'Restore this backup?', danger: true, okLabel: 'Restore backup', message: `Replace the current project data with the backup from <b>${esc(fmtDateTime(b.at))}</b> (${esc(b.reason)})? The current data is backed up first.` });
   if (!ok) return;
   snapshot('Before restore'); data = r.data; ui.collapsed.clear(); afterChange(); toast('Backup restored.');
+}
+
+function downloadExport() {
+  exportJSON(); render();
+  const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
 }
 
 /* ---------------- actions ---------------- */
@@ -2822,18 +2851,13 @@ const ACTIONS = {
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, () => toast(t, 'warn', 9000)); else toast(t, 'warn', 9000);
   },
   'dep-row-del': (ds, el) => { const r = el.closest('.dep-row'); if (r) r.remove(); },
-  'export-json': () => {
-    exportJSON(); render();
-    const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
-    toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
-  },
+  'export-json': () => { if (FSA.save) exportToChosenFile(); else downloadExport(); },
   'share-json': async () => {
     const r = await shareJSON(); render();
     if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
     else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
   },
   'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
-  'import-json': () => { const fi = $('#fileInput'); fi.value = ''; fi.click(); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
   'show-json': () => {
     computedFields();
@@ -2933,6 +2957,7 @@ function init() {
   try { const u = JSON.parse(localStorage.getItem(LS_UI) || '{}'); ['rmMode', 'rmColor', 'rmMgmtColor'].forEach(k => { if (typeof u[k] === 'string') ui[k] = u[k]; }); ['rmMilestones', 'rmForecast'].forEach(k => { if (typeof u[k] === 'boolean') ui[k] = u[k]; }); } catch (e) { /* ignore */ }
   const res = loadLocal();
   syncStored(); D = derive();
+  loadLink();
   const h = location.hash.slice(1); if (NAV.some(n => n.id === h)) ui.view = h;
   render();
   if (res.status === 'unavailable') { ui.saveState = 'error'; updateSaveChip(); toast('Browser storage is unavailable — export JSON regularly to keep your work.', 'warn', 6000); }
@@ -2949,6 +2974,122 @@ function init() {
 window.addEventListener('error', ev => { try { toast('Unexpected error: ' + ev.message, 'error', 8000); } catch (e) { /* ignore */ } });
 window.BackupDR = { version: APP_VERSION, schema: SCHEMA_VERSION, getData: () => data, getDerived: () => D, parseProject, preparePrint, endPrint, roadmapRange, today: () => D.today };
 document.addEventListener('DOMContentLoaded', init);
+
+/* =====================================================================
+   Linked project file (File System Access API)
+   - "Import JSON" (upload arrow) -> dialog: browse for a file, or create a new one (you choose name + place)
+   - the status chip in the top bar then writes the latest data back to that same file
+   Works in Chrome / Edge / Opera on a computer. Elsewhere (Firefox, Safari, phones, embedded viewers)
+   the normal import / download is used instead.
+   ===================================================================== */
+const FSA = { open: typeof window.showOpenFilePicker === 'function', save: typeof window.showSaveFilePicker === 'function' };
+const JSON_TYPES = [{ description: 'Backup & DR project (JSON)', accept: { 'application/json': ['.json'] } }];
+let linked = null;               // { handle, name, savedAt }
+
+/* ---- remember the chosen file between visits (IndexedDB can hold file handles) ---- */
+function idbOpen() {
+  return new Promise((res, rej) => {
+    try { const r = indexedDB.open('backupdr.files', 1); r.onupgradeneeded = () => r.result.createObjectStore('handles'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); }
+  });
+}
+async function idbDo(mode, fn) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => { const tx = db.transaction('handles', mode); const rq = fn(tx.objectStore('handles')); tx.oncomplete = () => { db.close(); res(rq && rq.result); }; tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); }; });
+}
+const persistLink = () => { if (!linked) return idbDo('readwrite', s => s.delete('linked')).catch(() => {}); return idbDo('readwrite', s => s.put({ handle: linked.handle, savedAt: linked.savedAt }, 'linked')).catch(() => {}); };
+async function loadLink() {
+  if (!FSA.open && !FSA.save) return;
+  try {
+    const rec = await idbDo('readonly', s => s.get('linked'));
+    if (rec && rec.handle) { linked = { handle: rec.handle, name: rec.handle.name, savedAt: rec.savedAt || null }; updateSaveChip(); }
+  } catch (e) { /* storage unavailable: no remembered file */ }
+}
+function setLink(handle, savedAt) { linked = { handle, name: handle.name, savedAt: savedAt || new Date().toISOString() }; persistLink(); render(); }
+function unlinkFile() { linked = null; persistLink(); render(); }
+const fileDirty = () => !!linked && (!linked.savedAt || data.meta.modifiedAt > linked.savedAt);
+
+/* ---- writing ---- */
+async function ensureWritable(handle) {
+  const o = { mode: 'readwrite' };
+  if (handle.queryPermission && (await handle.queryPermission(o)) === 'granted') return true;
+  if (handle.requestPermission) return (await handle.requestPermission(o)) === 'granted';
+  return true;
+}
+async function writeToHandle(handle) {
+  const text = exportText();
+  const w = await handle.createWritable();
+  try { await w.write(text); await w.close(); } catch (e) { try { await w.abort(); } catch (x) { /* ignore */ } throw e; }
+}
+function pickerFailed(e, kind) {
+  if (e && e.name === 'AbortError') return;                 // the user closed the picker
+  if (kind === 'open') { toast('This viewer does not allow choosing a file location, so the normal file chooser is used instead.', 'warn', 6000); classicImport(); }
+  else { toast('This viewer does not allow choosing a file location, so the file is downloaded instead.', 'warn', 6000); downloadExport(); }
+}
+function classicImport() { const fi = $('#fileInput'); fi.value = ''; fi.click(); }
+
+async function saveToLinkedFile() {
+  if (!linked) { fileDialog(); return; }
+  try {
+    if (!(await ensureWritable(linked.handle))) { toast('Permission to change that file was not given, so nothing was written.', 'warn', 6000); return; }
+    await writeToHandle(linked.handle);
+    linked.savedAt = new Date().toISOString(); persistLink(); renderNav(); updateSaveChip();
+    toast(`Saved to ${linked.name}.`, 'ok');
+  } catch (e) {
+    if (e && (e.name === 'NotFoundError' || e.name === 'InvalidStateError')) {
+      const again = await confirmDialog({ title: 'The linked file can’t be found', okLabel: 'Choose a file…', message: `<b>${esc(linked.name)}</b> has been moved, renamed or deleted, so it can’t be updated. Choose a new name and location?` });
+      if (again) createNewFile(); else unlinkFile();
+    } else toast('Could not write to the file: ' + (e && e.message ? e.message : e), 'error', 8000);
+  }
+}
+async function browseForFile() {
+  let hs;
+  try { hs = await window.showOpenFilePicker({ types: JSON_TYPES, multiple: false }); } catch (e) { return pickerFailed(e, 'open'); }
+  const handle = hs[0];
+  let text, file;
+  try { file = await handle.getFile(); text = await file.text(); } catch (e) { toast('Could not read that file.', 'error'); return; }
+  const imported = await handleImportText(text, file.name);
+  if (imported) { setLink(handle, new Date().toISOString()); toast(`Linked to ${handle.name}. Press the button in the top bar to save your changes back to it.`, 'ok', 6000); }
+}
+async function createNewFile() {
+  let handle;
+  try { handle = await window.showSaveFilePicker({ suggestedName: 'Backup-DR-Data.json', types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
+  setLink(handle, new Date().toISOString()); render();
+  toast(`Saved to ${handle.name}. Press the button in the top bar any time to update it.`, 'ok', 6000);
+}
+
+/* Export JSON: browse for the folder and file name instead of dropping a file into Downloads (a copy; the linked file, if any, is unchanged) */
+async function exportToChosenFile() {
+  let handle;
+  try { handle = await window.showSaveFilePicker({ suggestedName: stampName('Backup-DR-Data', 'json'), types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
+  render(); toast(`Exported to ${handle.name}.`, 'ok', 4500);
+}
+
+/* ---- dialog behind the upload arrow ---- */
+function fileDialog() {
+  const cur = linked ? `<div class="fl-cur"><div><small>Linked file</small><b>${esc(linked.name)}</b><span>${fileDirty() ? 'Has changes not yet written to the file' : 'Up to date' + (linked.savedAt ? ' · saved ' + esc(fmtStamp(new Date(linked.savedAt))) : '')}</span></div>
+      <div class="btn-row">${btn('Update file now', 'file-save', '', 'primary', 'save')}${btn('Stop linking', 'file-unlink', '', 'ghost')}</div></div>` : '';
+  openModal({
+    title: 'Project file', hideSave: true, cancelLabel: 'Close',
+    html: `<p class="muted small">Choose a real file on this computer. After that, the button in the top bar (next to Import JSON) writes your latest changes straight back to it.</p>${cur}
+      <div class="fl-opts">
+        <button type="button" class="fl-opt" data-action="file-browse">${icon('upload', 22)}<span><b>Browse for an existing file…</b><small>Pick a project JSON file. It replaces the current data after you confirm, then stays linked for saving.</small></span></button>
+        <button type="button" class="fl-opt" data-action="file-new">${icon('save', 22)}<span><b>Save as a new file…</b><small>Choose the folder <em>and the file name</em>. The current project is written there and stays linked.</small></span></button>
+        <button type="button" class="fl-opt" data-action="file-classic">${icon('report', 22)}<span><b>Import once, without linking</b><small>The usual file chooser; the file is not kept linked afterwards.</small></span></button>
+      </div>`
+  });
+}
+Object.assign(ACTIONS, {
+  'import-json': () => { if (FSA.open || FSA.save) fileDialog(); else classicImport(); },
+  'file-dialog': () => fileDialog(),
+  'file-browse': () => { closeModal(); browseForFile(); },
+  'file-new': () => { closeModal(); createNewFile(); },
+  'file-classic': () => { closeModal(); classicImport(); },
+  'file-save': () => { closeModal(); saveToLinkedFile(); },
+  'file-unlink': () => { unlinkFile(); closeModal(); toast('No longer linked to a file. Autosave in the browser carries on.'); },
+  'file-chip': () => { if (linked) saveToLinkedFile(); else if (FSA.save || FSA.open) fileDialog(); else downloadExport(); }
+});
 
 })();
 </script>

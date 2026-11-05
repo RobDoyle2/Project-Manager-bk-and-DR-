@@ -1,5 +1,5 @@
 const { chromium, devices } = require('playwright');
-(async()=>{const b=await chromium.launch();const ctx=await b.newContext({...devices['Pixel 7'],acceptDownloads:true});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({...devices['Pixel 7'],acceptDownloads:true});await ctx.addInitScript(()=>{delete window.showSaveFilePicker;delete window.showOpenFilePicker;});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.addInitScript(()=>{window.__shared=null;navigator.canShare=d=>!!(d&&d.files&&d.files.length);navigator.share=async d=>{window.__shared={name:d.files[0].name,type:d.files[0].type,text:await d.files[0].text()}}});
 await p.goto('file:///home/claude/out/Backup-DR-Project.html');await p.waitForSelector('#view .page-head');
 await p.setInputFiles('#fileInput','/tmp/rich.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);

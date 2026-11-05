@@ -3,7 +3,7 @@ const URL='file:///home/claude/out/Backup-DR-Project.html';
 let f=0,pz=0; const ok=(c,m)=>{c?pz++:f++;console.log(c?'  PASS':'  FAIL',m)};
 const rgb=h=>{const n=parseInt(h.slice(1),16);return `rgb(${n>>16}, ${(n>>8)&255}, ${n&255})`};
 const P=[['#006B5B','#C0DDD6'],['#315DA8','#C6D3E9'],['#65449A','#D3C7E5'],['#C45B32','#EED0C1'],['#147E91','#C0DDE1'],['#A17A20','#E8DDBB'],['#526B82','#C9D4DC'],['#963E60','#E6C6D2']];
-(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1500,height:950}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1500,height:950}});await p.addInitScript(()=>{delete window.showSaveFilePicker;delete window.showOpenFilePicker;});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(URL);await p.waitForSelector('#view .page-head');
 const data=()=>p.evaluate(()=>JSON.parse(JSON.stringify(window.BackupDR.getData())));
 const go=async v=>{await p.evaluate(v=>{location.hash='#'+v},v);await p.waitForTimeout(150)};

@@ -2,7 +2,7 @@ const { chromium } = require('playwright'); const fs=require('fs');
 const URL='file:///home/claude/out/Backup-DR-Project.html';
 let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS':'  FAIL',m)};
 (async()=>{
- const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:1440,height:900},acceptDownloads:true}); const p=await ctx.newPage();
+ const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:1440,height:900},acceptDownloads:true}); await ctx.addInitScript(()=>{delete window.showSaveFilePicker;delete window.showOpenFilePicker;}); const p=await ctx.newPage();
  const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
  await p.goto(URL); await p.waitForSelector('#view .page-head');
  const data=()=>p.evaluate(()=>JSON.parse(JSON.stringify(window.BackupDR.getData())));

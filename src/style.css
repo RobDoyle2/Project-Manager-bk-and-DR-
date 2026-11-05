@@ -440,6 +440,21 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .csv-info{font-size:.84rem;color:#13734a;background:#e6f8ef;border-radius:8px;padding:6px 10px;margin-top:4px}
 
 .tb-btn svg{margin-right:5px}
+button.save-chip{font-family:inherit;line-height:1.2;cursor:pointer;max-width:min(48vw,340px);white-space:nowrap}
+button.save-chip:hover{border-color:var(--brand)}
+.save-chip .chip-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.save-chip.file-ok{color:#13734a;background:#e6f8ef;border-color:#c7ecd9}
+.save-chip.file-dirty{color:#fff;background:var(--brand);border-color:var(--brand)}
+.save-chip.file-dirty:hover{background:var(--brand-d)}
+.fl-opts{display:grid;gap:10px;margin-top:14px}
+.fl-opt{display:flex;gap:14px;align-items:flex-start;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font:inherit;color:var(--ink)}
+.fl-opt:hover,.fl-opt:focus-visible{border-color:var(--brand);background:var(--brand-soft)}
+.fl-opt .ic{flex:none;color:var(--brand);margin-top:2px}
+.fl-opt b{display:block;margin-bottom:2px}
+.fl-opt small{color:var(--ink2);font-size:.82rem;line-height:1.35}
+.fl-cur{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:var(--brand-soft)}
+.fl-cur small{display:block;color:var(--ink2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.fl-cur b{display:block}.fl-cur span{color:var(--ink2);font-size:.85rem}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
 .json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfa;resize:vertical}

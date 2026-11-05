@@ -4,7 +4,7 @@
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';

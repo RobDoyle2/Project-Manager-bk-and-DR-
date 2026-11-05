@@ -27,6 +27,20 @@ MOVING DATA BETWEEN COMPUTERS  (important)
   - The left sidebar shows an amber "Unexported changes" reminder until you export.
   - Blank template: Reports & Data Management > "Download blank template".
 
+SAVING TO A FILE YOU CHOOSE (Chrome / Edge / Opera on a computer)
+  - Click the upload arrow ("Import JSON") in the top bar. Choose:
+      * Browse for an existing file...  - pick a project .json; after you confirm, it replaces the current data and stays linked.
+      * Save as a new file...           - choose the folder AND the file name; the project is written there and stays linked.
+      * Import once, without linking    - the normal file chooser.
+  - The status button beside it then shows the file name. When it says "Update <file>" there are changes not yet
+    in the file; click it and the file is updated in place. (The browser may ask permission to edit the file
+    the first time after you reopen the app.)
+  - "Export JSON" (top bar, sidebar reminder, Reports page) also opens the save-as dialog, so you browse for the folder and
+    type the file name instead of the file landing in Downloads. This saves a copy; it does not change the linked file.
+  - Reports & Data Management has a matching "Save to a file..." / "Linked file..." button, with "Stop linking".
+  - Firefox, Safari, phones and embedded viewers cannot do this; there the upload arrow is the normal import and
+    the status button and Export JSON download the file to your Downloads folder.
+
 NAVIGATION
   Dashboard | Objectives | Tasks & Subtasks | Roadmap | Risks & Blockers | Dependencies | Milestones |
   Reports & Data Management
