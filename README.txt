@@ -27,8 +27,21 @@ MOVING DATA BETWEEN COMPUTERS  (important)
   - The left sidebar shows an amber "Unexported changes" reminder until you export.
   - Blank template: Reports & Data Management > "Download blank template".
 
+PROGRAMME NAME (top left)
+  - The name at the top left comes from the project JSON file ("project.name"). It is not tied to Backup & DR, so the
+    app can run any programme or project. A new, empty file shows "Programme name"; click the pencil to type it.
+  - It is stored with your data. Press the status button (or Export JSON) to write it into your file. The word
+    "Programme" under the name is part of the interface, not the file. Timeline dates etc. are under Reports & Data
+    Management > Project settings.
+  - Exported file names are built from the programme name (e.g. Acme-Phase-2_2026-11-05_1055.json); an unnamed
+    programme uses "Project".
+
 SAVING TO A FILE YOU CHOOSE (Chrome / Edge / Opera on a computer)
-  - Click the upload arrow ("Import JSON") in the top bar. Choose:
+  - "Import JSON" (the upload arrow) opens the file browser straight away, starting in your Downloads folder, and keeps the
+    file you pick linked so the status button can update it. (Where the browser allows choosing a start folder; on
+    Android / iPhone / Firefox / Safari the system's own file chooser appears and its start folder cannot be set by the page.)
+  - To create a new file, or to see the link: click the status button before a file is linked (or use Reports & Data
+    Management > "Save to a file..."). The dialog offers:
       * Browse for an existing file...  - pick a project .json; after you confirm, it replaces the current data and stays linked.
       * Save as a new file...           - choose the folder AND the file name; the project is written there and stays linked.
       * Import once, without linking    - the normal file chooser.

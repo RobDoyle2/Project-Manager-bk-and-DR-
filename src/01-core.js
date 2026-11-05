@@ -1,10 +1,10 @@
 /* =====================================================================
-   Backup & DR Programme Manager — core: constants, dates, data model,
+   Programme Manager — core: constants, dates, data model,
    validation, central progress engine, persistence
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -129,7 +129,7 @@ function blankProject() {
   return {
     schemaVersion: SCHEMA_VERSION,
     app: APP_ID,
-    project: { id: 'PRJ-001', name: 'Backup & Disaster Recovery Programme', description: '', manager: '', startDate: '2026-10-01', endDate: '2027-06-30' },
+    project: { id: 'PRJ-001', name: '', description: '', manager: '', startDate: '2026-10-01', endDate: '2027-06-30' },
     counters: { objective: 0, task: 0, subtask: 0, risk: 0, dependency: 0, milestone: 0 },
     objectives: [], risks: [], dependencies: [], milestones: [],
     meta: { createdAt: now, modifiedAt: now, lastExportedAt: null }
@@ -266,7 +266,7 @@ function parseProject(raw) {
   const p = raw.project;
   out.project = {
     id: str(p.id, 'PRJ-001') || 'PRJ-001',
-    name: str(p.name, '').trim() || 'Backup & Disaster Recovery Programme',
+    name: str(p.name, '').trim(),
     description: str(p.description), manager: str(p.manager),
     startDate: chkDate(p.startDate || '2026-10-01', 'Project start date', true),
     endDate: chkDate(p.endDate || '2027-06-30', 'Project end date', true)
@@ -636,18 +636,21 @@ function download(name, text, mime) {
   a.href = url; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 800);
 }
+/* programme name as shown in the interface (falls back to a prompt when the file has no name yet) and as a safe file-name stem */
+const progName = () => (data.project.name || '').trim() || 'Programme name';
+function fileBase() { const s = (data.project.name || '').normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 40); return s || 'Project'; }
 function stampName(prefix, ext) { const t = todayISO(); const n = new Date(); return `${prefix}_${t}_${pad2(n.getHours())}${pad2(n.getMinutes())}.${ext}`; }
 function exportText() { computedFields(); data.meta.lastExportedAt = new Date().toISOString(); saveLocal(); return JSON.stringify(data, null, 2); }
 function exportJSON(kind) {
   const text = exportText();
-  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), text);
+  download(stampName(kind === 'backup' ? fileBase() + '-backup' : fileBase(), 'json'), text);
   return text;
 }
 const canShareFiles = () => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] })); } catch (e) { return false; } };
 /* Mobile-friendly export: opens the phone's share sheet so the file can be saved to Files / Drive / Downloads / email. */
 async function shareJSON() {
   const text = exportText();
-  const file = new File([text], stampName('Backup-DR-Data', 'json'), { type: 'application/json' });
-  try { await navigator.share({ files: [file], title: 'Backup & DR project data' }); return 'shared'; }
+  const file = new File([text], stampName(fileBase(), 'json'), { type: 'application/json' });
+  try { await navigator.share({ files: [file], title: progName() + ' data' }); return 'shared'; }
   catch (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; }
 }

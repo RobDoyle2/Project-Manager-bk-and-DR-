@@ -12,7 +12,15 @@ const NAV = [
   { id: 'reports', label: 'Reports & Data Management', icon: 'report', fn: () => viewReports() }
 ];
 
+function renderBrand() {
+  const el = $('#brandName'); if (!el) return;
+  const n = (data.project.name || '').trim();
+  el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
+  const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
+  const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
+}
 function renderNav() {
+  renderBrand();
   const unexp = !data.meta.lastExportedAt || data.meta.modifiedAt > data.meta.lastExportedAt;
   const hasContent = countsOf(data).tasks || data.objectives.length || data.risks.length || data.milestones.length;
   $('#nav').innerHTML = NAV.map(n => {
@@ -87,7 +95,7 @@ async function handleImportText(text, fileName) {
   const ok = await confirmDialog({
     title: 'Replace current project data?', danger: true, okLabel: 'Replace with imported data',
     message: `Importing <b>${esc(file.name)}</b> will <b>replace</b> everything currently in the application.`,
-    html: `<div class="cmp"><div><small>Current</small><b>${esc(data.project.name)}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name)}</b><span>${fmt(inc)}</span></div></div>
+    html: `<div class="cmp"><div><small>Current</small><b>${esc(progName())}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name || 'Programme name')}</b><span>${fmt(inc)}</span></div></div>
       ${r.warnings.length ? `<p>The file was accepted with ${r.warnings.length} note${r.warnings.length === 1 ? '' : 's'}:</p>${problemList(r.warnings, 'warn')}` : ''}
       <p class="muted small">A backup of your current data is saved in this browser first (Reports &amp; Data Management → Browser backups).</p>`
   });
@@ -143,7 +151,7 @@ const ACTIONS = {
     bulkTasksModal(pid === undefined ? {} : { parentId: pid });
   },
   'save-settings': (ds, el) => SUBMITS['save-settings'](el.closest('form')),
-  'download-csv-template': () => download('Backup-DR-Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
+  'download-csv-template': () => download('Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
   'task-edit': ds => workItemModal('task', ds.id),
   'task-view': ds => workItemViewModal(ds.id),
   'sub-view': ds => workItemViewModal(ds.id),
@@ -186,7 +194,7 @@ const ACTIONS = {
     if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
     else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
   },
-  'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
+  'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName(fileBase() + '-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
   'show-json': () => {
     computedFields();
@@ -216,16 +224,22 @@ const ACTIONS = {
   'restore-backup': ds => restoreBackup(+ds.i),
   'delete-backup': ds => { const l = readBackups(); l.splice(+ds.i, 1); try { localStorage.setItem(LS_BACKUPS, JSON.stringify(l)); } catch (e) { /* ignore */ } render(); },
   'reset-project': () => resetProject(),
-  'download-template': () => { download('Backup-DR-Data_blank.json', JSON.stringify(blankProject(), null, 2)); },
+  'download-template': () => { download('Project-blank.json', JSON.stringify(blankProject(), null, 2)); },
   'print-roadmap': ds => doPrint('roadmap', ds.mode || ui.rmMode),
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
+  'brand-edit': () => openModal({
+    title: 'Programme name', saveLabel: 'Save',
+    html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),
+    onSave: f => { const v = f.elements.pname.value.trim(); if (v !== (data.project.name || '')) { data.project.name = v; afterChange(); toast(v ? 'Programme name saved.' : 'Programme name cleared.'); } },
+    onOpen: f => { const i = f.elements.pname; i.focus(); i.select(); }
+  }),
   'nav-toggle': () => { $('#sidebar').classList.toggle('open'); $('#scrim').classList.toggle('on'); }
 };
 const SUBMITS = {
   'save-settings': f => {
     const name = f.elements.pname.value.trim(), s = f.elements.pstart.value, e = f.elements.pend.value, err = $('#settingsErr');
-    const bad = !name ? 'Project name is required.' : (!parseISO(s) || !parseISO(e)) ? 'Enter valid timeline start and end dates.' : dayNum(e) < dayNum(s) ? 'Timeline end must be after the start.' : '';
+    const bad = (!parseISO(s) || !parseISO(e)) ? 'Enter valid timeline start and end dates.' : dayNum(e) < dayNum(s) ? 'Timeline end must be after the start.' : '';
     if (bad) { err.textContent = bad; err.hidden = false; return; }
     Object.assign(data.project, { name, description: f.elements.pdesc.value.trim(), manager: f.elements.pmanager.value.trim(), startDate: s, endDate: e });
     afterChange(); toast('Project settings saved.');

@@ -131,7 +131,7 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.topbar [data-action=export-json]')]);
   const exp = '/tmp/export.json'; await dl.saveAs(exp);
   const ej = JSON.parse(fs.readFileSync(exp, 'utf8'));
-  ok(/^Backup-DR-Data_\d{4}-\d{2}-\d{2}_\d{4}\.json$/.test(dl.suggestedFilename()), `download filename ${dl.suggestedFilename()}`);
+  ok(/^Project_\d{4}-\d{2}-\d{2}_\d{4}\.json$/.test(dl.suggestedFilename()), `download filename ${dl.suggestedFilename()}`);
   eq([ej.schemaVersion, ej.objectives.length, ej.objectives[0].tasks.length, ej.objectives[0].tasks[0].subtasks.length], [1, 1, 2, 3], 'export has schemaVersion and Project>Objectives>Tasks>Subtasks hierarchy');
   ok(/^\d{4}-\d{2}-\d{2}$/.test(ej.objectives[0].startDate) && ej.objectives[0].startDate === '2026-10-05', 'dates exported as ISO YYYY-MM-DD');
   const before = await D();

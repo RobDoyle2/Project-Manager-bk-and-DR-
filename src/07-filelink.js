@@ -6,7 +6,12 @@
    the normal import / download is used instead.
    ===================================================================== */
 const FSA = { open: typeof window.showOpenFilePicker === 'function', save: typeof window.showSaveFilePicker === 'function' };
-const JSON_TYPES = [{ description: 'Backup & DR project (JSON)', accept: { 'application/json': ['.json'] } }];
+const JSON_TYPES = [{ description: 'Project data (JSON)', accept: { 'application/json': ['.json'] } }];
+/* Pickers start in the Downloads folder where the browser supports it (older versions ignore / reject the hint, so retry without it). */
+async function pick(fn, opts) {
+  try { return await window[fn]({ ...opts, startIn: 'downloads' }); }
+  catch (e) { if (e && e.name === 'TypeError') return window[fn](opts); throw e; }
+}
 let linked = null;               // { handle, name, savedAt }
 
 /* ---- remember the chosen file between visits (IndexedDB can hold file handles) ---- */
@@ -66,7 +71,7 @@ async function saveToLinkedFile() {
 }
 async function browseForFile() {
   let hs;
-  try { hs = await window.showOpenFilePicker({ types: JSON_TYPES, multiple: false }); } catch (e) { return pickerFailed(e, 'open'); }
+  try { hs = await pick('showOpenFilePicker', { types: JSON_TYPES, multiple: false }); } catch (e) { return pickerFailed(e, 'open'); }
   const handle = hs[0];
   let text, file;
   try { file = await handle.getFile(); text = await file.text(); } catch (e) { toast('Could not read that file.', 'error'); return; }
@@ -75,7 +80,7 @@ async function browseForFile() {
 }
 async function createNewFile() {
   let handle;
-  try { handle = await window.showSaveFilePicker({ suggestedName: 'Backup-DR-Data.json', types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { handle = await pick('showSaveFilePicker', { suggestedName: fileBase() + '.json', types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
   try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
   setLink(handle, new Date().toISOString()); render();
   toast(`Saved to ${handle.name}. Press the button in the top bar any time to update it.`, 'ok', 6000);
@@ -84,7 +89,7 @@ async function createNewFile() {
 /* Export JSON: browse for the folder and file name instead of dropping a file into Downloads (a copy; the linked file, if any, is unchanged) */
 async function exportToChosenFile() {
   let handle;
-  try { handle = await window.showSaveFilePicker({ suggestedName: stampName('Backup-DR-Data', 'json'), types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { handle = await pick('showSaveFilePicker', { suggestedName: stampName(fileBase(), 'json'), types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
   try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
   render(); toast(`Exported to ${handle.name}.`, 'ok', 4500);
 }
@@ -95,7 +100,7 @@ function fileDialog() {
       <div class="btn-row">${btn('Update file now', 'file-save', '', 'primary', 'save')}${btn('Stop linking', 'file-unlink', '', 'ghost')}</div></div>` : '';
   openModal({
     title: 'Project file', hideSave: true, cancelLabel: 'Close',
-    html: `<p class="muted small">Choose a real file on this computer. After that, the button in the top bar (next to Import JSON) writes your latest changes straight back to it.</p>${cur}
+    html: `<p class="muted small">Choose a real file on this computer (the chooser opens in your Downloads folder). After that, the button in the top bar (next to Import JSON) writes your latest changes straight back to it.</p>${cur}
       <div class="fl-opts">
         <button type="button" class="fl-opt" data-action="file-browse">${icon('upload', 22)}<span><b>Browse for an existing file…</b><small>Pick a project JSON file. It replaces the current data after you confirm, then stays linked for saving.</small></span></button>
         <button type="button" class="fl-opt" data-action="file-new">${icon('save', 22)}<span><b>Save as a new file…</b><small>Choose the folder <em>and the file name</em>. The current project is written there and stays linked.</small></span></button>
@@ -104,7 +109,7 @@ function fileDialog() {
   });
 }
 Object.assign(ACTIONS, {
-  'import-json': () => { if (FSA.open || FSA.save) fileDialog(); else classicImport(); },
+  'import-json': () => { if (FSA.open) browseForFile(); else classicImport(); },
   'file-dialog': () => fileDialog(),
   'file-browse': () => { closeModal(); browseForFile(); },
   'file-new': () => { closeModal(); createNewFile(); },

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Backup &amp; DR Programme Manager</title>
-<meta name="description" content="Standalone project management application for a Backup &amp; Disaster Recovery programme.">
+<title>Programme Manager</title>
+<meta name="description" content="Standalone, offline programme and project management application.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23004D44'/%3E%3Cpath d='M16 6l8 3v6c0 5-3.4 8.5-8 10-4.6-1.500-8-5-8-10V9z' fill='none' stroke='white' stroke-width='2.200' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -29,7 +29,11 @@ h3{font-size:1.02rem}
 .sidebar{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow:auto;z-index:60}
 .brand{display:flex;align-items:center;gap:11px;padding:4px 10px 18px}
 .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#32796E,#004D44 70%);display:grid;place-items:center;color:#fff;box-shadow:0 6px 14px rgba(0,77,68,.35)}
-.brand b{display:block;font-size:1.05rem;letter-spacing:-.01em}.brand small{color:var(--ink3);font-size:.76rem}
+.brand-t{flex:1;min-width:0}
+.brand b{display:block;font-size:1.05rem;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.brand b.ph{color:var(--ink3);font-weight:600;font-style:italic}
+.brand-edit{flex:none;width:30px;height:30px;color:var(--ink3);align-self:flex-start;margin-top:2px}
+.brand-edit:hover{color:var(--brand);background:var(--brand-soft)}.brand small{color:var(--ink3);font-size:.76rem}
 .nav{display:flex;flex-direction:column;gap:3px}
 .nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:.95rem;transition:background .15s,color .15s}
 .nav a:hover{background:#f1f3f2;color:var(--ink)}
@@ -585,7 +589,7 @@ button.save-chip:hover{border-color:var(--brand)}
 <noscript><p style="padding:2rem;font-family:sans-serif">This application needs JavaScript enabled in your browser.</p></noscript>
 <div class="app">
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-    <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></svg></div><div><b>Backup &amp; DR</b><small>Programme Manager</small></div></div>
+    <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></svg></div><div class="brand-t"><b id="brandName"></b><small>Programme</small></div><button type="button" class="icon-btn brand-edit" data-action="brand-edit" aria-label="Edit programme name" title="Edit programme name"></button></div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot" id="sideFoot"></div>
   </aside>
@@ -612,12 +616,12 @@ button.save-chip:hover{border-color:var(--brand)}
 (function () {
 'use strict';
 /* =====================================================================
-   Backup & DR Programme Manager — core: constants, dates, data model,
+   Programme Manager — core: constants, dates, data model,
    validation, central progress engine, persistence
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -742,7 +746,7 @@ function blankProject() {
   return {
     schemaVersion: SCHEMA_VERSION,
     app: APP_ID,
-    project: { id: 'PRJ-001', name: 'Backup & Disaster Recovery Programme', description: '', manager: '', startDate: '2026-10-01', endDate: '2027-06-30' },
+    project: { id: 'PRJ-001', name: '', description: '', manager: '', startDate: '2026-10-01', endDate: '2027-06-30' },
     counters: { objective: 0, task: 0, subtask: 0, risk: 0, dependency: 0, milestone: 0 },
     objectives: [], risks: [], dependencies: [], milestones: [],
     meta: { createdAt: now, modifiedAt: now, lastExportedAt: null }
@@ -879,7 +883,7 @@ function parseProject(raw) {
   const p = raw.project;
   out.project = {
     id: str(p.id, 'PRJ-001') || 'PRJ-001',
-    name: str(p.name, '').trim() || 'Backup & Disaster Recovery Programme',
+    name: str(p.name, '').trim(),
     description: str(p.description), manager: str(p.manager),
     startDate: chkDate(p.startDate || '2026-10-01', 'Project start date', true),
     endDate: chkDate(p.endDate || '2027-06-30', 'Project end date', true)
@@ -1249,19 +1253,22 @@ function download(name, text, mime) {
   a.href = url; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 800);
 }
+/* programme name as shown in the interface (falls back to a prompt when the file has no name yet) and as a safe file-name stem */
+const progName = () => (data.project.name || '').trim() || 'Programme name';
+function fileBase() { const s = (data.project.name || '').normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 40); return s || 'Project'; }
 function stampName(prefix, ext) { const t = todayISO(); const n = new Date(); return `${prefix}_${t}_${pad2(n.getHours())}${pad2(n.getMinutes())}.${ext}`; }
 function exportText() { computedFields(); data.meta.lastExportedAt = new Date().toISOString(); saveLocal(); return JSON.stringify(data, null, 2); }
 function exportJSON(kind) {
   const text = exportText();
-  download(stampName(kind === 'backup' ? 'Backup-DR-Data-backup' : 'Backup-DR-Data', 'json'), text);
+  download(stampName(kind === 'backup' ? fileBase() + '-backup' : fileBase(), 'json'), text);
   return text;
 }
 const canShareFiles = () => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] })); } catch (e) { return false; } };
 /* Mobile-friendly export: opens the phone's share sheet so the file can be saved to Files / Drive / Downloads / email. */
 async function shareJSON() {
   const text = exportText();
-  const file = new File([text], stampName('Backup-DR-Data', 'json'), { type: 'application/json' });
-  try { await navigator.share({ files: [file], title: 'Backup & DR project data' }); return 'shared'; }
+  const file = new File([text], stampName(fileBase(), 'json'), { type: 'application/json' });
+  try { await navigator.share({ files: [file], title: progName() + ' data' }); return 'shared'; }
   catch (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; }
 }
 
@@ -2110,7 +2117,7 @@ function viewDashboard() {
   const overdue = D.overdueItems.filter(x => x.kind !== 'obj').slice(0, 4);
   const stTotal = t.objectives || 1;
   const segs = STATUS_ORDER.filter(k => t.byObjStatus[k] > 0).map(k => `<i class="sg st-${k}" style="flex:${t.byObjStatus[k]}" data-tip="${STATUS_LABEL[k]}: ${t.byObjStatus[k]}"></i>`).join('');
-  let h = pageHead('Dashboard', `${esc(p.name)} · ${esc(rangeText(p.startDate, p.endDate))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}`,
+  let h = pageHead('Dashboard', `${esc(progName())} · ${esc(rangeText(p.startDate, p.endDate))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}`,
     btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'));
   if (empty) {
     h += `<div class="card onboard"><div class="onb-ic">${icon('shield', 34)}</div><div><h2>Welcome — your programme is empty</h2>
@@ -2388,7 +2395,7 @@ function viewReports() {
     </div>
     <div class="card span2"><h3>Project settings</h3>
       <form id="settingsForm" data-submit="save-settings" class="fgrid" novalidate>
-        ${fld('Project name', inp('pname', p.name, 'required maxlength="120"'), 'full')}
+        ${fld('Programme name', inp('pname', p.name, 'maxlength="120" placeholder="Programme name"'), 'full', 'Shown top left and saved in the project file.')}
         ${fld('Description', txt('pdesc', p.description, 2), 'full')}
         ${fld('Programme manager', inp('pmanager', p.manager, 'list="owners"') + ownerDatalist())}
         <span></span>
@@ -2405,7 +2412,7 @@ function reportBodyHtml() {
   const risks = data.risks.filter(r => r.status !== 'closed').sort((a, b) => riskScore(b) - riskScore(a));
   const atRisk = Array.from(D.task.values()).filter(x => x.status === 'at-risk' || x.status === 'delayed');
   return `<div class="rep">
-    <div class="rep-head"><div><h1>${esc(p.name)}</h1><p>Project status report · ${esc(fmtDate(D.today))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}</p><p class="rep-sub">Timeline: ${esc(rangeText(p.startDate, p.endDate))}</p></div><div class="rep-ring">${ringSvg(t.overall)}</div></div>
+    <div class="rep-head"><div><h1>${esc(progName())}</h1><p>Project status report · ${esc(fmtDate(D.today))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}</p><p class="rep-sub">Timeline: ${esc(rangeText(p.startDate, p.endDate))}</p></div><div class="rep-ring">${ringSvg(t.overall)}</div></div>
     <div class="rep-kpis"><div><b>${t.objectives}</b><span>Objectives</span></div><div><b>${t.tasks}</b><span>Tasks</span></div><div><b>${t.tasksDone}</b><span>Completed</span></div><div><b>${t.tasksStarted}</b><span>In progress</span></div><div class="r"><b>${t.tasksBlocked}</b><span>Blocked</span></div><div class="a"><b>${t.tasksOverdue}</b><span>Overdue</span></div></div>
     <h2>Objectives</h2>
     ${realObjs().length ? `<table><thead><tr><th>ID</th><th>Objective</th><th>Owner</th><th>Baseline</th><th>Forecast</th><th>Tasks</th><th>Progress</th><th>Status</th></tr></thead><tbody>
@@ -2420,7 +2427,7 @@ function reportBodyHtml() {
     ${risks.length ? `<table><thead><tr><th>Risk</th><th>Rating</th><th>Owner</th><th>Mitigation</th><th>Status</th></tr></thead><tbody>${risks.map(r => `<tr><td>${esc(r.description)}</td><td><span class="band band-${riskBand(riskScore(r))}">${riskScore(r)} · ${cap(riskBand(riskScore(r)))}</span></td><td>${esc(r.owner || '—')}</td><td>${esc(r.mitigation || '—')}</td><td>${cap(r.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No open risks recorded.</p>'}
     <h2>Open dependencies (${data.dependencies.filter(d => d.status !== 'satisfied').length})</h2>
     ${data.dependencies.filter(d => d.status !== 'satisfied').length ? `<table><thead><tr><th>Dependent item</th><th>Depends on</th><th>Type</th><th>Status</th></tr></thead><tbody>${data.dependencies.filter(d => d.status !== 'satisfied').map(d => `<tr><td>${esc(nameOf(d.fromId))}</td><td>${esc(d.toId ? nameOf(d.toId) : d.assetName)}${D.conflicts.has(d.id) ? ' ⚠' : ''}</td><td>${DEP_TYPES[d.type]}</td><td>${cap(d.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No open dependencies.</p>'}
-    <p class="rep-foot">Generated by Backup &amp; DR Programme Manager v${APP_VERSION} · schema v${SCHEMA_VERSION}</p></div>`;
+    <p class="rep-foot">Generated by Programme Manager v${APP_VERSION} · schema v${SCHEMA_VERSION}</p></div>`;
 }
 
 /* =====================================================================
@@ -2648,7 +2655,7 @@ function preparePrint(kind, mode) {
   let html, orient = 'landscape';
   if (kind === 'roadmap') {
     const p = data.project;
-    html = `<div class="print-sheet"><div class="ps-head"><div><h1>${esc(p.name)}</h1><p>${mode === 'management' ? 'Programme roadmap — management view' : 'Programme roadmap — technical view'} · ${esc(rangeText(p.startDate, p.endDate))}</p></div>
+    html = `<div class="print-sheet"><div class="ps-head"><div><h1>${esc(progName())}</h1><p>${mode === 'management' ? 'Programme roadmap — management view' : 'Programme roadmap — technical view'} · ${esc(rangeText(p.startDate, p.endDate))}</p></div>
       <div class="ps-meta"><b>${pct(D.totals.overall)}%</b> overall<br><small>As at ${esc(fmtDate(D.today))}</small></div></div>
       ${mode === 'management' ? mgmtRoadmapHtml({ print: true }) : techRoadmapHtml({ print: true })}${roadmapLegend(mode)}</div>`;
   } else { html = `<div class="print-sheet report-sheet">${reportBodyHtml()}</div>`; orient = 'portrait'; }
@@ -2665,8 +2672,8 @@ function doPrint(kind, mode) {
 }
 function downloadReport() {
   const css = $('#reportCss').textContent;
-  const doc = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(data.project.name)} — Status report ${esc(todayISO())}</title><style>${css}</style></head><body class="report-page">${reportBodyHtml()}</body></html>`;
-  download(stampName('Backup-DR-Status-Report', 'html'), doc, 'text/html');
+  const doc = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(progName())} — Status report ${esc(todayISO())}</title><style>${css}</style></head><body class="report-page">${reportBodyHtml()}</body></html>`;
+  download(stampName(fileBase() + '-Status-Report', 'html'), doc, 'text/html');
 }
 
 /* =====================================================================
@@ -2683,7 +2690,15 @@ const NAV = [
   { id: 'reports', label: 'Reports & Data Management', icon: 'report', fn: () => viewReports() }
 ];
 
+function renderBrand() {
+  const el = $('#brandName'); if (!el) return;
+  const n = (data.project.name || '').trim();
+  el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
+  const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
+  const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
+}
 function renderNav() {
+  renderBrand();
   const unexp = !data.meta.lastExportedAt || data.meta.modifiedAt > data.meta.lastExportedAt;
   const hasContent = countsOf(data).tasks || data.objectives.length || data.risks.length || data.milestones.length;
   $('#nav').innerHTML = NAV.map(n => {
@@ -2758,7 +2773,7 @@ async function handleImportText(text, fileName) {
   const ok = await confirmDialog({
     title: 'Replace current project data?', danger: true, okLabel: 'Replace with imported data',
     message: `Importing <b>${esc(file.name)}</b> will <b>replace</b> everything currently in the application.`,
-    html: `<div class="cmp"><div><small>Current</small><b>${esc(data.project.name)}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name)}</b><span>${fmt(inc)}</span></div></div>
+    html: `<div class="cmp"><div><small>Current</small><b>${esc(progName())}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name || 'Programme name')}</b><span>${fmt(inc)}</span></div></div>
       ${r.warnings.length ? `<p>The file was accepted with ${r.warnings.length} note${r.warnings.length === 1 ? '' : 's'}:</p>${problemList(r.warnings, 'warn')}` : ''}
       <p class="muted small">A backup of your current data is saved in this browser first (Reports &amp; Data Management → Browser backups).</p>`
   });
@@ -2814,7 +2829,7 @@ const ACTIONS = {
     bulkTasksModal(pid === undefined ? {} : { parentId: pid });
   },
   'save-settings': (ds, el) => SUBMITS['save-settings'](el.closest('form')),
-  'download-csv-template': () => download('Backup-DR-Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
+  'download-csv-template': () => download('Tasks-template.csv', CSV_TEMPLATE, 'text/csv'),
   'task-edit': ds => workItemModal('task', ds.id),
   'task-view': ds => workItemViewModal(ds.id),
   'sub-view': ds => workItemViewModal(ds.id),
@@ -2857,7 +2872,7 @@ const ACTIONS = {
     if (r === 'shared') toast('Shared — choose Files, Drive or another app to keep it.');
     else if (r === 'failed') toast('Sharing isn\'t available here. Use “Show / copy JSON” instead.', 'warn', 7000);
   },
-  'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName('Backup-DR-Data-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
+  'download-backup': ds => { const b = readBackups()[+ds.i]; if (b) download(stampName(fileBase() + '-backup', 'json'), JSON.stringify(JSON.parse(b.json), null, 2)); },
   'save-now': () => { const a = saveLocal(), b = snapshot('Manual save'); toast(a ? (b ? 'Saved and backed up in this browser.' : 'Saved (backup could not be stored).') : 'Browser storage unavailable — please use Export JSON.', a ? 'ok' : 'error'); render(); },
   'show-json': () => {
     computedFields();
@@ -2887,16 +2902,22 @@ const ACTIONS = {
   'restore-backup': ds => restoreBackup(+ds.i),
   'delete-backup': ds => { const l = readBackups(); l.splice(+ds.i, 1); try { localStorage.setItem(LS_BACKUPS, JSON.stringify(l)); } catch (e) { /* ignore */ } render(); },
   'reset-project': () => resetProject(),
-  'download-template': () => { download('Backup-DR-Data_blank.json', JSON.stringify(blankProject(), null, 2)); },
+  'download-template': () => { download('Project-blank.json', JSON.stringify(blankProject(), null, 2)); },
   'print-roadmap': ds => doPrint('roadmap', ds.mode || ui.rmMode),
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
+  'brand-edit': () => openModal({
+    title: 'Programme name', saveLabel: 'Save',
+    html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),
+    onSave: f => { const v = f.elements.pname.value.trim(); if (v !== (data.project.name || '')) { data.project.name = v; afterChange(); toast(v ? 'Programme name saved.' : 'Programme name cleared.'); } },
+    onOpen: f => { const i = f.elements.pname; i.focus(); i.select(); }
+  }),
   'nav-toggle': () => { $('#sidebar').classList.toggle('open'); $('#scrim').classList.toggle('on'); }
 };
 const SUBMITS = {
   'save-settings': f => {
     const name = f.elements.pname.value.trim(), s = f.elements.pstart.value, e = f.elements.pend.value, err = $('#settingsErr');
-    const bad = !name ? 'Project name is required.' : (!parseISO(s) || !parseISO(e)) ? 'Enter valid timeline start and end dates.' : dayNum(e) < dayNum(s) ? 'Timeline end must be after the start.' : '';
+    const bad = (!parseISO(s) || !parseISO(e)) ? 'Enter valid timeline start and end dates.' : dayNum(e) < dayNum(s) ? 'Timeline end must be after the start.' : '';
     if (bad) { err.textContent = bad; err.hidden = false; return; }
     Object.assign(data.project, { name, description: f.elements.pdesc.value.trim(), manager: f.elements.pmanager.value.trim(), startDate: s, endDate: e });
     afterChange(); toast('Project settings saved.');
@@ -2983,7 +3004,12 @@ document.addEventListener('DOMContentLoaded', init);
    the normal import / download is used instead.
    ===================================================================== */
 const FSA = { open: typeof window.showOpenFilePicker === 'function', save: typeof window.showSaveFilePicker === 'function' };
-const JSON_TYPES = [{ description: 'Backup & DR project (JSON)', accept: { 'application/json': ['.json'] } }];
+const JSON_TYPES = [{ description: 'Project data (JSON)', accept: { 'application/json': ['.json'] } }];
+/* Pickers start in the Downloads folder where the browser supports it (older versions ignore / reject the hint, so retry without it). */
+async function pick(fn, opts) {
+  try { return await window[fn]({ ...opts, startIn: 'downloads' }); }
+  catch (e) { if (e && e.name === 'TypeError') return window[fn](opts); throw e; }
+}
 let linked = null;               // { handle, name, savedAt }
 
 /* ---- remember the chosen file between visits (IndexedDB can hold file handles) ---- */
@@ -3043,7 +3069,7 @@ async function saveToLinkedFile() {
 }
 async function browseForFile() {
   let hs;
-  try { hs = await window.showOpenFilePicker({ types: JSON_TYPES, multiple: false }); } catch (e) { return pickerFailed(e, 'open'); }
+  try { hs = await pick('showOpenFilePicker', { types: JSON_TYPES, multiple: false }); } catch (e) { return pickerFailed(e, 'open'); }
   const handle = hs[0];
   let text, file;
   try { file = await handle.getFile(); text = await file.text(); } catch (e) { toast('Could not read that file.', 'error'); return; }
@@ -3052,7 +3078,7 @@ async function browseForFile() {
 }
 async function createNewFile() {
   let handle;
-  try { handle = await window.showSaveFilePicker({ suggestedName: 'Backup-DR-Data.json', types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { handle = await pick('showSaveFilePicker', { suggestedName: fileBase() + '.json', types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
   try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
   setLink(handle, new Date().toISOString()); render();
   toast(`Saved to ${handle.name}. Press the button in the top bar any time to update it.`, 'ok', 6000);
@@ -3061,7 +3087,7 @@ async function createNewFile() {
 /* Export JSON: browse for the folder and file name instead of dropping a file into Downloads (a copy; the linked file, if any, is unchanged) */
 async function exportToChosenFile() {
   let handle;
-  try { handle = await window.showSaveFilePicker({ suggestedName: stampName('Backup-DR-Data', 'json'), types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
+  try { handle = await pick('showSaveFilePicker', { suggestedName: stampName(fileBase(), 'json'), types: JSON_TYPES }); } catch (e) { return pickerFailed(e, 'save'); }
   try { await writeToHandle(handle); } catch (e) { toast('Could not write to that file: ' + (e && e.message ? e.message : e), 'error', 8000); return; }
   render(); toast(`Exported to ${handle.name}.`, 'ok', 4500);
 }
@@ -3072,7 +3098,7 @@ function fileDialog() {
       <div class="btn-row">${btn('Update file now', 'file-save', '', 'primary', 'save')}${btn('Stop linking', 'file-unlink', '', 'ghost')}</div></div>` : '';
   openModal({
     title: 'Project file', hideSave: true, cancelLabel: 'Close',
-    html: `<p class="muted small">Choose a real file on this computer. After that, the button in the top bar (next to Import JSON) writes your latest changes straight back to it.</p>${cur}
+    html: `<p class="muted small">Choose a real file on this computer (the chooser opens in your Downloads folder). After that, the button in the top bar (next to Import JSON) writes your latest changes straight back to it.</p>${cur}
       <div class="fl-opts">
         <button type="button" class="fl-opt" data-action="file-browse">${icon('upload', 22)}<span><b>Browse for an existing file…</b><small>Pick a project JSON file. It replaces the current data after you confirm, then stays linked for saving.</small></span></button>
         <button type="button" class="fl-opt" data-action="file-new">${icon('save', 22)}<span><b>Save as a new file…</b><small>Choose the folder <em>and the file name</em>. The current project is written there and stays linked.</small></span></button>
@@ -3081,7 +3107,7 @@ function fileDialog() {
   });
 }
 Object.assign(ACTIONS, {
-  'import-json': () => { if (FSA.open || FSA.save) fileDialog(); else classicImport(); },
+  'import-json': () => { if (FSA.open) browseForFile(); else classicImport(); },
   'file-dialog': () => fileDialog(),
   'file-browse': () => { closeModal(); browseForFile(); },
   'file-new': () => { closeModal(); createNewFile(); },

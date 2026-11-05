@@ -223,7 +223,7 @@ function preparePrint(kind, mode) {
   let html, orient = 'landscape';
   if (kind === 'roadmap') {
     const p = data.project;
-    html = `<div class="print-sheet"><div class="ps-head"><div><h1>${esc(p.name)}</h1><p>${mode === 'management' ? 'Programme roadmap — management view' : 'Programme roadmap — technical view'} · ${esc(rangeText(p.startDate, p.endDate))}</p></div>
+    html = `<div class="print-sheet"><div class="ps-head"><div><h1>${esc(progName())}</h1><p>${mode === 'management' ? 'Programme roadmap — management view' : 'Programme roadmap — technical view'} · ${esc(rangeText(p.startDate, p.endDate))}</p></div>
       <div class="ps-meta"><b>${pct(D.totals.overall)}%</b> overall<br><small>As at ${esc(fmtDate(D.today))}</small></div></div>
       ${mode === 'management' ? mgmtRoadmapHtml({ print: true }) : techRoadmapHtml({ print: true })}${roadmapLegend(mode)}</div>`;
   } else { html = `<div class="print-sheet report-sheet">${reportBodyHtml()}</div>`; orient = 'portrait'; }
@@ -240,6 +240,6 @@ function doPrint(kind, mode) {
 }
 function downloadReport() {
   const css = $('#reportCss').textContent;
-  const doc = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(data.project.name)} — Status report ${esc(todayISO())}</title><style>${css}</style></head><body class="report-page">${reportBodyHtml()}</body></html>`;
-  download(stampName('Backup-DR-Status-Report', 'html'), doc, 'text/html');
+  const doc = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(progName())} — Status report ${esc(todayISO())}</title><style>${css}</style></head><body class="report-page">${reportBodyHtml()}</body></html>`;
+  download(stampName(fileBase() + '-Status-Report', 'html'), doc, 'text/html');
 }

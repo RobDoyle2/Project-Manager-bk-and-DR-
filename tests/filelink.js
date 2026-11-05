@@ -21,8 +21,8 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   ok((await p.evaluate(() => document.querySelector('#saveChip').tagName)) === 'BUTTON', 'chip is a real button');
 
   // ---- upload arrow gives the Browse / Save-as dialog ----
-  await p.click('.topbar [data-action=import-json]'); await p.waitForSelector('#modal[open] .fl-opts');
-  ok(await p.$('#modal [data-action=file-browse]') !== null && await p.$('#modal [data-action=file-new]') !== null && await p.$('#modal [data-action=file-classic]') !== null, 'upload arrow opens dialog: browse / save-as-new / import once');
+  await p.click('#saveChip'); await p.waitForSelector('#modal[open] .fl-opts');
+  ok(await p.$('#modal [data-action=file-browse]') !== null && await p.$('#modal [data-action=file-new]') !== null && await p.$('#modal [data-action=file-classic]') !== null, 'unlinked chip opens dialog: browse / save-as-new / import once');
   // ---- choose name + location for a NEW file ----
   await p.click('#modal [data-action=file-new]'); await p.waitForTimeout(500);
   const calls = await p.evaluate(() => window.__pick.calls);
@@ -47,7 +47,7 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   const dlSeen = p.waitForEvent('download', { timeout: 1500 }).then(() => true, () => false);
   await p.click('.topbar [data-action=export-json]'); await p.waitForTimeout(600);
   const ec = await p.evaluate(() => window.__pick.calls);
-  ok(ec.length === 1 && ec[0][0] === 'save' && /Backup-DR-Data_.*\.json/.test(ec[0][1]), 'Export JSON opens the save-as picker with a suggested name: ' + JSON.stringify(ec));
+  ok(ec.length === 1 && ec[0][0] === 'save' && /^Backup-Disaster-Recovery-Programme_\d{4}.*\.json$/.test(ec[0][1]), 'Export JSON opens the save-as picker with a suggested name: ' + JSON.stringify(ec));
   const ex = await p.evaluate(() => window.__read('export-copy.json')); ok(/Filelink test objective/.test(ex) && JSON.parse(ex).schemaVersion === 1, 'export written to the file you chose');
   ok(!(await dlSeen), 'no automatic download to the Downloads folder');
   c = await chip(); ok(/my-plan\.json/.test(c.t), 'exporting a copy does not change the linked file: ' + c.t);
@@ -73,7 +73,7 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   // ---- browse for an EXISTING file ----
   await p.evaluate(async () => window.__put('other.json', JSON.stringify({ schemaVersion: 1, project: { name: 'Other plan' }, objectives: [{ id: 'OBJ-001', name: 'Only objective', startDate: '2026-10-01', endDate: '2026-11-01', progress: 0 }], tasks: [], subtasks: [], risks: [], dependencies: [], milestones: [], counters: {} })));
   await p.evaluate(() => { window.__pick.next = { name: 'other.json' }; });
-  await p.click('.topbar [data-action=import-json]'); await p.click('#modal [data-action=file-browse]');
+  await p.click('.topbar [data-action=import-json]');
   await p.waitForSelector('#confirm[open]'); ok(/other\.json/.test(await p.innerText('#confirm')), 'browsing an existing file asks to confirm the replace');
   await p.click('#confirm [data-confirm=ok]'); await p.waitForTimeout(600);
   c = await chip(); ok(/other\.json/.test(c.t) && /file-ok/.test(c.c), 'now linked to the browsed file: ' + c.t);
@@ -85,25 +85,24 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
 
   // ---- cancelling ----
   await p.evaluate(() => { window.__pick.next = { err: 'AbortError' }; });
-  await p.click('.topbar [data-action=import-json]'); await p.click('#modal [data-action=file-browse]'); await p.waitForTimeout(300);
+  await p.click('.topbar [data-action=import-json]'); await p.waitForTimeout(300);
   c = await chip(); ok(/other\.json/.test(c.t) && (await p.$('#confirm[open]')) === null, 'closing the picker changes nothing');
   await p.evaluate(async () => { window.__pick.next = { name: 'my-plan.json' }; });
-  await p.click('.topbar [data-action=import-json]'); await p.click('#modal [data-action=file-browse]'); await p.waitForSelector('#confirm[open]'); await p.click('#confirm [data-confirm=cancel]'); await p.waitForTimeout(300);
+  await p.click('.topbar [data-action=import-json]'); await p.waitForSelector('#confirm[open]'); await p.click('#confirm [data-confirm=cancel]'); await p.waitForTimeout(300);
   c = await chip(); ok(/other\.json/.test(c.t), 'declining the replace keeps the old link: ' + c.t);
   // invalid file
   await p.evaluate(async () => { await window.__put('bad.json', 'not json'); window.__pick.next = { name: 'bad.json' }; });
-  await p.click('.topbar [data-action=import-json]'); await p.click('#modal [data-action=file-browse]'); await p.waitForSelector('#confirm[open]');
+  await p.click('.topbar [data-action=import-json]'); await p.waitForSelector('#confirm[open]');
   ok(/not valid JSON/.test(await p.innerText('#confirm')), 'an invalid file is rejected'); await p.click('#confirm [data-confirm=ok]').catch(() => {}); await p.waitForTimeout(200);
   c = await chip(); ok(/other\.json/.test(c.t), 'invalid file does not change the link');
 
   // ---- sandbox / blocked picker falls back to the normal chooser ----
   await p.evaluate(() => { window.__pick.next = { err: 'SecurityError' }; });
-  await p.click('.topbar [data-action=import-json]');
   const fc = p.waitForEvent('filechooser', { timeout: 3000 }).then(() => true, () => false);
-  await p.click('#modal [data-action=file-browse]'); ok(await fc, 'picker blocked (SecurityError) -> falls back to the normal file chooser');
+  await p.click('.topbar [data-action=import-json]'); ok(await fc, 'picker blocked (SecurityError) -> falls back to the normal file chooser');
 
   // ---- stop linking ----
-  await p.click('.topbar [data-action=import-json]'); await p.waitForSelector('#modal .fl-cur'); await p.click('#modal [data-action=file-unlink]'); await p.waitForTimeout(300);
+  await p.click('#nav a[data-nav=reports]'); await p.click('[data-action=file-dialog]'); await p.waitForSelector('#modal .fl-cur'); await p.click('#modal [data-action=file-unlink]'); await p.waitForTimeout(300);
   c = await chip(); ok(!/file-/.test(c.c) && !/other\.json/.test(c.t), 'Stop linking returns the chip to normal: ' + c.t);
   await p.reload(); await p.waitForSelector('#saveChip'); await p.waitForTimeout(400); c = await chip(); ok(!/\.json/.test(c.t), 'unlink survives reload');
   ok(errs.length === 0, 'no JS errors ' + JSON.stringify(errs));
