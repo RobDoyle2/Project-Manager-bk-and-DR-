@@ -2,7 +2,8 @@
    Views: dashboard, objectives, tasks, risks, dependencies, milestones,
    reports & data
    ===================================================================== */
-const pageHead = (title, sub, actions = '') => `<div class="page-head"><div><h1>${esc(title)}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div><div class="head-actions">${actions}</div></div>`;
+const pmLogo = (size, id) => `<svg class="pm-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7566"/><stop offset="1" stop-color="#003B34"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#${id})"/><path d="M14 42V16h9.500a7.500 7.500 0 0 1 0 15H14" fill="none" stroke="#fff" stroke-width="6.400" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 42V16l9.500 14L54 16v26" fill="none" stroke="#fff" stroke-width="6.400" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="49" width="38" height="5.500" rx="2.750" fill="#fff" fill-opacity=".26"/><rect x="13" y="49" width="24" height="5.500" rx="2.750" fill="#F4C95D"/></svg>`;
+const pageHead = (title, sub, actions = '', lead = '') => { const txt = `<div><h1>${esc(title)}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div>`; return `<div class="page-head">${lead ? `<div class="ph-main">${lead}${txt}</div>` : txt}<div class="head-actions">${actions}</div></div>`; };
 const btn = (label, action, extra = '', cls = '', ic = '') => `<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ic ? icon(ic, 16) : ''}${label}</button>`;
 
 /* ---------------- Dashboard ---------------- */
@@ -25,7 +26,7 @@ function viewDashboard() {
   const stTotal = t.objectives || 1;
   const segs = STATUS_ORDER.filter(k => t.byObjStatus[k] > 0).map(k => `<i class="sg st-${k}" style="flex:${t.byObjStatus[k]}" data-tip="${STATUS_LABEL[k]}: ${t.byObjStatus[k]}"></i>`).join('');
   let h = pageHead('Dashboard', `${esc(progName())} · ${esc(rangeText(p.startDate, p.endDate))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}`,
-    btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'));
+    btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'), pmLogo(52, 'pmg-dash'));
   if (empty) {
     h += `<div class="card onboard"><div class="onb-ic">${icon('shield', 34)}</div><div><h2>Welcome — your programme is empty</h2>
       <p>Start by defining what the programme must achieve. Everything else — progress, status, dashboard and roadmap — is calculated from your objectives and tasks.</p>

@@ -30,7 +30,7 @@ h3{font-size:1.02rem}
 .app{display:grid;grid-template-columns:256px minmax(0,1fr);min-height:100vh}
 .sidebar{background:#fff;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow:auto;z-index:60}
 .brand{display:flex;align-items:center;gap:11px;padding:4px 10px 18px}
-.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#32796E,#004D44 70%);display:grid;place-items:center;color:#fff;box-shadow:0 6px 14px rgba(0,77,68,.35)}
+.logo{flex:none;width:40px;height:40px;border-radius:11px;line-height:0;box-shadow:0 6px 14px rgba(0,77,68,.30)}.logo svg{display:block;width:40px;height:40px}
 .brand-t{flex:1;min-width:0}
 .brand b{display:block;font-size:1.05rem;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .brand b.ph{color:var(--ink3);font-weight:600;font-style:italic}
@@ -62,6 +62,8 @@ h3{font-size:1.02rem}
 
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
 .page-head p{margin-top:5px;max-width:70ch}
+.ph-main{display:flex;align-items:center;gap:15px;min-width:0}.pm-logo{flex:none;display:block;border-radius:14px;box-shadow:0 6px 16px rgba(0,77,68,.28)}
+@media (max-width:640px){.pm-logo{width:42px;height:42px}.ph-main{gap:11px;align-items:flex-start}}
 .head-actions{display:flex;gap:10px;flex-wrap:wrap}
 
 /* ---------- buttons ---------- */
@@ -591,7 +593,7 @@ button.save-chip:hover{border-color:var(--brand)}
 <noscript><p style="padding:2rem;font-family:sans-serif">This application needs JavaScript enabled in your browser.</p></noscript>
 <div class="app">
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-    <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.300 8-8 9-4.700-1-8-4.500-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/></svg></div><div class="brand-t"><b id="brandName"></b><small>Programme</small></div><button type="button" class="icon-btn brand-edit" data-action="brand-edit" aria-label="Edit programme name" title="Edit programme name"></button></div>
+    <div class="brand"><div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40" aria-hidden="true"><defs><linearGradient id="pmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7566"/><stop offset="1" stop-color="#003B34"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#pmg)"/><path d="M14 42V16h9.5a7.5 7.5 0 0 1 0 15H14" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 42V16l9.5 14L54 16v26" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="49" width="38" height="5.5" rx="2.75" fill="#fff" fill-opacity=".26"/><rect x="13" y="49" width="24" height="5.5" rx="2.75" fill="#F4C95D"/></svg></div><div class="brand-t"><b id="brandName"></b><small>Programme</small></div><button type="button" class="icon-btn brand-edit" data-action="brand-edit" aria-label="Edit programme name" title="Edit programme name"></button></div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot" id="sideFoot"></div>
   </aside>
@@ -623,7 +625,7 @@ button.save-chip:hover{border-color:var(--brand)}
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.4.3';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -2097,7 +2099,8 @@ function bulkTasksModal(ctx = {}) {
    Views: dashboard, objectives, tasks, risks, dependencies, milestones,
    reports & data
    ===================================================================== */
-const pageHead = (title, sub, actions = '') => `<div class="page-head"><div><h1>${esc(title)}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div><div class="head-actions">${actions}</div></div>`;
+const pmLogo = (size, id) => `<svg class="pm-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7566"/><stop offset="1" stop-color="#003B34"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#${id})"/><path d="M14 42V16h9.500a7.500 7.500 0 0 1 0 15H14" fill="none" stroke="#fff" stroke-width="6.400" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 42V16l9.500 14L54 16v26" fill="none" stroke="#fff" stroke-width="6.400" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="49" width="38" height="5.500" rx="2.750" fill="#fff" fill-opacity=".26"/><rect x="13" y="49" width="24" height="5.500" rx="2.750" fill="#F4C95D"/></svg>`;
+const pageHead = (title, sub, actions = '', lead = '') => { const txt = `<div><h1>${esc(title)}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div>`; return `<div class="page-head">${lead ? `<div class="ph-main">${lead}${txt}</div>` : txt}<div class="head-actions">${actions}</div></div>`; };
 const btn = (label, action, extra = '', cls = '', ic = '') => `<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ic ? icon(ic, 16) : ''}${label}</button>`;
 
 /* ---------------- Dashboard ---------------- */
@@ -2120,7 +2123,7 @@ function viewDashboard() {
   const stTotal = t.objectives || 1;
   const segs = STATUS_ORDER.filter(k => t.byObjStatus[k] > 0).map(k => `<i class="sg st-${k}" style="flex:${t.byObjStatus[k]}" data-tip="${STATUS_LABEL[k]}: ${t.byObjStatus[k]}"></i>`).join('');
   let h = pageHead('Dashboard', `${esc(progName())} · ${esc(rangeText(p.startDate, p.endDate))}${p.manager ? ' · Programme manager: ' + esc(p.manager) : ''}`,
-    btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'));
+    btn('New objective', 'obj-new', '', 'primary', 'plus') + btn('New task', 'task-new', '', '', 'plus') + btn('Add several tasks', 'tasks-bulk', '', '', 'plus'), pmLogo(52, 'pmg-dash'));
   if (empty) {
     h += `<div class="card onboard"><div class="onb-ic">${icon('shield', 34)}</div><div><h2>Welcome — your programme is empty</h2>
       <p>Start by defining what the programme must achieve. Everything else — progress, status, dashboard and roadmap — is calculated from your objectives and tasks.</p>

@@ -59,7 +59,5 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   let dl = q.waitForEvent('download'); await q.click('.topbar [data-action=export-json]'); let d = await dl; ok(/^Project_\d{4}-\d{2}-\d{2}_\d{4}\.json$/.test(d.suggestedFilename()), 'unnamed programme -> file name Project_<date>: ' + d.suggestedFilename());
   await q.click('.brand [data-action=brand-edit]'); await q.fill('#modal [name=pname]', 'Café / Rollout: 2027!'); await q.click('#modal [data-modal-save]'); await q.waitForTimeout(200);
   dl = q.waitForEvent('download'); await q.click('.topbar [data-action=export-json]'); d = await dl; ok(/^Cafe-Rollout-2027_/.test(d.suggestedFilename()), 'file name derived safely from the programme name: ' + d.suggestedFilename());
-  await q.setViewportSize({ width: 390, height: 800 }); await q.click('.hamb'); await q.fill('#modal [name=pname]', 'x').catch(() => {});
-  await q.keyboard.press('Escape'); await q.click('.brand [data-action=brand-edit]').catch(() => {}); await q.waitForTimeout(100);
   console.log(`RESULT ${pz} passed, ${f} failed`); await b.close(); srv.kill(); process.exit(f ? 1 : 0);
 })().catch(e => { console.error('CRASH', e); process.exit(2) });
