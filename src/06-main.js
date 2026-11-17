@@ -18,6 +18,7 @@ function renderBrand() {
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
   const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
+  const ib = $('.info-btn'); if (ib && !ib.firstChild) ib.innerHTML = icon('info', 18);
   const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
 }
 function renderNav() {
@@ -237,6 +238,7 @@ const ACTIONS = {
   'print-roadmap': ds => doPrint('roadmap', ds.mode || ui.rmMode),
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
+  'about': () => aboutModal(),
   'brand-edit': () => openModal({
     title: 'Programme name', saveLabel: 'Save',
     html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),

@@ -463,6 +463,18 @@ button.save-chip:hover{border-color:var(--brand)}
 .fl-cur{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:var(--brand-soft)}
 .fl-cur small{display:block;color:var(--ink2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
 .fl-cur b{display:block}.fl-cur span{color:var(--ink2);font-size:.85rem}
+.side-about{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.info-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--brand);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
+.info-btn:hover,.info-btn:focus-visible{background:var(--brand-soft);border-color:var(--brand)}
+.about{display:flex;flex-direction:column;gap:6px}
+.about-hero{display:flex;align-items:center;gap:16px;padding:6px 0 16px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.about-hero b{display:block;font-size:1.25rem;letter-spacing:-.01em}.about-hero span{display:block;color:var(--ink2);font-size:.9rem;margin-top:3px}
+.about section{padding:10px 0 4px}
+.about h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--brand)}
+.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem;line-height:1.45}
+.about-by{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);text-align:center;font-weight:600}
+.about-by a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
+.about-hero b small{font-size:.72rem;font-weight:600;color:var(--ink3);margin-left:6px;letter-spacing:.02em}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
 .json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfa;resize:vertical}

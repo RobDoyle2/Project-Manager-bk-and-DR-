@@ -476,6 +476,18 @@ button.save-chip:hover{border-color:var(--brand)}
 .fl-cur{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:var(--brand-soft)}
 .fl-cur small{display:block;color:var(--ink2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
 .fl-cur b{display:block}.fl-cur span{color:var(--ink2);font-size:.85rem}
+.side-about{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.info-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--brand);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
+.info-btn:hover,.info-btn:focus-visible{background:var(--brand-soft);border-color:var(--brand)}
+.about{display:flex;flex-direction:column;gap:6px}
+.about-hero{display:flex;align-items:center;gap:16px;padding:6px 0 16px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.about-hero b{display:block;font-size:1.25rem;letter-spacing:-.01em}.about-hero span{display:block;color:var(--ink2);font-size:.9rem;margin-top:3px}
+.about section{padding:10px 0 4px}
+.about h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--brand)}
+.about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem;line-height:1.45}
+.about-by{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);text-align:center;font-weight:600}
+.about-by a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
+.about-hero b small{font-size:.72rem;font-weight:600;color:var(--ink3);margin-left:6px;letter-spacing:.02em}
 @media (max-width:640px){.tb-btn span{display:none}.tb-btn svg{margin:0}.tb-btn{padding:6px 9px}.save-chip{font-size:.72rem;padding:4px 8px}.topbar{gap:8px}.topbar h2{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 
 .json-box{width:100%;font-family:Consolas,"Cascadia Mono",Menlo,monospace;font-size:.78rem;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfa;resize:vertical}
@@ -603,6 +615,7 @@ button.save-chip:hover{border-color:var(--brand)}
     <div class="brand"><div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40" aria-hidden="true"><defs><linearGradient id="pmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7566"/><stop offset="1" stop-color="#003B34"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#pmg)"/><path d="M14 42V16h9.5a7.5 7.5 0 0 1 0 15H14" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 42V16l9.5 14L54 16v26" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="49" width="38" height="5.5" rx="2.75" fill="#fff" fill-opacity=".26"/><rect x="13" y="49" width="24" height="5.5" rx="2.75" fill="#F4C95D"/></svg></div><div class="brand-t"><b id="brandName"></b><small>Programme</small></div><button type="button" class="icon-btn brand-edit" data-action="brand-edit" aria-label="Edit programme name" title="Edit programme name"></button></div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot" id="sideFoot"></div>
+    <div class="side-about"><button type="button" class="info-btn" data-action="about" aria-label="About Programme Manager — help and information" title="About / help"></button></div>
   </aside>
   <div class="scrim" id="scrim"></div>
   <div class="main">
@@ -634,7 +647,7 @@ const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
 const APP_VERSION = '1.5.3';
 /* Shown small under Export JSON (top right). Bump by 0.01 every time a new version is pushed: 0.01, 0.02 ... 0.10 ... */
-const BUILD_VERSION = '0.02';
+const BUILD_VERSION = '0.03';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -1316,6 +1329,7 @@ const ICONS = {
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   shield: '<path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.6v.2" stroke-width="2.6"/>',
   book: '<path d="M12 6.5C10.4 5.2 8.3 4.5 6 4.5H3v13.5h3c2.3 0 4.4.7 6 2 1.6-1.3 3.7-2 6-2h3V4.5h-3c-2.3 0-4.4.7-6 2z"/><path d="M12 6.5v13.5"/>',
   refresh: '<path d="M20 5v5h-5M4 19v-5h5"/><path d="M5.5 9A7 7 0 0 1 19 10M18.5 15A7 7 0 0 1 5 14"/>'
 };
@@ -1983,6 +1997,35 @@ function workItemViewModal(id) {
 function viewItem(id) {
   const n = D.node.get(id); if (!n) return;
   if (n.kind === 'obj') objectiveViewModal(id); else workItemViewModal(id);
+}
+
+/* ---------------- About / help window (the "i" button, bottom left) ---------------- */
+function aboutModal() {
+  const html = `<div class="about">
+    <div class="about-hero">${pmLogo(60, 'pmg-about')}<div><b>Programme Manager <small>v${esc(BUILD_VERSION)}</small></b><span>Plan, track and report on any programme or project. Works offline, in one file.</span></div></div>
+    <section><h4>Getting started</h4><ul>
+      <li>Click the <b>pencil</b> at the top left to name your programme. The name is saved in your JSON file.</li>
+      <li>Add <b>objectives</b> on the Objectives page, then <b>tasks</b> and <b>subtasks</b> under them. “Add several tasks” lets you paste a list or import a CSV.</li>
+      <li>Progress works itself out: you set a percentage on tasks and subtasks, and objectives and the whole programme are calculated from them.</li>
+      <li>The <b>Dashboard</b> shows where things stand. The <b>Roadmap</b> has a Management view and a Technical view. Click any name to open it read-only, and use the pencil to edit.</li>
+    </ul></section>
+    <section><h4>Saving your work</h4><ul>
+      <li>Your work is autosaved in this browser as you go. <b>Save regularly to back up your data.</b></li>
+      <li>The browser keeps a few automatic backups, but they are lost if you clear your browser data. <b>A saved JSON file is the reliable backup.</b></li>
+      <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file. It reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
+      <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
+    </ul></section>
+    <section><h4>Opening a project</h4><ul>
+      <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
+      <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
+    </ul></section>
+    <section><h4>About the JSON file</h4><ul>
+      <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
+      <li><b>Your data never leaves your browser or the JSON file you select. Nothing is sent to a server, unless you choose to share the file yourself.</b></li>
+    </ul></section>
+    <p class="about-by">Created by Robert Doyle from <a href="https://nuloha.com" target="_blank" rel="noopener noreferrer">nuloha.com</a></p>
+  </div>`;
+  openModal({ title: 'About Programme Manager', html, wide: true, hideSave: true, cancelLabel: 'Close' });
 }
 
 /* =====================================================================
@@ -2718,6 +2761,7 @@ function renderBrand() {
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
   const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
+  const ib = $('.info-btn'); if (ib && !ib.firstChild) ib.innerHTML = icon('info', 18);
   const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
 }
 function renderNav() {
@@ -2937,6 +2981,7 @@ const ACTIONS = {
   'print-roadmap': ds => doPrint('roadmap', ds.mode || ui.rmMode),
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
+  'about': () => aboutModal(),
   'brand-edit': () => openModal({
     title: 'Programme name', saveLabel: 'Save',
     html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),

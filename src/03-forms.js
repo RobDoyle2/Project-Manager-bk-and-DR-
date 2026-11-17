@@ -409,3 +409,32 @@ function viewItem(id) {
   const n = D.node.get(id); if (!n) return;
   if (n.kind === 'obj') objectiveViewModal(id); else workItemViewModal(id);
 }
+
+/* ---------------- About / help window (the "i" button, bottom left) ---------------- */
+function aboutModal() {
+  const html = `<div class="about">
+    <div class="about-hero">${pmLogo(60, 'pmg-about')}<div><b>Programme Manager <small>v${esc(BUILD_VERSION)}</small></b><span>Plan, track and report on any programme or project. Works offline, in one file.</span></div></div>
+    <section><h4>Getting started</h4><ul>
+      <li>Click the <b>pencil</b> at the top left to name your programme. The name is saved in your JSON file.</li>
+      <li>Add <b>objectives</b> on the Objectives page, then <b>tasks</b> and <b>subtasks</b> under them. “Add several tasks” lets you paste a list or import a CSV.</li>
+      <li>Progress works itself out: you set a percentage on tasks and subtasks, and objectives and the whole programme are calculated from them.</li>
+      <li>The <b>Dashboard</b> shows where things stand. The <b>Roadmap</b> has a Management view and a Technical view. Click any name to open it read-only, and use the pencil to edit.</li>
+    </ul></section>
+    <section><h4>Saving your work</h4><ul>
+      <li>Your work is autosaved in this browser as you go. <b>Save regularly to back up your data.</b></li>
+      <li>The browser keeps a few automatic backups, but they are lost if you clear your browser data. <b>A saved JSON file is the reliable backup.</b></li>
+      <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file. It reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
+      <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
+    </ul></section>
+    <section><h4>Opening a project</h4><ul>
+      <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
+      <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
+    </ul></section>
+    <section><h4>About the JSON file</h4><ul>
+      <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
+      <li><b>Your data never leaves your browser or the JSON file you select. Nothing is sent to a server, unless you choose to share the file yourself.</b></li>
+    </ul></section>
+    <p class="about-by">Created by Robert Doyle from <a href="https://nuloha.com" target="_blank" rel="noopener noreferrer">nuloha.com</a></p>
+  </div>`;
+  openModal({ title: 'About Programme Manager', html, wide: true, hideSave: true, cancelLabel: 'Close' });
+}

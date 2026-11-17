@@ -27,6 +27,11 @@ MOVING DATA BETWEEN COMPUTERS  (important)
   - The left sidebar shows an amber "Unexported changes" reminder until you export.
   - Blank template: Reports & Data Management > "Download blank template".
 
+HELP / ABOUT WINDOW (bottom left)
+  - The small "i" button at the bottom left of the sidebar opens "About Programme Manager": getting started, saving your
+    work, opening a project and what the JSON file holds. Close it with the X, the Close button or Esc. The text is in
+    aboutModal() in src/03-forms.js.
+
 VERSION LABEL (top right)
   - A small label under the Export JSON button (e.g. v0.01) shows which version you are running. It goes up by 0.01
     every time a new version is pushed to GitHub (v0.01, v0.02 ... v0.10 ...). To change it, edit BUILD_VERSION near the
