@@ -2,7 +2,7 @@ const { chromium } = require('playwright'); const fs=require('fs');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file:///home/claude/out/Backup-DR-Project.html');await p.waitForSelector('#view .page-head');
 // source app with data -> show JSON
-await p.setInputFiles('#fileInput','/tmp/rich.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
+await p.setInputFiles('#fileInput','/tmp/rich.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
 await p.evaluate(()=>{location.hash='#reports'});await p.waitForTimeout(150);
 await p.click('[data-action=show-json]');const txt=await p.inputValue('#jsonOut');
 console.log('shown JSON valid & has objectives:',JSON.parse(txt).objectives.length);

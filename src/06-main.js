@@ -92,7 +92,8 @@ async function handleImportText(text, fileName) {
   }
   const cur = countsOf(data), inc = countsOf(r.data);
   const fmt = c => `${c.objectives} objectives, ${c.tasks} tasks, ${c.subtasks} subtasks, ${c.milestones} milestones, ${c.risks} risks`;
-  const ok = await confirmDialog({
+  // nothing to lose (completely empty project, file accepted without notes): load it straight away
+  const ok = (isProjectEmpty() && !r.warnings.length) ? true : await confirmDialog({
     title: 'Replace current project data?', danger: true, okLabel: 'Replace with imported data',
     message: `Importing <b>${esc(file.name)}</b> will <b>replace</b> everything currently in the application.`,
     html: `<div class="cmp"><div><small>Current</small><b>${esc(progName())}</b><span>${fmt(cur)}</span></div><div class="cmp-arrow">→</div><div><small>Imported</small><b>${esc(r.data.project.name || 'Programme name')}</b><span>${fmt(inc)}</span></div></div>
@@ -100,7 +101,7 @@ async function handleImportText(text, fileName) {
       <p class="muted small">A backup of your current data is saved in this browser first (Reports &amp; Data Management → Browser backups).</p>`
   });
   if (!ok) { toast('Import cancelled — nothing was changed.', 'warn'); return; }
-  snapshot(`Before import of ${file.name}`);
+  if (!isProjectEmpty()) snapshot(`Before import of ${file.name}`);
   data = r.data; ui.collapsed.clear(); ui.objOpen.clear();
   ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
   syncStored(); D = derive(); saveLocal(); go('dashboard'); render();
@@ -124,7 +125,14 @@ async function restoreBackup(i) {
 function downloadExport() {
   exportJSON(); render();
   const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
-  toast(touch ? 'Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.' : 'Project exported as JSON.', 'ok', touch ? 9000 : 3200);
+  if (touch) { toast('Export started. If you can\'t find the file in Downloads, use Reports → “Share / save to…” or “Show / copy JSON”.', 'ok', 9000); return; }
+  if (typeof FSA !== 'undefined' && FSA.save) { toast('Project exported as JSON.', 'ok', 3200); return; }
+  // This browser (e.g. Firefox, Safari) cannot let a web page open a "Save as" window, so say how to get one.
+  const ua = navigator.userAgent || '';
+  const how = /Firefox\//.test(ua) ? 'To choose the folder each time: Firefox Settings → General → Downloads → “Always ask you where to save files”.'
+    : (/Safari\//.test(ua) && !/Chrom(e|ium)\//.test(ua)) ? 'To choose the folder each time: Safari Settings → General → File download location → “Ask for each download”.'
+    : 'To choose the folder each time, turn on “Ask where to save each file” in your browser\'s download settings, or use Edge or Chrome.';
+  toast('Exported to your Downloads folder. This browser can\'t open a Save-as window from a web page. ' + how, 'ok', 14000);
 }
 
 /* ---------------- actions ---------------- */
@@ -213,7 +221,7 @@ const ACTIONS = {
   },
   'paste-json': () => {
     openModal({ title: 'Paste JSON to import', wide: true, saveLabel: 'Check & import',
-      html: `<p class="muted small">Paste the full text of a project JSON file here. It is validated first, and you will be asked to confirm before your current data is replaced.</p>
+      html: `<p class="muted small">Paste the full text of a project JSON file here. It is validated first, and you will be asked to confirm before any existing project data is replaced.</p>
         <textarea name="jsonIn" class="json-box" rows="14" placeholder='{ "schemaVersion": 1, ... }'></textarea>`,
       onSave: f => {
         const text = f.elements.jsonIn.value.trim();
@@ -282,7 +290,7 @@ document.addEventListener('change', e => {
   else if (el.matches && el.matches('[data-progress]')) {
     const n = D.node.get(el.dataset.id);
     if (n) { setLeafProgress(n.item, el.value); afterChange(); }
-  } else if (el.id === 'fileInput' && el.files && el.files[0]) handleImportFile(el.files[0]);
+  } else if (el.id === 'fileInput' && el.files && el.files[0]) { const f = el.files[0]; el.value = ''; handleImportFile(f); }
 });
 window.addEventListener('hashchange', () => {
   const v = location.hash.slice(1);

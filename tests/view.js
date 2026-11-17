@@ -6,7 +6,7 @@ const rich=JSON.parse(require('fs').readFileSync('/tmp/rich.json','utf8'));
 rich.objectives[1].links=[{name:'Appliance spec',url:'https://example.com/spec.pdf'},{name:'Runbook (share)',url:'\\\\\\\\srv\\\\dr\\\\runbook.docx'}];
 rich.objectives[1].notes=[{date:'2026-10-20',text:'Vendor shortlisted'}];
 require('fs').writeFileSync('/tmp/rich-links.json',JSON.stringify(rich));
-await p.setInputFiles('#fileInput','/tmp/rich-links.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
+await p.setInputFiles('#fileInput','/tmp/rich-links.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
 await p.evaluate(()=>{location.hash='#objectives'});await p.waitForTimeout(200);
 ok((await p.$$('.obj-card .icon-btn[data-action=obj-view]')).length===5,'every objective card has a View (book) button');
 const order=await p.$$eval('.obj-card:nth-child(2) .obj-actions .icon-btn',e=>e.map(x=>x.dataset.action));ok(order.join()==='obj-view,obj-edit,obj-del','order: view, edit, delete ('+order.join()+')');

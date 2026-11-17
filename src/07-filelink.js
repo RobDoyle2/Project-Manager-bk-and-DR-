@@ -9,8 +9,16 @@ const FSA = { open: typeof window.showOpenFilePicker === 'function', save: typeo
 const JSON_TYPES = [{ description: 'Project data (JSON)', accept: { 'application/json': ['.json'] } }];
 /* Pickers start in the Downloads folder where the browser supports it (older versions ignore / reject the hint, so retry without it). */
 async function pick(fn, opts) {
-  try { return await window[fn]({ ...opts, startIn: 'downloads' }); }
-  catch (e) { if (e && e.name === 'TypeError') return window[fn](opts); throw e; }
+  // The Downloads start-folder hint is only a nicety: if the browser refuses it for ANY reason (e.g. a Downloads folder redirected
+  // to OneDrive), retry without it, and finally without the file-type filter, before giving up. Only a user cancel stops the chain.
+  const tries = [{ ...opts, startIn: 'downloads' }, opts];
+  if (opts.types) { const { types, ...bare } = opts; tries.push(bare); }
+  let last;
+  for (const o of tries) {
+    try { return await window[fn](o); }
+    catch (e) { if (e && e.name === 'AbortError') throw e; last = e; try { console.warn('file picker attempt failed:', fn, e && e.name, e && e.message); } catch (x) { /* ignore */ } }
+  }
+  throw last;
 }
 let linked = null;               // { handle, name, savedAt }
 
@@ -50,24 +58,27 @@ async function writeToHandle(handle) {
 }
 function pickerFailed(e, kind) {
   if (e && e.name === 'AbortError') return;                 // the user closed the picker
-  if (kind === 'open') { toast('This viewer does not allow choosing a file location, so the normal file chooser is used instead.', 'warn', 6000); classicImport(); }
-  else { toast('This viewer does not allow choosing a file location, so the file is downloaded instead.', 'warn', 6000); downloadExport(); }
+  const why = e && (e.name || e.message) ? ` (${[e.name, e.message].filter(Boolean).join(': ').slice(0, 140)})` : '';
+  if (kind === 'open') { toast('The browser would not open its file chooser here' + why + ', so the normal file chooser is used instead.', 'warn', 12000); classicImport(); }
+  else { toast('The browser would not open its save-as window here' + why + ', so the file was downloaded to your Downloads folder instead.', 'warn', 12000); downloadExport(); }
 }
 function classicImport() { const fi = $('#fileInput'); fi.value = ''; fi.click(); }
 
 async function saveToLinkedFile() {
-  if (!linked) { fileDialog(); return; }
+  if (!linked) { fileDialog(); return false; }
   try {
-    if (!(await ensureWritable(linked.handle))) { toast('Permission to change that file was not given, so nothing was written.', 'warn', 6000); return; }
+    if (!(await ensureWritable(linked.handle))) { toast('Permission to change that file was not given, so nothing was written.', 'warn', 6000); return false; }
     await writeToHandle(linked.handle);
     linked.savedAt = new Date().toISOString(); persistLink(); renderNav(); updateSaveChip();
     toast(`Saved to ${linked.name}.`, 'ok');
+    return true;
   } catch (e) {
     if (e && (e.name === 'NotFoundError' || e.name === 'InvalidStateError')) {
       const again = await confirmDialog({ title: 'The linked file can’t be found', okLabel: 'Choose a file…', message: `<b>${esc(linked.name)}</b> has been moved, renamed or deleted, so it can’t be updated. Choose a new name and location?` });
       if (again) createNewFile(); else unlinkFile();
     } else toast('Could not write to the file: ' + (e && e.message ? e.message : e), 'error', 8000);
   }
+  return false;
 }
 async function browseForFile() {
   let hs;
@@ -94,6 +105,20 @@ async function exportToChosenFile() {
   render(); toast(`Exported to ${handle.name}.`, 'ok', 4500);
 }
 
+/* ---- unsaved-changes guard: any action that replaces the project first checks the linked file is up to date ---- */
+let pendingProceed = null;
+function guardUnsaved(proceed) {
+  if (!(linked && fileDirty() && !isProjectEmpty())) { proceed(); return; }
+  pendingProceed = proceed;
+  openModal({
+    title: 'Unsaved changes', hideSave: true, cancelLabel: 'Cancel',
+    html: `<p><b>${esc(linked.name)}</b> has changes that have not been saved to the file yet.</p>
+      <p>Importing replaces the current project, so those changes would be left out of the file. (A copy is kept under Browser backups.)</p>
+      <div class="btn-row" style="margin-top:16px">${btn('Save first, then import', 'unsaved-save', '', 'primary', 'save')}${btn('Import anyway', 'unsaved-anyway', '', 'danger')}</div>`
+  });
+}
+const runPending = () => { const f = pendingProceed; pendingProceed = null; if (f) f(); };
+
 /* ---- dialog behind the upload arrow ---- */
 function fileDialog() {
   const cur = linked ? `<div class="fl-cur"><div><small>Linked file</small><b>${esc(linked.name)}</b><span>${fileDirty() ? 'Has changes not yet written to the file' : 'Up to date' + (linked.savedAt ? ' · saved ' + esc(fmtStamp(new Date(linked.savedAt))) : '')}</span></div>
@@ -109,12 +134,15 @@ function fileDialog() {
   });
 }
 Object.assign(ACTIONS, {
-  'import-json': () => { if (FSA.open) browseForFile(); else classicImport(); },
+  'import-json': () => guardUnsaved(() => { if (FSA.open) browseForFile(); else classicImport(); }),
   'file-dialog': () => fileDialog(),
-  'file-browse': () => { closeModal(); browseForFile(); },
+  'file-browse': () => { closeModal(); guardUnsaved(browseForFile); },
   'file-new': () => { closeModal(); createNewFile(); },
-  'file-classic': () => { closeModal(); classicImport(); },
+  'file-classic': () => { closeModal(); guardUnsaved(classicImport); },
   'file-save': () => { closeModal(); saveToLinkedFile(); },
   'file-unlink': () => { unlinkFile(); closeModal(); toast('No longer linked to a file. Autosave in the browser carries on.'); },
+  'unsaved-save': async () => { closeModal(); if (await saveToLinkedFile()) runPending(); else pendingProceed = null; },
+  'unsaved-anyway': () => { closeModal(); runPending(); },
   'file-chip': () => { if (linked) saveToLinkedFile(); else if (FSA.save || FSA.open) fileDialog(); else downloadExport(); }
 });
+{ const pasteJson = ACTIONS['paste-json']; ACTIONS['paste-json'] = () => guardUnsaved(pasteJson); }

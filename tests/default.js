@@ -5,7 +5,7 @@ await p.goto('file:///home/claude/out/Backup-DR-Project.html');await p.waitForSe
 const rich=JSON.parse(fs.readFileSync('/tmp/rich.json','utf8'));
 const t1=rich.objectives[0].tasks[0];t1.links=[{name:'Inventory sheet',url:'https://example.com/inv.xlsx'}];t1.subtasks[0].links=[{name:'CMDB export',url:'https://example.com/cmdb'}];t1.notes=[{date:'2026-10-02',text:'Kick-off done'}];
 fs.writeFileSync('/tmp/rich2.json',JSON.stringify(rich));
-await p.setInputFiles('#fileInput','/tmp/rich2.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
+await p.setInputFiles('#fileInput','/tmp/rich2.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
 const go=async v=>{await p.evaluate(v=>{location.hash='#'+v},v);await p.waitForTimeout(150)};
 const isView=async()=>({view:await p.$('#modal .vw')!==null,inputs:await p.$$eval('#modal input,#modal textarea,#modal select',e=>e.length)});
 const close=async()=>{await p.click('#modal [data-modal-close] >> nth=1');await p.waitForTimeout(100)};

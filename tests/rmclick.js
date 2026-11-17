@@ -2,7 +2,7 @@ const { chromium } = require('playwright'); const fs=require('fs');
 let f=0,pz=0;const ok=(c,m)=>{c?pz++:f++;console.log(c?'  PASS':'  FAIL',m)};
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file:///home/claude/out/Backup-DR-Project.html');await p.waitForSelector('#view .page-head');
-await p.setInputFiles('#fileInput','/tmp/rich2.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
+await p.setInputFiles('#fileInput','/tmp/rich2.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
 const go=async v=>{await p.evaluate(v=>{location.hash='#'+v},v);await p.waitForTimeout(150)};
 const st=async()=>({view:await p.$('#modal .vw')!==null,inputs:await p.$$eval('#modal input,#modal textarea,#modal select',e=>e.length),title:await p.innerText('#modal header h3').catch(()=>'' )});
 const close=async()=>{await p.click('#modal [data-modal-close] >> nth=1');await p.waitForTimeout(100)};

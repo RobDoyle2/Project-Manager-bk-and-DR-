@@ -39,11 +39,11 @@ const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.topbar [data-
 const ej=JSON.parse(fs.readFileSync('/tmp/pal.json','utf8'));ok(ej.objectives.every(o=>Number.isInteger(o.colorIndex)),'colour assignment is stored in the JSON');
 // reorder in JSON then import: colours stay with objectives
 ej.objectives.reverse();fs.writeFileSync('/tmp/pal2.json',JSON.stringify(ej));
-await go('reports');await p.setInputFiles('#fileInput','/tmp/pal2.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
+await go('reports');await p.setInputFiles('#fileInput','/tmp/pal2.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
 d=await data();ok(d.objectives.map(o=>o.name+':'+o.colorIndex).join()===ej.objectives.map(o=>o.name+':'+o.colorIndex).join(),'reordered objectives keep their own colours after import');
 // older data with no colorIndex gets assigned automatically
 const old=JSON.parse(fs.readFileSync('/tmp/rich.json','utf8'));fs.writeFileSync('/tmp/old.json',JSON.stringify(old));
-await p.setInputFiles('#fileInput','/tmp/old.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
+await p.setInputFiles('#fileInput','/tmp/old.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
 d=await data();ok(d.objectives.filter(o=>!o.system).map(o=>o.colorIndex).join()==='0,1,2,3,4','existing project without colours is assigned 0..4 automatically');
 // task moved to another objective takes its colour
 await go('tasks');await p.click('.icon-btn[data-action=task-edit][data-id=TSK-012]');await p.selectOption('#modal [name=parent]','OBJ-001');await p.click('#modal [data-modal-save]');await p.waitForTimeout(150);

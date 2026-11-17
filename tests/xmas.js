@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 let f=0,pz=0;const ok=(c,m)=>{c?pz++:f++;console.log(c?'  PASS':'  FAIL',m)};
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file:///home/claude/out/Backup-DR-Project.html');await p.waitForSelector('#view .page-head');
-await p.setInputFiles('#fileInput','/tmp/rich.json');await p.waitForSelector('#confirm[open]');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
+await p.setInputFiles('#fileInput','/tmp/rich.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(300);
 const geom=async sel=>p.evaluate(sel=>{const x=document.querySelector(sel+' .g-xmas'),g=document.querySelector(sel+' .g-grid');if(!x)return null;const a=x.getBoundingClientRect(),c=g.getBoundingClientRect();return{l:(a.left-c.left)/c.width*100,w:a.width/c.width*100,n:document.querySelectorAll(sel+' .g-xmas').length,txt:x.innerText}},sel);
 const exp={l:(dayNum=>dayNum)(0)};
 // expected: Dec 24 2026 .. Jan 2 2027 inclusive over 1 Oct 2026 .. 30 Jun 2027 (273 days)

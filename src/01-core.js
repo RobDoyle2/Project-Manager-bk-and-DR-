@@ -4,7 +4,7 @@
    ===================================================================== */
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
-const APP_VERSION = '1.4.3';
+const APP_VERSION = '1.5.3';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -598,6 +598,11 @@ function saveLocal() {
 function scheduleSave() {
   ui.saveState = 'pending'; updateSaveChip();
   clearTimeout(saveTimer); saveTimer = setTimeout(saveLocal, 350);
+}
+/* true when there is nothing worth protecting: no objectives / tasks / risks / milestones / dependencies and no programme name, description or manager */
+function isProjectEmpty() {
+  const c = countsOf(data), p = data.project;
+  return !c.objectives && !c.tasks && !c.subtasks && !c.risks && !c.milestones && !c.dependencies && !(p.name || '').trim() && !(p.description || '').trim() && !(p.manager || '').trim();
 }
 function countsOf(d) {
   let t = 0, s = 0;

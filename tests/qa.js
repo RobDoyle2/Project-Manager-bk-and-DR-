@@ -144,9 +144,11 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m} (got $
   await p2.goto(URL); await p2.waitForSelector('#view .page-head');
   eq((await p2.evaluate(() => window.BackupDR.getData().objectives.length)), 0, 'fresh browser starts empty');
   await p2.evaluate(() => { location.hash = '#reports'; });
+  await p2.setInputFiles('#fileInput', exp); await p2.waitForTimeout(600);
+  ok(await p2.$('#confirm[open]') === null && (await p2.evaluate(() => window.BackupDR.getData().objectives.length)) > 0, 'empty project: the file loads straight away without a replace prompt');
   await p2.setInputFiles('#fileInput', exp);
   await p2.waitForSelector('#confirm[open]');
-  ok(/Replace current project data/.test(await p2.innerText('#confirm')), 'confirmation shown before replacing data');
+  ok(/Replace current project data/.test(await p2.innerText('#confirm')), 'confirmation shown before replacing data (project now has data)');
   await p2.screenshot({ path: 'shots/qa-import-confirm.png' });
   await p2.click('#confirm button[value=ok]');
   await p2.waitForTimeout(300);

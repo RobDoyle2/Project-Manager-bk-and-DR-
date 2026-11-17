@@ -32,7 +32,7 @@ await p.click('.icon-btn[data-action=task-edit] >> nth=0');await p.click('#modal
 const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.topbar [data-action=export-json]')]);await dl.saveAs('/tmp/links.json');const ej=JSON.parse(fs.readFileSync('/tmp/links.json','utf8'));
 ok(ej.objectives[0].links.length===3,'links included in the exported JSON');
 ej.objectives[0].links.push({name:'evil',url:'javascript:alert(1)'},{name:'empty'});fs.writeFileSync('/tmp/links2.json',JSON.stringify(ej));
-await go('reports');await p.setInputFiles('#fileInput','/tmp/links2.json');await p.waitForSelector('#confirm[open]');const msg=await p.innerText('#confirm');await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
+await go('reports');await p.setInputFiles('#fileInput','/tmp/links2.json');await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{});const msg=await p.innerText('#confirm');if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]');await p.waitForTimeout(250);
 d=await data();ok(d.objectives[0].links.length===3&&/disallowed|without a web address/.test(msg),'import drops dangerous / empty links with a warning, keeps the good ones');
 await go('objectives');await p.screenshot({path:'shots/links-obj.png'});
 await go('tasks');await p.screenshot({path:'shots/links-tasks.png'});

@@ -8,14 +8,14 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   await p.addInitScript(() => {
     window.__pick = { next: null, calls: [] };
     const root = () => navigator.storage.getDirectory();
-    window.showSaveFilePicker = async o => { window.__pick.calls.push(['save', o && o.suggestedName]); const n = window.__pick.next; window.__pick.next = null; if (n && n.err) throw Object.assign(new Error(n.err), { name: n.err }); const d = await root(); return d.getFileHandle((n && n.name) || 'my-plan.json', { create: true }); };
-    window.showOpenFilePicker = async o => { window.__pick.calls.push(['open']); const n = window.__pick.next; window.__pick.next = null; if (n && n.err) throw Object.assign(new Error(n.err), { name: n.err }); const d = await root(); return [await d.getFileHandle(n.name)]; };
+    window.showSaveFilePicker = async o => { window.__pick.calls.push(['save', o && o.suggestedName]); const n = window.__pick.next; if (!(n && n.sticky)) window.__pick.next = null; if (n && n.err) throw Object.assign(new Error(n.err), { name: n.err }); const d = await root(); return d.getFileHandle((n && n.name) || 'my-plan.json', { create: true }); };
+    window.showOpenFilePicker = async o => { window.__pick.calls.push(['open']); const n = window.__pick.next; if (!(n && n.sticky)) window.__pick.next = null; if (n && n.err) throw Object.assign(new Error(n.err), { name: n.err }); const d = await root(); return [await d.getFileHandle(n.name)]; };
     window.__put = async (name, text) => { const d = await root(); const h = await d.getFileHandle(name, { create: true }); const w = await h.createWritable(); await w.write(text); await w.close(); };
     window.__read = async name => { const d = await root(); const h = await d.getFileHandle(name); return (await h.getFile()).text(); };
   });
   await p.goto('http://localhost:8765/Backup-DR-Project.html'); await p.waitForSelector('#view .page-head');
   const chip = async () => ({ t: (await p.innerText('#saveChip')).trim(), c: await p.getAttribute('#saveChip', 'class') });
-  const imp = async path => { await p.setInputFiles('#fileInput', path); await p.waitForSelector('#confirm[open]'); await p.click('#confirm [data-confirm=ok]'); await p.waitForTimeout(300); };
+  const imp = async path => { await p.setInputFiles('#fileInput', path); await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{}); if(await p.$('#confirm[open]'))await p.click('#confirm [data-confirm=ok]'); await p.waitForTimeout(300); };
   await imp('/tmp/rich2.json');
   let c = await chip(); ok(/Autosaved|Ready/.test(c.t) && !/file-/.test(c.c), 'before choosing a file the chip is the normal autosave chip: ' + c.t);
   ok((await p.evaluate(() => document.querySelector('#saveChip').tagName)) === 'BUTTON', 'chip is a real button');
@@ -54,9 +54,9 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   await p.evaluate(() => { window.__pick.next = { err: 'AbortError' }; });
   const dl0 = p.waitForEvent('download', { timeout: 1000 }).then(() => true, () => false);
   await p.click('.topbar [data-action=export-json]'); ok(!(await dl0), 'cancelling the export picker does nothing');
-  await p.evaluate(() => { window.__pick.next = { err: 'SecurityError' }; });
+  await p.evaluate(() => { window.__pick.next = { err: 'SecurityError', sticky: true }; });
   const dl1 = p.waitForEvent('download', { timeout: 3000 }).then(() => true, () => false);
-  await p.click('.topbar [data-action=export-json]'); ok(await dl1, 'export falls back to a normal download if the picker is blocked');
+  await p.click('.topbar [data-action=export-json]'); ok(await dl1, 'export falls back to a normal download if the picker is blocked'); await p.evaluate(() => { window.__pick.next = null; });
 
   // ---- remembered after reload ----
   // (headless Chromium crashes when it reads a sandbox-filesystem handle back out of IndexedDB, so the stored record is a stand-in
@@ -74,6 +74,7 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   await p.evaluate(async () => window.__put('other.json', JSON.stringify({ schemaVersion: 1, project: { name: 'Other plan' }, objectives: [{ id: 'OBJ-001', name: 'Only objective', startDate: '2026-10-01', endDate: '2026-11-01', progress: 0 }], tasks: [], subtasks: [], risks: [], dependencies: [], milestones: [], counters: {} })));
   await p.evaluate(() => { window.__pick.next = { name: 'other.json' }; });
   await p.click('.topbar [data-action=import-json]');
+  await p.waitForSelector('#modal [data-action=unsaved-anyway]', { timeout: 2000 }).then(() => p.click('#modal [data-action=unsaved-anyway]'), () => {});   // the remembered link above has unsaved changes -> the new warning appears
   await p.waitForSelector('#confirm[open]'); ok(/other\.json/.test(await p.innerText('#confirm')), 'browsing an existing file asks to confirm the replace');
   await p.click('#confirm [data-confirm=ok]'); await p.waitForTimeout(600);
   c = await chip(); ok(/other\.json/.test(c.t) && /file-ok/.test(c.c), 'now linked to the browsed file: ' + c.t);
@@ -97,7 +98,7 @@ let f = 0, pz = 0; const ok = (c, m) => { c ? pz++ : f++; console.log(c ? '  PAS
   c = await chip(); ok(/other\.json/.test(c.t), 'invalid file does not change the link');
 
   // ---- sandbox / blocked picker falls back to the normal chooser ----
-  await p.evaluate(() => { window.__pick.next = { err: 'SecurityError' }; });
+  await p.evaluate(() => { window.__pick.next = { err: 'SecurityError', sticky: true }; });
   const fc = p.waitForEvent('filechooser', { timeout: 3000 }).then(() => true, () => false);
   await p.click('.topbar [data-action=import-json]'); ok(await fc, 'picker blocked (SecurityError) -> falls back to the normal file chooser');
 

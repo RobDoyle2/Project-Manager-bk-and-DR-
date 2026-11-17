@@ -5,7 +5,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
   const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:1440,height:900},acceptDownloads:true});
   const p=await ctx.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
   await p.goto(URL); await p.waitForSelector('#view .page-head');
-  await p.setInputFiles('#fileInput','/tmp/rich.json'); await p.waitForSelector('#confirm[open]'); await p.click('#confirm button[value=ok]'); await p.waitForTimeout(300);
+  await p.setInputFiles('#fileInput','/tmp/rich.json'); await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{}); if(await p.$('#confirm[open]'))await p.click('#confirm button[value=ok]'); await p.waitForTimeout(300);
   const go=async v=>{await p.evaluate(v=>{location.hash='#'+v},v);await p.waitForTimeout(150)};
   const data=()=>p.evaluate(()=>JSON.parse(JSON.stringify(window.BackupDR.getData())));
   const der=()=>p.evaluate(()=>{const d=window.BackupDR.getDerived();return{t:d.totals,n:Object.fromEntries([...d.node].map(([k,v])=>[k,v.status]))}});
@@ -36,7 +36,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
   ok(/3<\/b> task|<b>3<\/b>/.test(await p.innerHTML('#confirm .confirm-msg')),'delete confirmation lists task count'); await p.click('#confirm button[value=ok]'); await p.waitForTimeout(200);
   const after=await data(); ok(after.objectives.length===before.objectives.length-1&&!after.dependencies.some(x=>['TSK-003','TSK-004','TSK-005'].includes(x.fromId)||['TSK-003','TSK-004'].includes(x.toId)),'objective deleted with tasks and their dependencies');
   console.log('== backup restore / reset / report');
-  await go('reports'); ok((await p.$$('.bk')).length>=1,'browser backups listed');
+  await go('reports'); await p.click('[data-action=save-now]'); await p.waitForTimeout(200); ok((await p.$$('.bk')).length>=1,'browser backups listed');
   const [dl]=await Promise.all([p.waitForEvent('download'),p.click('[data-action=download-report]')]); ok(/Status-Report/.test(dl.suggestedFilename()),'status report downloads');
   await p.click('[data-action=reset-project]'); await p.click('#confirm button[value=ok]'); await p.waitForTimeout(200); ok((await data()).objectives.length===0,'reset gives blank project');
   await go('reports'); await p.click('[data-action=restore-backup][data-i="0"]'); await p.click('#confirm button[value=ok]'); await p.waitForTimeout(200); ok((await data()).objectives.length>0,'restore backup recovers data');

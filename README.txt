@@ -50,6 +50,11 @@ SAVING TO A FILE YOU CHOOSE (Chrome / Edge / Opera on a computer)
     the first time after you reopen the app.)
   - "Export JSON" (top bar, sidebar reminder, Reports page) also opens the save-as dialog, so you browse for the folder and
     type the file name instead of the file landing in Downloads. This saves a copy; it does not change the linked file.
+  - UNSAVED-CHANGES WARNING: if you start an import (Import JSON, Paste JSON, or the Browse / Import once options) while
+    the linked file is missing changes, a box offers "Save first, then import", "Import anyway" or Cancel. "Save first"
+    writes the linked file and only then opens the file browser; if that save fails, nothing is imported.
+  - Importing into a completely empty project (no objectives, tasks, risks, milestones, dependencies, name, description or
+    manager) loads the file straight away with no "Replace?" box. Any project that has content still asks first.
   - Reports & Data Management has a matching "Save to a file..." / "Linked file..." button, with "Stop linking".
   - Firefox, Safari, phones and embedded viewers cannot do this; there the upload arrow is the normal import and
     the status button and Export JSON download the file to your Downloads folder.

@@ -57,7 +57,7 @@ let fails=0,passes=0; const ok=(c,m)=>{c?passes++:fails++;console.log(c?'  PASS'
  d=await data(); ok(d.objectives.find(o=>o.id==='OBJ-001').tasks.some(t=>t.id==='TSK-001')&&!d.objectives.find(o=>o.system).tasks.some(t=>t.id==='TSK-001'),'task moved from unassigned to objective');
  const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.topbar [data-action=export-json]')]); await dl.saveAs('/tmp/e3.json');
  const before=await p.evaluate(()=>window.BackupDR.getDerived().totals);
- await go('reports'); await p.setInputFiles('#fileInput','/tmp/e3.json'); await p.waitForSelector('#confirm[open]'); await p.click('#confirm button[value=ok]'); await p.waitForTimeout(300);
+ await go('reports'); await p.setInputFiles('#fileInput','/tmp/e3.json'); await p.waitForSelector('#confirm[open]',{timeout:1500}).catch(()=>{}); if(await p.$('#confirm[open]'))await p.click('#confirm button[value=ok]'); await p.waitForTimeout(300);
  const after=await p.evaluate(()=>window.BackupDR.getDerived().totals); ok(JSON.stringify(before)===JSON.stringify(after)&&(await data()).objectives.some(o=>o.system),'export/import keeps unassigned bucket and totals');
  await p.screenshot({path:'shots/qa3-tasks.png',fullPage:true});
  ok(errs.length===0,'no JS errors '+JSON.stringify(errs));
