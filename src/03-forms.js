@@ -332,6 +332,9 @@ const MS_LABEL = { planned: 'Planned', 'at-risk': 'At risk', achieved: 'Achieved
 const MS_STATUS_CLASS = { planned: 'in-progress', 'at-risk': 'at-risk', achieved: 'completed', missed: 'blocked' };
 
 /* ---------------- Objective: read-only view ---------------- */
+/* a name inside a read-only view that opens that item's own read-only view */
+const vwOpen = (id, text) => `<button type="button" class="vw-open" data-action="open-item" data-id="${esc(id)}" title="Open (read only)">${text}</button>`;
+
 function objectiveViewModal(id) {
   const r = IDX.objective.get(id); if (!r) return;
   const o = r.item, i = D.obj.get(id), c = objCol(o);
@@ -344,7 +347,7 @@ function objectiveViewModal(id) {
       }).join('')
     : '<span class="muted">No links added.</span>';
   const tasks = o.tasks.length
-    ? `<div class="vw-tasks">${o.tasks.map(t => { const ti = D.task.get(t.id); return `<div class="vw-task"><span class="vw-tn">${esc(t.name)}${t.subtasks.length ? ` <small class="muted">(${ti.subDone}/${ti.subCount} subtasks)</small>` : ''}</span>${pill(ti.status)}<b>${pct(ti.progress)}%</b></div>`; }).join('')}</div>`
+    ? `<div class="vw-tasks">${o.tasks.map(t => { const ti = D.task.get(t.id); return `<div class="vw-task"><span class="vw-tn">${vwOpen(t.id, esc(t.name))}${t.subtasks.length ? ` <small class="muted">(${ti.subDone}/${ti.subCount} subtasks)</small>` : ''}</span>${pill(ti.status)}<b>${pct(ti.progress)}%</b></div>`; }).join('')}</div>`
     : '<span class="muted">No tasks yet.</span>';
   const notes = (o.notes || []).length ? `<ul class="notes">${o.notes.slice().reverse().map(n => `<li><span class="nd">${n.date ? esc(fmtDate(n.date)) : 'Note'}</span>${esc(n.text)}</li>`).join('')}</ul>` : '<span class="muted">No notes.</span>';
   const html = `<div class="vw">
@@ -381,10 +384,10 @@ function workItemViewModal(id) {
   const r = isTask ? IDX.task.get(id) : IDX.sub.get(id), c = objCol(r.obj), deps = D.depsFrom.get(id) || [];
   const row = (label, inner) => `<div class="vw-row"><span class="vw-l">${label}</span><div class="vw-v">${inner}</div></div>`;
   const belongs = isTask
-    ? (r.obj.system ? '<span class="muted">Not linked to an objective yet</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`)
-    : `${esc(r.task.name)} <span class="muted">in</span> ${r.obj.system ? '<span class="muted">Unassigned tasks</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${esc(r.obj.name)}`}`;
+    ? (r.obj.system ? '<span class="muted">Not linked to an objective yet</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${vwOpen(r.obj.id, esc(r.obj.name))}`)
+    : `${vwOpen(r.task.id, esc(r.task.name))} <span class="muted">in</span> ${r.obj.system ? '<span class="muted">Unassigned tasks</span>' : `<span class="vw-sw" style="background:${c.c}"></span> ${vwOpen(r.obj.id, esc(r.obj.name))}`}`;
   const subs = isTask && it.subtasks.length
-    ? `<div class="vw-tasks">${it.subtasks.map(s => { const si = D.sub.get(s.id); return `<div class="vw-task"><span class="vw-tn">${esc(s.name)}${s.owner ? ` <small class="muted">· ${esc(s.owner)}</small>` : ''}</span>${pill(si.status)}<b>${pct(si.progress)}%</b></div>`; }).join('')}</div>` : '';
+    ? `<div class="vw-tasks">${it.subtasks.map(s => { const si = D.sub.get(s.id); return `<div class="vw-task"><span class="vw-tn">${vwOpen(s.id, esc(s.name))}${s.owner ? ` <small class="muted">· ${esc(s.owner)}</small>` : ''}</span>${pill(si.status)}<b>${pct(si.progress)}%</b></div>`; }).join('')}</div>` : '';
   const html = `<div class="vw">
     <div class="vw-top" style="--oc:${c.c}"><span class="vw-stripe"></span><div><div class="vw-ids">${idChip(it.id)} <span class="chip">${isTask ? 'Task' : 'Subtask'}</span> ${prioChip(it.priority)} ${pill(n.status)}</div><h2 class="vw-title">${esc(it.name)}</h2></div></div>
     <div class="vw-prog">${pbarC(n.progress, c.c)}<b>${pct(n.progress)}%</b><span class="muted small">${isTask && n.subCount ? `${n.subDone}/${n.subCount} subtasks complete (automatic)` : 'updated manually'}</span></div>
