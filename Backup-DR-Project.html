@@ -55,6 +55,8 @@ h3{font-size:1.02rem}
 .topbar .hamb{display:none}
 .topbar h2{font-size:1rem;font-weight:700;color:var(--ink2)}
 .topbar .sp{flex:1}
+.tb-stack{position:relative;display:inline-flex}
+.build-ver{position:absolute;right:3px;top:calc(100% + 2px);font-size:.62rem;line-height:1;letter-spacing:.02em;color:var(--ink3);white-space:nowrap;pointer-events:auto;user-select:all}
 .save-chip{display:inline-flex;gap:6px;align-items:center;font-size:.8rem;padding:5px 11px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink2);font-weight:600}
 .save-chip.saved{color:#13734a;background:#e6f8ef;border-color:#c7ecd9}
 .save-chip.error{color:#a3191e;background:#fdeaea;border-color:#f6c4c6}
@@ -607,7 +609,7 @@ button.save-chip:hover{border-color:var(--brand)}
       <span class="sp"></span>
       <button type="button" id="saveChip" class="save-chip" data-action="file-chip" aria-live="polite" title="Click to choose a file on your computer to save to">Ready</button>
       <button class="btn small tb-btn" data-action="import-json" title="Load a project from a JSON file (replaces current data after confirmation)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg><span>Import JSON</span></button>
-      <button class="btn small tb-btn" data-action="export-json" title="Export the full project as a JSON file (you choose the folder and name where the browser allows it)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button>
+      <span class="tb-stack"><button class="btn small tb-btn" data-action="export-json" title="Export the full project as a JSON file (you choose the folder and name where the browser allows it)"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Export JSON</span></button><span class="build-ver" id="buildVer"></span></span>
     </header>
     <main id="view" tabindex="-1"></main>
   </div>
@@ -628,6 +630,8 @@ button.save-chip:hover{border-color:var(--brand)}
 const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
 const APP_VERSION = '1.5.3';
+/* Shown small under Export JSON (top right). Bump by 0.01 every time a new version is pushed: 0.01, 0.02 ... 0.10 ... */
+const BUILD_VERSION = '0.01';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -2703,6 +2707,7 @@ const NAV = [
 ];
 
 function renderBrand() {
+  const bv = $('#buildVer'); if (bv) { bv.textContent = 'v' + BUILD_VERSION; bv.title = 'Version v' + BUILD_VERSION + ' (app ' + APP_VERSION + ')'; }
   const el = $('#brandName'); if (!el) return;
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';

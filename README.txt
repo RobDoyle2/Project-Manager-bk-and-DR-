@@ -27,6 +27,11 @@ MOVING DATA BETWEEN COMPUTERS  (important)
   - The left sidebar shows an amber "Unexported changes" reminder until you export.
   - Blank template: Reports & Data Management > "Download blank template".
 
+VERSION LABEL (top right)
+  - A small label under the Export JSON button (e.g. v0.01) shows which version you are running. It goes up by 0.01
+    every time a new version is pushed to GitHub (v0.01, v0.02 ... v0.10 ...). To change it, edit BUILD_VERSION near the
+    top of src/01-core.js and rebuild. Hover over it to see the internal app number as well.
+
 PROGRAMME NAME (top left)
   - The name at the top left comes from the project JSON file ("project.name"). It is not tied to Backup & DR, so the
     app can run any programme or project. A new, empty file shows "Programme name"; click the pencil to type it.

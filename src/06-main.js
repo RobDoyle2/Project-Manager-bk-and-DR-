@@ -13,6 +13,7 @@ const NAV = [
 ];
 
 function renderBrand() {
+  const bv = $('#buildVer'); if (bv) { bv.textContent = 'v' + BUILD_VERSION; bv.title = 'Version v' + BUILD_VERSION + ' (app ' + APP_VERSION + ')'; }
   const el = $('#brandName'); if (!el) return;
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
