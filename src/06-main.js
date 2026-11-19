@@ -18,7 +18,6 @@ function renderBrand() {
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
   const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
-  const ib = $('.info-btn'); if (ib && !ib.firstChild) ib.innerHTML = icon('info', 18);
   const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
 }
 function renderNav() {
@@ -28,10 +27,10 @@ function renderNav() {
   $('#nav').innerHTML = NAV.map(n => {
     const badge = n.id === 'risks' && D.blockedItems.length ? `<span class="nav-badge red" data-tip="${D.blockedItems.length} blocked item(s)">${D.blockedItems.length}</span>` : '';
     return `<a href="#${n.id}" class="${ui.view === n.id ? 'active' : ''}" data-nav="${n.id}" ${ui.view === n.id ? 'aria-current="page"' : ''}>${icon(n.icon, 19)}<span>${n.label}</span>${badge}</a>`;
-  }).join('');
+  }).join('') + `<div class="nav-sep" role="separator"></div><a href="#about" class="nav-about" data-action="about" role="button">${icon('info', 19)}<span>About and help</span></a><a href="#new-project" class="nav-new" data-action="new-project" role="button">${icon('plus', 19)}<span>New project</span></a>`;
   $('#sideFoot').innerHTML = hasContent && unexp
     ? `<button class="export-nudge" data-action="export-json">${icon('download', 15)}<span>Unexported changes<br><small>Export JSON to keep a safe copy</small></span></button>`
-    : `<div class="side-ok">${icon('check', 14)} <span>${data.meta.lastExportedAt ? 'Exported ' + esc(fmtDateTime(data.meta.lastExportedAt)) : 'Nothing to export yet'}</span></div>`;
+    : `<div class="side-ok">${icon('check', 14)} <span>${data.meta.lastExportedAt ? 'Data last exported: ' + esc(fmtDateTime(data.meta.lastExportedAt)) : 'Data not exported yet'}</span></div>`;
   $('#pageTitle').textContent = (NAV.find(n => n.id === ui.view) || NAV[0]).label;
 }
 function updateSaveChip() {
@@ -239,6 +238,7 @@ const ACTIONS = {
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
   'about': () => aboutModal(),
+  'about-more': () => { const x = $('#aboutMore'), b = $('#aboutToggle'); if (!x || !b) return; const open = x.hidden; x.hidden = !open; b.setAttribute('aria-expanded', String(open)); b.firstElementChild.textContent = open ? 'Show less' : 'Show more'; },
   'brand-edit': () => openModal({
     title: 'Programme name', saveLabel: 'Save',
     html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),
@@ -265,8 +265,9 @@ document.addEventListener('click', e => {
     return;
   }
   const fn = ACTIONS[el.dataset.action];
+  const inSide = el.dataset.nav !== undefined || !!el.closest('#sidebar');   // measured before the handler runs: it may redraw the menu and detach el
   if (fn) { e.preventDefault(); try { fn(el.dataset, el, e); } catch (err) { console.error(err); toast('Something went wrong: ' + (err && err.message ? err.message : err), 'error', 8000); } }
-  if (el.dataset.nav !== undefined || el.closest('#sidebar')) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
+  if (inSide) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
 });
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.bar[data-action],.ms-pt[data-action],.rm-name[data-action]')) { e.preventDefault(); e.target.click(); }

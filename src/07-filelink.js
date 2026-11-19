@@ -107,14 +107,15 @@ async function exportToChosenFile() {
 
 /* ---- unsaved-changes guard: any action that replaces the project first checks the linked file is up to date ---- */
 let pendingProceed = null;
-function guardUnsaved(proceed) {
+function guardUnsaved(proceed, kind = 'import') {
   if (!(linked && fileDirty() && !isProjectEmpty())) { proceed(); return; }
   pendingProceed = proceed;
+  const np = kind === 'new';
   openModal({
     title: 'Unsaved changes', hideSave: true, cancelLabel: 'Cancel',
     html: `<p><b>${esc(linked.name)}</b> has changes that have not been saved to the file yet.</p>
-      <p>Importing replaces the current project, so those changes would be left out of the file. (A copy is kept under Browser backups.)</p>
-      <div class="btn-row" style="margin-top:16px">${btn('Save first, then import', 'unsaved-save', '', 'primary', 'save')}${btn('Import anyway', 'unsaved-anyway', '', 'danger')}</div>`
+      <p>${np ? 'Starting a new project clears the current one' : 'Importing replaces the current project'}, so those changes would be left out of the file. (A copy is kept under Browser backups.)</p>
+      <div class="btn-row" style="margin-top:16px">${btn(np ? 'Save first, then continue' : 'Save first, then import', 'unsaved-save', '', 'primary', 'save')}${btn(np ? 'Continue anyway' : 'Import anyway', 'unsaved-anyway', '', 'danger')}</div>`
   });
 }
 const runPending = () => { const f = pendingProceed; pendingProceed = null; if (f) f(); };
@@ -146,3 +147,25 @@ Object.assign(ACTIONS, {
   'file-chip': () => { if (linked) saveToLinkedFile(); else if (FSA.save || FSA.open) fileDialog(); else downloadExport(); }
 });
 { const pasteJson = ACTIONS['paste-json']; ACTIONS['paste-json'] = () => guardUnsaved(pasteJson); }
+
+/* ---- New project (sidebar menu, next to the programme name) ----
+   Never touches the old JSON file: the link to it is dropped before anything is cleared, and nothing here writes to a file
+   except the optional "create a new file" step, which uses a fresh file the user chooses. */
+async function newProjectFlow() {
+  if (!isProjectEmpty()) {
+    const old = linked ? `<b>${esc(linked.name)}</b> is not changed or deleted. The app simply stops being linked to it, so the new project can never overwrite it.` : 'Any JSON file you saved or exported earlier is not changed or deleted.';
+    const ok = await confirmDialog({ title: 'Start a new project?', okLabel: 'Start new project', message: `This clears the app to a blank project with no programme name.<br><br>${old}<br><br>A backup of the current project is also kept in this browser (Reports &amp; Data Management → Browser backups).` });
+    if (!ok) return;
+    snapshot('Before new project');
+  }
+  linked = null; persistLink();                                    // unlink first: nothing after this point can reach the old file
+  data = blankProject(); ui.collapsed.clear(); ui.objOpen.clear();
+  ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
+  afterChange(); go('dashboard');
+  toast('Started a new project.', 'ok');
+  if (FSA.save) {
+    const create = await confirmDialog({ title: 'Create a file for the new project?', okLabel: 'Choose name and location…', cancelLabel: 'Not now', message: 'Pick where to save the new project’s JSON file. After that, the status button in the top bar keeps that file up to date. You can skip this and do it later by clicking the status button.' });
+    if (create) createNewFile(); else toast('No file chosen yet. Click the status button in the top bar when you want to save one.', 'ok', 6000);
+  } else toast('Name your programme with the pencil at the top left. Use Export JSON when you want to save the new project to a file.', 'ok', 8000);
+}
+ACTIONS['new-project'] = () => guardUnsaved(newProjectFlow, 'new');

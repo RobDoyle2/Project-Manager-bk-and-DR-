@@ -103,12 +103,12 @@ function openModal({ title, html, saveLabel = 'Save', onSave, wide = false, hide
   if (first && !('ontouchstart' in window)) first.focus();
   return form;
 }
-function confirmDialog({ title = 'Are you sure?', message = '', html = '', okLabel = 'Confirm', danger = false }) {
+function confirmDialog({ title = 'Are you sure?', message = '', html = '', okLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
   return new Promise(res => {
     const d = $('#confirm');
     d.innerHTML = `<div class="modal-card small"><header><h3>${esc(title)}</h3></header>
       <div class="modal-body"><p class="confirm-msg">${message}</p>${html}</div>
-      <footer><button type="button" data-confirm="cancel" value="cancel" class="btn ghost">Cancel</button><button type="button" data-confirm="ok" value="ok" class="btn ${danger ? 'danger' : 'primary'}" autofocus>${esc(okLabel)}</button></footer></div>`;
+      <footer><button type="button" data-confirm="cancel" value="cancel" class="btn ghost">${esc(cancelLabel)}</button><button type="button" data-confirm="ok" value="ok" class="btn ${danger ? 'danger' : 'primary'}" autofocus>${esc(okLabel)}</button></footer></div>`;
     d.returnValue = '';
     d.addEventListener('close', () => res(d.returnValue === 'ok'), { once: true });
     d.showModal();

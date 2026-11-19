@@ -415,25 +415,37 @@ function aboutModal() {
   const html = `<div class="about">
     <div class="about-hero">${pmLogo(60, 'pmg-about')}<div><b>Programme Manager <small>v${esc(BUILD_VERSION)}</small></b><span>Plan, track and report on any programme or project. Works offline, in one file.</span></div></div>
     <section><h4>Getting started</h4><ul>
+      <li><b>To start a fresh project, choose New project</b> in the left-hand menu, below the dividing line under Reports and Data Management. On a phone, tap the menu button at the top left first. It clears the app to a blank project, keeps a backup in your browser, and never changes your saved JSON file.</li>
       <li>Click the <b>pencil</b> at the top left to name your programme. The name is saved in your JSON file.</li>
       <li>Add <b>objectives</b> on the Objectives page, then <b>tasks</b> and <b>subtasks</b> under them. “Add several tasks” lets you paste a list or import a CSV.</li>
       <li>Progress works itself out: you set a percentage on tasks and subtasks, and objectives and the whole programme are calculated from them.</li>
-      <li>The <b>Dashboard</b> shows where things stand. The <b>Roadmap</b> has a Management view and a Technical view. Click any name to open it read-only, and use the pencil to edit.</li>
+      <li>The <b>Dashboard</b> shows where things stand. Click any name to open it read-only, and use the pencil to edit.</li>
     </ul></section>
     <section><h4>Saving your work</h4><ul>
       <li>Your work is autosaved in this browser as you go. <b>Save regularly to back up your data.</b></li>
       <li>The browser keeps a few automatic backups, but they are lost if you clear your browser data. <b>A saved JSON file is the reliable backup.</b></li>
-      <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file. It reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
-      <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
-    </ul></section>
-    <section><h4>Opening a project</h4><ul>
-      <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
-      <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
-    </ul></section>
-    <section><h4>About the JSON file</h4><ul>
-      <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
       <li><b>Your data never leaves your browser or the JSON file you select. Nothing is sent to a server, unless you choose to share the file yourself.</b></li>
     </ul></section>
+    <div class="about-more" id="aboutMore" hidden>
+      <section><h4>Opening a project</h4><ul>
+        <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
+        <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
+      </ul></section>
+      <section><h4>The status button and your file</h4><ul>
+        <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file.</li>
+        <li>The <b>status button</b> at the top shows when your linked file is up to date, and when it needs updating: it reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
+        <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
+        <li><b>Work in one browser tab at a time.</b> If you have the app open in two tabs, the last one to save overwrites the other.</li>
+      </ul></section>
+      <section><h4>Roadmap and reports</h4><ul>
+        <li>The <b>Roadmap</b> has two views: <b>Management</b> is the high-level picture, and <b>Technical</b> is the detailed one.</li>
+        <li><b>Printing:</b> reports can be printed or saved as a PDF from Reports and Data Management.</li>
+      </ul></section>
+      <section><h4>About the JSON file</h4><ul>
+        <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
+      </ul></section>
+    </div>
+    <div class="about-toggle"><button type="button" class="btn ghost" id="aboutToggle" data-action="about-more" aria-expanded="false" aria-controls="aboutMore"><span>Show more</span></button></div>
     <p class="about-by">Created by Robert Doyle from <a href="https://nuloha.com" target="_blank" rel="noopener noreferrer">nuloha.com</a></p>
   </div>`;
   openModal({ title: 'About Programme Manager', html, wide: true, hideSave: true, cancelLabel: 'Close' });

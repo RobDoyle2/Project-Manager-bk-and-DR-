@@ -24,13 +24,28 @@ MOVING DATA BETWEEN COMPUTERS  (important)
   - Import:  Reports & Data Management > "Import JSON...", or drag a .json file onto the window.
              The file is validated first; you must confirm before existing data is replaced.
              A browser backup of the current data is taken automatically before any import/reset/restore.
-  - The left sidebar shows an amber "Unexported changes" reminder until you export.
+  - The bottom of the sidebar reads "Data last exported: <date and time>" (or "Data not exported yet"), and turns into an
+    amber "Unexported changes" reminder when there are edits you have not exported.
   - Blank template: Reports & Data Management > "Download blank template".
 
-HELP / ABOUT WINDOW (bottom left)
-  - The small "i" button at the bottom left of the sidebar opens "About Programme Manager": getting started, saving your
-    work, opening a project and what the JSON file holds. Close it with the X, the Close button or Esc. The text is in
-    aboutModal() in src/03-forms.js.
+NEW PROJECT (sidebar menu, bottom of the list)
+  - Below a thin dividing line under Reports & Data Management you will find "About and help" and then "New project"
+    (plus icon). It is kept out of the top bar and away from the main pages on purpose, to avoid accidental clicks.
+  - If the linked file has unsaved edits you are first asked to save first / continue anyway / cancel. Then you are asked
+    to confirm; the box says the current project's file is NOT changed or deleted.
+  - On confirm: a browser backup is taken, the link to the old file is dropped, and the app is cleared to a blank project
+    with no programme name. You are then offered "Choose name and location..." to create a new file straight away (or "Not now").
+  - The old JSON file is never modified. If the project is already empty the confirmation is skipped.
+
+HELP / ABOUT WINDOW (sidebar menu)
+  - "About and help" (info icon) sits in the menu list below the dividing line, so it is always visible, including on
+    mobile. It opens "About Programme Manager".
+  - The window opens with the essentials only: Getting started (starting with how to find "New project"), Saving your
+    work (save regularly, the JSON file is the reliable backup) and the privacy line.
+  - "Show more" at the bottom expands the rest in the same window: opening a project, what the status button means,
+    the one-tab warning (last save wins), the Management / Technical roadmap views, printing / saving reports as PDF,
+    and what the JSON file holds. "Show less" folds it back. The credit line stays at the very bottom either way.
+    Close it with the X, the Close button or Esc. The text is in aboutModal() in src/03-forms.js.
 
 VERSION LABEL (top right)
   - A small label under the Export JSON button (e.g. v0.01) shows which version you are running. It goes up by 0.01

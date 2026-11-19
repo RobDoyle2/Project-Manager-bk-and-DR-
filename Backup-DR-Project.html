@@ -37,10 +37,12 @@ h3{font-size:1.02rem}
 .brand b{display:block;font-size:1.05rem;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .brand b.ph{color:var(--ink3);font-weight:600;font-style:italic}
 .brand-edit{flex:none;width:30px;height:30px;color:var(--ink3);align-self:flex-start;margin-top:2px}
-.brand-edit:hover{color:var(--brand);background:var(--brand-soft)}.brand small{color:var(--ink3);font-size:.76rem}
+.brand-edit:hover{color:var(--brand);background:var(--brand-soft)}
+.brand small{color:var(--ink3);font-size:.76rem}
 .nav{display:flex;flex-direction:column;gap:3px}
 .nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--ink2);text-decoration:none;font-weight:600;font-size:.95rem;transition:background .15s,color .15s}
 .nav a:hover{background:#f1f3f2;color:var(--ink)}
+.nav .nav-sep{height:1px;background:var(--line);margin:10px 12px}
 .nav a.active{background:var(--brand-soft);color:var(--brand-d)}
 .nav-badge{margin-left:auto;font-size:.72rem;font-weight:700;min-width:20px;height:20px;border-radius:99px;display:grid;place-items:center;padding:0 6px}
 .nav-badge.red{background:var(--red);color:#fff}
@@ -476,15 +478,14 @@ button.save-chip:hover{border-color:var(--brand)}
 .fl-cur{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:var(--brand-soft)}
 .fl-cur small{display:block;color:var(--ink2);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
 .fl-cur b{display:block}.fl-cur span{color:var(--ink2);font-size:.85rem}
-.side-about{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.info-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--brand);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
-.info-btn:hover,.info-btn:focus-visible{background:var(--brand-soft);border-color:var(--brand)}
 .about{display:flex;flex-direction:column;gap:6px}
 .about-hero{display:flex;align-items:center;gap:16px;padding:6px 0 16px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .about-hero b{display:block;font-size:1.25rem;letter-spacing:-.01em}.about-hero span{display:block;color:var(--ink2);font-size:.9rem;margin-top:3px}
 .about section{padding:10px 0 4px}
 .about h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--brand)}
 .about ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem;line-height:1.45}
+.about-more[hidden]{display:none}
+.about-toggle{display:flex;justify-content:center;padding:12px 0 0}
 .about-by{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);text-align:center;font-weight:600}
 .about-by a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
 .about-hero b small{font-size:.72rem;font-weight:600;color:var(--ink3);margin-left:6px;letter-spacing:.02em}
@@ -615,7 +616,6 @@ button.save-chip:hover{border-color:var(--brand)}
     <div class="brand"><div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="40" height="40" aria-hidden="true"><defs><linearGradient id="pmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0E7566"/><stop offset="1" stop-color="#003B34"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#pmg)"/><path d="M14 42V16h9.5a7.5 7.5 0 0 1 0 15H14" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M35 42V16l9.5 14L54 16v26" fill="none" stroke="#fff" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="13" y="49" width="38" height="5.5" rx="2.75" fill="#fff" fill-opacity=".26"/><rect x="13" y="49" width="24" height="5.5" rx="2.75" fill="#F4C95D"/></svg></div><div class="brand-t"><b id="brandName"></b><small>Programme</small></div><button type="button" class="icon-btn brand-edit" data-action="brand-edit" aria-label="Edit programme name" title="Edit programme name"></button></div>
     <nav class="nav" id="nav"></nav>
     <div class="side-foot" id="sideFoot"></div>
-    <div class="side-about"><button type="button" class="info-btn" data-action="about" aria-label="About Programme Manager — help and information" title="About / help"></button></div>
   </aside>
   <div class="scrim" id="scrim"></div>
   <div class="main">
@@ -647,7 +647,7 @@ const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
 const APP_VERSION = '1.5.3';
 /* Shown small under Export JSON (top right). Bump by 0.01 every time a new version is pushed: 0.01, 0.02 ... 0.10 ... */
-const BUILD_VERSION = '0.03';
+const BUILD_VERSION = '0.04';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -1408,12 +1408,12 @@ function openModal({ title, html, saveLabel = 'Save', onSave, wide = false, hide
   if (first && !('ontouchstart' in window)) first.focus();
   return form;
 }
-function confirmDialog({ title = 'Are you sure?', message = '', html = '', okLabel = 'Confirm', danger = false }) {
+function confirmDialog({ title = 'Are you sure?', message = '', html = '', okLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
   return new Promise(res => {
     const d = $('#confirm');
     d.innerHTML = `<div class="modal-card small"><header><h3>${esc(title)}</h3></header>
       <div class="modal-body"><p class="confirm-msg">${message}</p>${html}</div>
-      <footer><button type="button" data-confirm="cancel" value="cancel" class="btn ghost">Cancel</button><button type="button" data-confirm="ok" value="ok" class="btn ${danger ? 'danger' : 'primary'}" autofocus>${esc(okLabel)}</button></footer></div>`;
+      <footer><button type="button" data-confirm="cancel" value="cancel" class="btn ghost">${esc(cancelLabel)}</button><button type="button" data-confirm="ok" value="ok" class="btn ${danger ? 'danger' : 'primary'}" autofocus>${esc(okLabel)}</button></footer></div>`;
     d.returnValue = '';
     d.addEventListener('close', () => res(d.returnValue === 'ok'), { once: true });
     d.showModal();
@@ -2004,25 +2004,37 @@ function aboutModal() {
   const html = `<div class="about">
     <div class="about-hero">${pmLogo(60, 'pmg-about')}<div><b>Programme Manager <small>v${esc(BUILD_VERSION)}</small></b><span>Plan, track and report on any programme or project. Works offline, in one file.</span></div></div>
     <section><h4>Getting started</h4><ul>
+      <li><b>To start a fresh project, choose New project</b> in the left-hand menu, below the dividing line under Reports and Data Management. On a phone, tap the menu button at the top left first. It clears the app to a blank project, keeps a backup in your browser, and never changes your saved JSON file.</li>
       <li>Click the <b>pencil</b> at the top left to name your programme. The name is saved in your JSON file.</li>
       <li>Add <b>objectives</b> on the Objectives page, then <b>tasks</b> and <b>subtasks</b> under them. “Add several tasks” lets you paste a list or import a CSV.</li>
       <li>Progress works itself out: you set a percentage on tasks and subtasks, and objectives and the whole programme are calculated from them.</li>
-      <li>The <b>Dashboard</b> shows where things stand. The <b>Roadmap</b> has a Management view and a Technical view. Click any name to open it read-only, and use the pencil to edit.</li>
+      <li>The <b>Dashboard</b> shows where things stand. Click any name to open it read-only, and use the pencil to edit.</li>
     </ul></section>
     <section><h4>Saving your work</h4><ul>
       <li>Your work is autosaved in this browser as you go. <b>Save regularly to back up your data.</b></li>
       <li>The browser keeps a few automatic backups, but they are lost if you clear your browser data. <b>A saved JSON file is the reliable backup.</b></li>
-      <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file. It reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
-      <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
-    </ul></section>
-    <section><h4>Opening a project</h4><ul>
-      <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
-      <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
-    </ul></section>
-    <section><h4>About the JSON file</h4><ul>
-      <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
       <li><b>Your data never leaves your browser or the JSON file you select. Nothing is sent to a server, unless you choose to share the file yourself.</b></li>
     </ul></section>
+    <div class="about-more" id="aboutMore" hidden>
+      <section><h4>Opening a project</h4><ul>
+        <li><b>Import JSON</b> replaces everything currently loaded with the file you pick. It asks you to confirm first, unless the app is empty.</li>
+        <li>To switch projects, save the current one first, then import the next. If your linked file has unsaved changes, the app warns you and offers to save first.</li>
+      </ul></section>
+      <section><h4>The status button and your file</h4><ul>
+        <li>In Edge and Chrome, click <b>Import JSON</b> and pick your file, or click the status button and choose “Save as a new file”. After that, the status button updates that same file.</li>
+        <li>The <b>status button</b> at the top shows when your linked file is up to date, and when it needs updating: it reads “Update &lt;file name&gt;” when there are changes not yet saved.</li>
+        <li><b>Export JSON</b> saves a separate copy. In Firefox and Safari it downloads the file, because those browsers can’t open a save window from a web page.</li>
+        <li><b>Work in one browser tab at a time.</b> If you have the app open in two tabs, the last one to save overwrites the other.</li>
+      </ul></section>
+      <section><h4>Roadmap and reports</h4><ul>
+        <li>The <b>Roadmap</b> has two views: <b>Management</b> is the high-level picture, and <b>Technical</b> is the detailed one.</li>
+        <li><b>Printing:</b> reports can be printed or saved as a PDF from Reports and Data Management.</li>
+      </ul></section>
+      <section><h4>About the JSON file</h4><ul>
+        <li>The JSON file is one plain-text file holding everything: the programme name, objectives, tasks, subtasks, risks, dependencies, milestones and settings. Keep it anywhere, back it up, or open it on another computer.</li>
+      </ul></section>
+    </div>
+    <div class="about-toggle"><button type="button" class="btn ghost" id="aboutToggle" data-action="about-more" aria-expanded="false" aria-controls="aboutMore"><span>Show more</span></button></div>
     <p class="about-by">Created by Robert Doyle from <a href="https://nuloha.com" target="_blank" rel="noopener noreferrer">nuloha.com</a></p>
   </div>`;
   openModal({ title: 'About Programme Manager', html, wide: true, hideSave: true, cancelLabel: 'Close' });
@@ -2761,7 +2773,6 @@ function renderBrand() {
   const n = (data.project.name || '').trim();
   el.textContent = n || 'Programme name'; el.className = n ? '' : 'ph'; el.title = n || 'No name yet — click the pencil to add one';
   const b = $('.brand-edit'); if (b && !b.firstChild) b.innerHTML = icon('edit', 15);
-  const ib = $('.info-btn'); if (ib && !ib.firstChild) ib.innerHTML = icon('info', 18);
   const t = n ? n + ' — Programme Manager' : 'Programme Manager'; if (document.title !== t) document.title = t;
 }
 function renderNav() {
@@ -2771,10 +2782,10 @@ function renderNav() {
   $('#nav').innerHTML = NAV.map(n => {
     const badge = n.id === 'risks' && D.blockedItems.length ? `<span class="nav-badge red" data-tip="${D.blockedItems.length} blocked item(s)">${D.blockedItems.length}</span>` : '';
     return `<a href="#${n.id}" class="${ui.view === n.id ? 'active' : ''}" data-nav="${n.id}" ${ui.view === n.id ? 'aria-current="page"' : ''}>${icon(n.icon, 19)}<span>${n.label}</span>${badge}</a>`;
-  }).join('');
+  }).join('') + `<div class="nav-sep" role="separator"></div><a href="#about" class="nav-about" data-action="about" role="button">${icon('info', 19)}<span>About and help</span></a><a href="#new-project" class="nav-new" data-action="new-project" role="button">${icon('plus', 19)}<span>New project</span></a>`;
   $('#sideFoot').innerHTML = hasContent && unexp
     ? `<button class="export-nudge" data-action="export-json">${icon('download', 15)}<span>Unexported changes<br><small>Export JSON to keep a safe copy</small></span></button>`
-    : `<div class="side-ok">${icon('check', 14)} <span>${data.meta.lastExportedAt ? 'Exported ' + esc(fmtDateTime(data.meta.lastExportedAt)) : 'Nothing to export yet'}</span></div>`;
+    : `<div class="side-ok">${icon('check', 14)} <span>${data.meta.lastExportedAt ? 'Data last exported: ' + esc(fmtDateTime(data.meta.lastExportedAt)) : 'Data not exported yet'}</span></div>`;
   $('#pageTitle').textContent = (NAV.find(n => n.id === ui.view) || NAV[0]).label;
 }
 function updateSaveChip() {
@@ -2982,6 +2993,7 @@ const ACTIONS = {
   'print-report': () => doPrint('report'),
   'download-report': () => { downloadReport(); toast('Status report downloaded.'); },
   'about': () => aboutModal(),
+  'about-more': () => { const x = $('#aboutMore'), b = $('#aboutToggle'); if (!x || !b) return; const open = x.hidden; x.hidden = !open; b.setAttribute('aria-expanded', String(open)); b.firstElementChild.textContent = open ? 'Show less' : 'Show more'; },
   'brand-edit': () => openModal({
     title: 'Programme name', saveLabel: 'Save',
     html: fld('Name', inp('pname', data.project.name || '', 'maxlength="120" placeholder="Programme name" autocomplete="off"'), 'full', 'Shown top left and stored in the project file. Press the status button in the top bar to write it to your file.'),
@@ -3008,8 +3020,9 @@ document.addEventListener('click', e => {
     return;
   }
   const fn = ACTIONS[el.dataset.action];
+  const inSide = el.dataset.nav !== undefined || !!el.closest('#sidebar');   // measured before the handler runs: it may redraw the menu and detach el
   if (fn) { e.preventDefault(); try { fn(el.dataset, el, e); } catch (err) { console.error(err); toast('Something went wrong: ' + (err && err.message ? err.message : err), 'error', 8000); } }
-  if (el.dataset.nav !== undefined || el.closest('#sidebar')) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
+  if (inSide) { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('on'); }
 });
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.bar[data-action],.ms-pt[data-action],.rm-name[data-action]')) { e.preventDefault(); e.target.click(); }
@@ -3181,14 +3194,15 @@ async function exportToChosenFile() {
 
 /* ---- unsaved-changes guard: any action that replaces the project first checks the linked file is up to date ---- */
 let pendingProceed = null;
-function guardUnsaved(proceed) {
+function guardUnsaved(proceed, kind = 'import') {
   if (!(linked && fileDirty() && !isProjectEmpty())) { proceed(); return; }
   pendingProceed = proceed;
+  const np = kind === 'new';
   openModal({
     title: 'Unsaved changes', hideSave: true, cancelLabel: 'Cancel',
     html: `<p><b>${esc(linked.name)}</b> has changes that have not been saved to the file yet.</p>
-      <p>Importing replaces the current project, so those changes would be left out of the file. (A copy is kept under Browser backups.)</p>
-      <div class="btn-row" style="margin-top:16px">${btn('Save first, then import', 'unsaved-save', '', 'primary', 'save')}${btn('Import anyway', 'unsaved-anyway', '', 'danger')}</div>`
+      <p>${np ? 'Starting a new project clears the current one' : 'Importing replaces the current project'}, so those changes would be left out of the file. (A copy is kept under Browser backups.)</p>
+      <div class="btn-row" style="margin-top:16px">${btn(np ? 'Save first, then continue' : 'Save first, then import', 'unsaved-save', '', 'primary', 'save')}${btn(np ? 'Continue anyway' : 'Import anyway', 'unsaved-anyway', '', 'danger')}</div>`
   });
 }
 const runPending = () => { const f = pendingProceed; pendingProceed = null; if (f) f(); };
@@ -3220,6 +3234,28 @@ Object.assign(ACTIONS, {
   'file-chip': () => { if (linked) saveToLinkedFile(); else if (FSA.save || FSA.open) fileDialog(); else downloadExport(); }
 });
 { const pasteJson = ACTIONS['paste-json']; ACTIONS['paste-json'] = () => guardUnsaved(pasteJson); }
+
+/* ---- New project (sidebar menu, next to the programme name) ----
+   Never touches the old JSON file: the link to it is dropped before anything is cleared, and nothing here writes to a file
+   except the optional "create a new file" step, which uses a fresh file the user chooses. */
+async function newProjectFlow() {
+  if (!isProjectEmpty()) {
+    const old = linked ? `<b>${esc(linked.name)}</b> is not changed or deleted. The app simply stops being linked to it, so the new project can never overwrite it.` : 'Any JSON file you saved or exported earlier is not changed or deleted.';
+    const ok = await confirmDialog({ title: 'Start a new project?', okLabel: 'Start new project', message: `This clears the app to a blank project with no programme name.<br><br>${old}<br><br>A backup of the current project is also kept in this browser (Reports &amp; Data Management → Browser backups).` });
+    if (!ok) return;
+    snapshot('Before new project');
+  }
+  linked = null; persistLink();                                    // unlink first: nothing after this point can reach the old file
+  data = blankProject(); ui.collapsed.clear(); ui.objOpen.clear();
+  ui.taskFilter = { q: '', obj: 'all', status: 'all', owner: 'all', blockedOnly: false, hideDone: false }; ui.objFilter = { q: '', status: 'all' }; ui.rmObj = 'all';
+  afterChange(); go('dashboard');
+  toast('Started a new project.', 'ok');
+  if (FSA.save) {
+    const create = await confirmDialog({ title: 'Create a file for the new project?', okLabel: 'Choose name and location…', cancelLabel: 'Not now', message: 'Pick where to save the new project’s JSON file. After that, the status button in the top bar keeps that file up to date. You can skip this and do it later by clicking the status button.' });
+    if (create) createNewFile(); else toast('No file chosen yet. Click the status button in the top bar when you want to save one.', 'ok', 6000);
+  } else toast('Name your programme with the pencil at the top left. Use Export JSON when you want to save the new project to a file.', 'ok', 8000);
+}
+ACTIONS['new-project'] = () => guardUnsaved(newProjectFlow, 'new');
 
 })();
 </script>

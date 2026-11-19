@@ -6,7 +6,7 @@ const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
 const APP_VERSION = '1.5.3';
 /* Shown small under Export JSON (top right). Bump by 0.01 every time a new version is pushed: 0.01, 0.02 ... 0.10 ... */
-const BUILD_VERSION = '0.03';
+const BUILD_VERSION = '0.04';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
