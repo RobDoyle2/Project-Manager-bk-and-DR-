@@ -114,6 +114,13 @@ function workItemModal(kind, id, ctx = {}) {
   openModal({
     title: item ? `Edit ${isTask ? 'task' : 'subtask'} · ${item.id}` : `New ${isTask ? 'task' : 'subtask'}`, html, wide: true, saveLabel: item ? 'Save changes' : `Create ${isTask ? 'task' : 'subtask'}`,
     onOpen: f => {
+      if (!isTask && item) {   // small bin icon in the edit form's footer (same look as the bin on the list rows)
+        const del = document.createElement('button');
+        del.type = 'button'; del.className = 'icon-btn danger modal-del'; del.dataset.modalDelete = '1';
+        del.setAttribute('aria-label', 'Delete subtask'); del.dataset.tip = 'Delete subtask'; del.innerHTML = icon('trash', 18);
+        del.addEventListener('click', async () => { if (await deleteSubFlow(item.id)) closeModal(); });
+        const ft = $('footer', f); if (ft) ft.prepend(del);
+      }
       const checkWarn = () => {
         const pid = f.elements.parent.value; if (!pid) { const el0 = $('#dateWarn', f); el0.hidden = true; return; }
         const par = isTask ? IDX.objective.get(pid) : IDX.task.get(pid);
@@ -180,9 +187,10 @@ async function deleteTaskFlow(id) {
 }
 async function deleteSubFlow(id) {
   const r = IDX.sub.get(id); if (!r) return;
-  const ok = await confirmDialog({ title: 'Delete subtask?', danger: true, okLabel: 'Delete subtask', message: `Delete subtask <b>${esc(r.item.name)}</b>? The progress of <b>${esc(r.task.name)}</b> will be recalculated.` });
-  if (!ok) return;
+  const ok = await confirmDialog({ title: 'Delete subtask?', danger: true, okLabel: 'Delete subtask', message: `Delete subtask <b>${esc(r.item.name)}</b>? Related dependencies will be removed, and the progress of <b>${esc(r.task.name)}</b> will be recalculated. This cannot be undone.` });
+  if (!ok) return false;
   deleteSub(id); afterChange(); toast('Subtask deleted');
+  return true;
 }
 function openItem(id) {
   const n = D.node.get(id); if (!n) return;

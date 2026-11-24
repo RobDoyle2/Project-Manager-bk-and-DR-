@@ -47,6 +47,12 @@ HELP / ABOUT WINDOW (sidebar menu)
     and what the JSON file holds. "Show less" folds it back. The credit line stays at the very bottom either way.
     Close it with the X, the Close button or Esc. The text is in aboutModal() in src/03-forms.js.
 
+DELETING A SUBTASK
+  - Open a subtask with its pencil and click the small bin icon at the bottom left of the edit form. You are asked to
+    confirm (the box names the subtask); dependencies pointing to it are removed and any risk related to it is unlinked.
+    The bin on each list row works as before. On wide windows (about 1540px and up) the Tasks table shows all columns;
+    on narrower windows the rows stack, and every row keeps its view, edit and bin icons fully visible.
+
 VERSION LABEL (top right)
   - A small label under the Export JSON button (e.g. v0.01) shows which version you are running. It goes up by 0.01
     every time a new version is pushed to GitHub (v0.01, v0.02 ... v0.10 ...). To change it, edit BUILD_VERSION near the

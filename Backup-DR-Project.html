@@ -199,7 +199,7 @@ h3{font-size:1.02rem}
 .tg-l{display:flex;gap:14px;align-items:center}.tg-bar{width:6px;height:38px;border-radius:6px;background:var(--c)}
 .t-group-h small{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:3px}
 .tg-r{display:flex;gap:14px;align-items:center}.tg-prog{display:flex;gap:10px;align-items:center;width:210px}.tg-prog b{min-width:40px;text-align:right}
-.t-head,.t-row{display:grid;grid-template-columns:minmax(250px,2.3fr) 150px 175px 84px 125px 175px 108px;gap:12px;align-items:center;padding:0 20px}
+.t-head,.t-row{display:grid;grid-template-columns:minmax(250px,2.3fr) 150px 175px 84px 125px 175px 140px;gap:12px;align-items:center;padding:0 20px}
 .t-head{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;padding-top:10px;padding-bottom:8px;border-bottom:1px solid var(--line2);border-top:1px solid var(--line2)}
 .t-row{padding-top:10px;padding-bottom:10px;border-bottom:1px solid var(--line2);font-size:.88rem}
 .t-row:last-child{border-bottom:0}
@@ -281,6 +281,7 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .modal-card header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
 .modal-card header h3{font-size:1.15rem}
 .modal-body{padding:20px 22px;overflow:auto;flex:1}
+.modal-card footer .modal-del{margin-right:auto;width:38px;height:38px;border:1px solid var(--line);background:#fff}
 .modal-card footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fafbfa}
 .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0}.fld.full,.full{grid-column:1/-1}
@@ -407,13 +408,16 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 }
 
 /* ---------- responsive ---------- */
-@media (max-width:1400px){
+/* the full table needs ~1530px of window (sidebar included) to fit all columns and the four row buttons; below that rows stack */
+@media (max-width:1540px){
   .t-head{display:none}
   .t-row{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:8px;padding-top:14px;padding-bottom:14px}
   .t-row .t-name{grid-column:1/-1}.t-row .t-act{grid-column:4;grid-row:1;justify-self:end}
   .t-row .t-name{grid-column:1/4}
   .t-row [data-label]:not(.t-name)::before{content:attr(data-label);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700;margin-bottom:2px}
   .t-row .t-dates{grid-column:span 2}.t-row .t-prog{grid-column:span 2}
+}
+@media (max-width:1400px){
   .r-head,.d-head{display:none}
   .r-row{grid-template-columns:repeat(3,minmax(0,1fr))}.r-row .r-main{grid-column:1/-1}.r-row .t-act{grid-column:3}
   .b-table .r-row{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -647,7 +651,7 @@ const SCHEMA_VERSION = 1;
 const APP_ID = 'backup-dr-project';
 const APP_VERSION = '1.5.3';
 /* Shown small under Export JSON (top right). Bump by 0.01 every time a new version is pushed: 0.01, 0.02 ... 0.10 ... */
-const BUILD_VERSION = '0.04';
+const BUILD_VERSION = '0.05';
 const LS_KEY = 'backupdr.project.v1';
 const LS_BACKUPS = 'backupdr.backups.v1';
 const LS_UI = 'backupdr.ui.v1';
@@ -1703,6 +1707,13 @@ function workItemModal(kind, id, ctx = {}) {
   openModal({
     title: item ? `Edit ${isTask ? 'task' : 'subtask'} · ${item.id}` : `New ${isTask ? 'task' : 'subtask'}`, html, wide: true, saveLabel: item ? 'Save changes' : `Create ${isTask ? 'task' : 'subtask'}`,
     onOpen: f => {
+      if (!isTask && item) {   // small bin icon in the edit form's footer (same look as the bin on the list rows)
+        const del = document.createElement('button');
+        del.type = 'button'; del.className = 'icon-btn danger modal-del'; del.dataset.modalDelete = '1';
+        del.setAttribute('aria-label', 'Delete subtask'); del.dataset.tip = 'Delete subtask'; del.innerHTML = icon('trash', 18);
+        del.addEventListener('click', async () => { if (await deleteSubFlow(item.id)) closeModal(); });
+        const ft = $('footer', f); if (ft) ft.prepend(del);
+      }
       const checkWarn = () => {
         const pid = f.elements.parent.value; if (!pid) { const el0 = $('#dateWarn', f); el0.hidden = true; return; }
         const par = isTask ? IDX.objective.get(pid) : IDX.task.get(pid);
@@ -1769,9 +1780,10 @@ async function deleteTaskFlow(id) {
 }
 async function deleteSubFlow(id) {
   const r = IDX.sub.get(id); if (!r) return;
-  const ok = await confirmDialog({ title: 'Delete subtask?', danger: true, okLabel: 'Delete subtask', message: `Delete subtask <b>${esc(r.item.name)}</b>? The progress of <b>${esc(r.task.name)}</b> will be recalculated.` });
-  if (!ok) return;
+  const ok = await confirmDialog({ title: 'Delete subtask?', danger: true, okLabel: 'Delete subtask', message: `Delete subtask <b>${esc(r.item.name)}</b>? Related dependencies will be removed, and the progress of <b>${esc(r.task.name)}</b> will be recalculated. This cannot be undone.` });
+  if (!ok) return false;
   deleteSub(id); afterChange(); toast('Subtask deleted');
+  return true;
 }
 function openItem(id) {
   const n = D.node.get(id); if (!n) return;
