@@ -53,6 +53,13 @@ DELETING A SUBTASK
     The bin on each list row works as before. On wide windows (about 1540px and up) the Tasks table shows all columns;
     on narrower windows the rows stack, and every row keeps its view, edit and bin icons fully visible.
 
+SUBTASKS LOOK DIFFERENT FROM NOTES AND TASKS
+  - In a task's edit form the "Subtasks - quick add" box is light yellow with an amber line down its left edge, a
+    Subtasks label with an icon, and a reminder: each line creates a separate subtask, and notes go in the Notes
+    section below (which stays plain white).
+  - On the Tasks page, subtask rows have the same light yellow tint and an amber line beside the name, so they are easy
+    to tell from tasks. The objective colour stripe on the row edge stays.
+
 VERSION LABEL (top right)
   - A small label under the Export JSON button (e.g. v0.01) shows which version you are running. It goes up by 0.01
     every time a new version is pushed to GitHub (v0.01, v0.02 ... v0.10 ...). To change it, edit BUILD_VERSION near the

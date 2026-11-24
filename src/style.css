@@ -1,6 +1,6 @@
 :root{
   --bg:#F8F8F5;--card:#fff;--ink:#252b29;--ink2:#626d68;--ink3:#6f7a74;--line:#e1e6e3;--line2:#eef1ef;
-  --brand:#004d44;--brand-d:#003b34;--brand-soft:#e4f0ec;--accent:#8c7a4b;--gold:#A39161;
+  --brand:#004d44;--sub-bg:#fffbea;--sub-bg2:#fff6d6;--sub-bd:#f1dfa0;--sub-line:#d9a400;--brand-d:#003b34;--brand-soft:#e4f0ec;--accent:#8c7a4b;--gold:#A39161;
   --radius:16px;--shadow:0 1px 2px rgba(37,43,41,.05),0 8px 24px rgba(37,43,41,.06);
   --red:#e5484d;--amber:#f5a524;--green:#22b573;--blue:#3b82f6;
 }
@@ -191,8 +191,9 @@ h3{font-size:1.02rem}
 .t-row{padding-top:10px;padding-bottom:10px;border-bottom:1px solid var(--line2);font-size:.88rem}
 .t-row:last-child{border-bottom:0}
 .t-row:hover{background:#fafbfa}
-.t-row.lvl-2{background:#fafbfa}
-.t-row.lvl-2 .t-name{padding-left:34px}
+.t-row.lvl-2{background:var(--sub-bg)}
+.t-row.lvl-2:hover{background:var(--sub-bg2)}
+.t-row.lvl-2 .t-name{margin-left:30px;padding-left:12px;border-left:3px solid var(--sub-line)}
 .t-row.is-blocked{box-shadow:inset 4px 0 0 var(--red);background:#fff8f8}
 .t-name{display:flex;gap:8px;align-items:flex-start;min-width:0}
 .t-name-txt{min-width:0;display:flex;flex-direction:column;gap:3px}
@@ -271,6 +272,11 @@ dialog[open]{display:block;margin:auto;animation:pop .16s ease-out}
 .modal-card footer .modal-del{margin-right:auto;width:38px;height:38px;border:1px solid var(--line);background:#fff}
 .modal-card footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fafbfa}
 .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.subs-box{background:var(--sub-bg);border:1px solid var(--sub-bd);border-left:5px solid var(--sub-line);border-radius:10px;padding:11px 14px 12px}
+.subs-label{display:flex;align-items:center;gap:8px;color:#7a5600;font-size:.9rem}
+.subs-label svg{color:var(--sub-line);flex:none}
+.subs-tag{margin-left:2px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7a5600;background:#fdeaa6;border-radius:999px;padding:2px 8px}
+.subs-box .hint{color:#6b5a2a}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0}.fld.full,.full{grid-column:1/-1}
 .fl{font-size:.8rem;font-weight:700;color:var(--ink2)}
 .fld textarea{resize:vertical;min-height:60px}

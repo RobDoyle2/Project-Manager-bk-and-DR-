@@ -106,7 +106,7 @@ function workItemModal(kind, id, ctx = {}) {
     ${progressBlock}
     ${blockerFields(v)}
     ${depEditorHtml(item ? item.id : '')}
-    ${isTask ? fld('Quick-add subtasks', txt('quickSubs', '', 3, 'placeholder="One subtask per line…"'), 'full', 'Each line becomes a subtask with this task\'s owner and dates. Tasks with subtasks calculate progress automatically.') : ''}
+    ${isTask ? `<label class="fld full subs-box"><span class="subs-label">${icon('tasks', 16)}<b>Subtasks</b><span class="subs-tag">quick add</span></span>${txt('quickSubs', '', 3, 'placeholder="One subtask per line…"')}<small class="hint"><b>Each line creates a separate subtask</b> (with this task's owner and dates). <b>Notes go in the Notes section below</b>, not here. Tasks with subtasks calculate progress automatically.</small></label>` : ''}
     ${linksEditorHtml(v.links)}
     ${notesBlock(v.notes)}
     <div class="full warn-note" id="dateWarn" hidden></div>
